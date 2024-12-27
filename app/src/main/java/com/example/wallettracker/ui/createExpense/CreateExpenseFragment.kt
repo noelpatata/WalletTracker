@@ -1,4 +1,4 @@
-package com.example.wallettracker.ui.slideshow
+package com.example.wallettracker.ui.settings
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.wallettracker.databinding.FragmentSlideshowBinding
+import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 
-class SlideshowFragment : Fragment() {
+class CreateExpenseFragment : Fragment() {
 
-    private var _binding: FragmentSlideshowBinding? = null
+    private var _binding: FragmentCreateexpenseBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -22,14 +22,14 @@ class SlideshowFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val slideshowViewModel =
-            ViewModelProvider(this).get(SlideshowViewModel::class.java)
+        val createExpenseViewModel =
+            ViewModelProvider(this).get(CreateExpenseViewModel::class.java)
 
-        _binding = FragmentSlideshowBinding.inflate(inflater, container, false)
+        _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textSlideshow
-        slideshowViewModel.text.observe(viewLifecycleOwner) {
+        val textView: TextView = binding.textSettings
+        createExpenseViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
         return root
