@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.Expense
+package com.example.wallettracker.data.ExpenseCategory
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
+import java.io.Closeable
 import java.lang.String
 import java.sql.Date
 import java.sql.SQLException
@@ -18,12 +19,13 @@ import kotlin.Throws
 import kotlin.arrayOf
 
 
-class ExpenseDAO {
+class ExpenseDAO : Closeable{
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
     constructor(context: Context?) {
         dbHelper = DatabaseHelper(context)
+        database = dbHelper?.getWritableDatabase()
     }
 
     // Open the database for read/write operations
@@ -33,7 +35,7 @@ class ExpenseDAO {
     }
 
     // Close the database
-    fun close() {
+    override fun close() {
         dbHelper?.close()
     }
 

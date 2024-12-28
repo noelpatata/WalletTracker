@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.Expense
+package com.example.wallettracker.data.ExpenseCategory
 
 import java.sql.Date
 

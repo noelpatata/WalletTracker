@@ -18,6 +18,11 @@
         tools:layout="@layout/fragment_settings" />
 
     <fragment
+        android:id="@+id/nav_categories"
+        android:name="com.example.wallettracker.ui.categories.CategoriesFragment"
+        android:label="@string/menu_categories"
+        tools:layout="@layout/fragment_categories" />
+    <fragment
         android:id="@+id/nav_createexpense"
         android:name="com.example.wallettracker.ui.createExpense.CreateExpenseFragment"
         android:label="@string/menu_createexpense"

@@ -12,19 +12,18 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.Expense
-import com.example.wallettracker.data.Expense.ExpenseDAO
+import com.example.wallettracker.data.ExpenseCategory.Expense
+import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import java.sql.Date
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.math.exp
+
 
 class CreateExpenseFragment : Fragment() {
 
     private var _binding: FragmentCreateexpenseBinding? = null
-    private var expenseDB: ExpenseDAO? = null
 
     private val binding get() = _binding!!
 
@@ -41,7 +40,6 @@ class CreateExpenseFragment : Fragment() {
 
         //app logic
         try {
-            InitDatabase()
             InitListeners()
             LoadData()
         }
@@ -53,11 +51,6 @@ class CreateExpenseFragment : Fragment() {
 
 
         return root
-    }
-
-    private fun InitDatabase() {
-        expenseDB = ExpenseDAO(requireContext())
-        expenseDB!!.open()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -107,12 +100,14 @@ class CreateExpenseFragment : Fragment() {
             val selectedCategory = binding.comboCategorias.adapter.getItem(binding.comboCategorias.selectedItemPosition) as String
 
             val expense = GetExpense()
-            val id = expenseDB!!.insertExpense(expense)
-            if (id > 0 ){
-                Toast.makeText(requireContext(), "Expense ${id} saved successfully", Toast.LENGTH_LONG).show()
-                findNavController().navigate(R.id.nav_home)
-            }
 
+            ExpenseDAO(requireContext()).use { expenseDB ->
+                val id = expenseDB.insertExpense(expense)
+                if (id > 0 ){
+                    Toast.makeText(requireContext(), "Expense ${id} saved successfully", Toast.LENGTH_LONG).show()
+                    findNavController().navigate(R.id.nav_home)
+                }
+            }
         }
         catch (e: Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
@@ -178,8 +173,6 @@ class CreateExpenseFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        if(expenseDB != null)
-            expenseDB!!.close()
 
 
     }

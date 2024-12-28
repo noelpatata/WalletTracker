@@ -9,6 +9,10 @@
             android:icon="@drawable/navicon_home"
             android:title="@string/menu_home" />
         <item
+            android:id="@+id/nav_categories"
+            android:icon="@drawable/navicon_categories"
+            android:title="@string/menu_categories" />
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/navicon_settings"
             android:title="@string/menu_settings" />
