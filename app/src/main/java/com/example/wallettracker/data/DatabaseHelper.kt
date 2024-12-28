@@ -34,7 +34,7 @@ class DatabaseHelper(context: Context?) :
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "price DOUBLE, " +
                 "expenseDate DATE, " +
-                "category BIGINT, " +
+                "category INTEGER, " +
                 "FOREIGN KEY(category) REFERENCES " + TABLE_EXPENSE_CATEGORY + "(_id) ON DELETE CASCADE);"
 
         // SQL statement to create the ExpenseCategory table

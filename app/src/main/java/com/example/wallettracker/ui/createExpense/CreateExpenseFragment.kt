@@ -12,6 +12,8 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
+import com.example.wallettracker.data.Expense.ExpenseCategory
+import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
 import com.example.wallettracker.data.ExpenseCategory.Expense
 import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
@@ -59,9 +61,12 @@ class CreateExpenseFragment : Fragment() {
         LoadComboCategorias()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadComboCategorias() {
-        //todo replace hardcoded list with sqlite registries
-        val categorias = listOf<String>("Ocio", "Importantes", "Necesarios")
+        var categories = listOf<ExpenseCategory>()
+        ExpenseCategoryDAO(requireContext()).use { categoryDB ->
+            categories = categoryDB.getAll()!!
+        }
 
         binding.comboCategorias
         val spinner: Spinner = binding.comboCategorias
@@ -69,11 +74,12 @@ class CreateExpenseFragment : Fragment() {
         if (spinner != null) {
             val adaptador = ComboCategoriasAdapter(
                 requireContext(),
-                categorias
+                categories
             )
             spinner.adapter = adaptador
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadDefaultDateTime() {

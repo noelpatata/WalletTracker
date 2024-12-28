@@ -8,8 +8,9 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import com.example.wallettracker.R
+import com.example.wallettracker.data.Expense.ExpenseCategory
 
-class ComboCategoriasAdapter(private val context: Context, private val items: List<String>) : BaseAdapter() {
+class ComboCategoriasAdapter(private val context: Context, private val items: List<ExpenseCategory>) : BaseAdapter() {
     override fun getCount(): Int = items.size
 
     override fun getItem(position: Int): Any = items[position]
@@ -20,11 +21,11 @@ class ComboCategoriasAdapter(private val context: Context, private val items: Li
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.element_combocategorias, parent, false)
 
-        val item = getItem(position) as String
+        val item = getItem(position) as ExpenseCategory
 
         // Bind data to views
         val text = view.findViewById<TextView>(R.id.spinner_text)
-        text.text = item
+        text.text = item.getName()
 
         return view
     }

@@ -16,4 +16,8 @@
     <string name="label_fecha">Fecha</string>
     <string name="label_hora">Hora</string>
     <string name="label_categoria">Categoria</string>
+    <string name="label_name">Nombre</string>
+    <string name="menu_createcategories">Create Category</string>
+    <string name="button_createcategory">Creates a category</string>
+
 </resources>

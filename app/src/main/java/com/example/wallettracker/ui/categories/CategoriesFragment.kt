@@ -11,10 +11,15 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
+import com.example.wallettracker.data.Expense.ExpenseCategory
+import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
 import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.databinding.FragmentHomeBinding
+import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
+import kotlin.math.exp
 
 class CategoriesFragment : Fragment() {
 
@@ -35,17 +40,10 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        ExpenseDAO(requireContext()).use { expenseDB ->
-            val lista = expenseDB.getAllExpenses()
-            if (lista != null){
-                if(lista.count() > 0){
+        InitListeners()
+        LoadData()
 
-                }
-            }
 
-        }
-
-        binding.rviewCategories
 
 
 
@@ -53,6 +51,40 @@ class CategoriesFragment : Fragment() {
 
         val root: View = binding.root
         return root
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun LoadData() {
+
+
+        try {
+            var lista: List<ExpenseCategory>
+            ExpenseCategoryDAO(requireContext()).use { sCat ->
+                lista = sCat.getAll()!!
+            }
+            ExpenseDAO(requireContext()).use{expenseDB ->
+                for (cat in lista){
+                    val total = expenseDB.getByCategory(cat.getId())
+
+                    cat.setTotal(total)
+                }
+            }
+            binding.rviewCategories.layoutManager = LinearLayoutManager(requireContext() )
+            binding.rviewCategories.adapter = RViewCategoriesAdapter(lista)
+        }
+        catch (e:Exception){
+            val a = e
+            val b = a
+        }
+
+
+
+    }
+
+    private fun InitListeners() {
+        binding.createCategory.setOnClickListener {
+            findNavController().navigate(R.id.nav_createcategories)
+        }
     }
 
     override fun onDestroyView() {

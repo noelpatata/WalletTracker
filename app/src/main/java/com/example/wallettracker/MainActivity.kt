@@ -41,9 +41,6 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        binding.appBarMain.fab.setOnClickListener { view ->
-            navController.navigate(R.id.nav_createexpense)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

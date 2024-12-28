@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
+import java.io.Closeable
 import java.lang.String
 import java.sql.SQLException
 import kotlin.Int
@@ -16,12 +17,13 @@ import kotlin.Throws
 import kotlin.arrayOf
 
 
-class ExpenseCategoryDAO {
+class ExpenseCategoryDAO : Closeable {
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
-    fun ExpenseDAO(context: Context?) {
+    constructor(context: Context?) {
         dbHelper = DatabaseHelper(context)
+        database = dbHelper?.getWritableDatabase()
     }
 
     // Open the database for read/write operations
@@ -31,38 +33,38 @@ class ExpenseCategoryDAO {
     }
 
     // Close the database
-    fun close() {
+    override fun close() {
         dbHelper?.close()
     }
 
     // Insert a new Expense into the database
-    fun insertExpense(Expense: ExpenseCategory): Long {
+    fun insert(Expense: ExpenseCategory): Long {
         val values = ContentValues()
         values.put("name", Expense.getName())
         return database!!.insert("ExpenseCategory", null, values)
     }
 
     // Update an existing Expense in the database
-    fun updateExpense(Expense: ExpenseCategory): Int {
+    fun update(Expense: ExpenseCategory): Int {
         val values = ContentValues()
         values.put("name", Expense.getName())
         return database!!.update("ExpenseCategory", values, "_id = ?", arrayOf(String.valueOf(Expense.getId())))
     }
 
     // Delete a Expense from the database
-    fun deleteExpense(ExpenseId: Long) {
+    fun delete(ExpenseId: Long) {
         database!!.delete("ExpenseCategory", "_id = ?", arrayOf(ExpenseId.toString()))
     }
 
     // Retrieve a list of all Expenses from the database
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getAllExpenses(): List<ExpenseCategory>? {
+    fun getAll(): List<ExpenseCategory>? {
         val ExpenseList: MutableList<ExpenseCategory> = ArrayList<ExpenseCategory>()
         val cursor = database!!.query("ExpenseCategory", null, null, null, null, null, null)
         if (cursor != null) {
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
-                val Expense: ExpenseCategory = cursorToExpense(cursor)
+                val Expense: ExpenseCategory = cursor(cursor)
                 ExpenseList.add(Expense)
                 cursor.moveToNext()
             }
@@ -73,7 +75,7 @@ class ExpenseCategoryDAO {
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
-    private fun cursorToExpense(cursor: Cursor): ExpenseCategory {
+    private fun cursor(cursor: Cursor): ExpenseCategory {
         val Expense = ExpenseCategory()
         Expense.setName(cursor.getString(cursor.getColumnIndex("name")))
 

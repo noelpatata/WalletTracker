@@ -79,6 +79,19 @@ class ExpenseDAO : Closeable{
         }
         return ExpenseList
     }
+    @SuppressLint("Range")
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getByCategory(categoryId: Long): Double {
+        val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
+        val cursor = database!!.rawQuery("SELECT SUM(price) as total from Expense where category = ${categoryId}", null)
+        var total: Double = 0.0
+        if(cursor.count > 0){
+            cursor.moveToFirst()
+            total = cursor.getDouble(cursor.getColumnIndex("total"))
+        }
+
+        return total
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
