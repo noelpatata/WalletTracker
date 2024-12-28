@@ -1,12 +1,11 @@
 package com.example.wallettracker.ui.settings
 
+import com.example.wallettracker.ui.pickers.TimePickerFragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 
 class CreateExpenseFragment : Fragment() {
@@ -22,16 +21,13 @@ class CreateExpenseFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val createExpenseViewModel =
-            ViewModelProvider(this).get(CreateExpenseViewModel::class.java)
 
         _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-        val textView: TextView = binding.textSettings
-        createExpenseViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        binding.pickTime.setOnClickListener {
+            TimePickerFragment().show(parentFragmentManager, "timePicker")
         }
+
         return root
     }
 
