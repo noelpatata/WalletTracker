@@ -1,4 +1,4 @@
-package com.example.wallettracker.ui.settings
+package com.example.wallettracker.ui.createExpense
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

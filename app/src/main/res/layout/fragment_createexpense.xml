@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.settings.CreateExpenseFragment">
+    tools:context=".ui.createExpense.CreateExpenseFragment">
 
 
     <LinearLayout
@@ -18,38 +18,100 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/lblPrecio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_precio" />
         <EditText
             android:id="@+id/input_price"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:inputType="numberDecimal"
              />
+        <TextView
+            android:id="@+id/lblFecha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_fecha" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_margin="10sp"
+
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
-            <Button
-                android:id="@+id/pickTime"
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/pickDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pick time" />
+                android:clickable="true"
+                android:src="@drawable/ic_date" />
             <EditText
-                android:id="@+id/input_datetime"
+                android:id="@+id/input_date"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:inputType="numberDecimal"
+                android:inputType="date"
                 />
-
-
         </LinearLayout>
+        <TextView
+            android:id="@+id/lblTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_precio" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+
+                tools:layout_editor_absoluteX="1dp"
+                tools:layout_editor_absoluteY="1dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/pickTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:src="@drawable/ic_time"
+                    android:focusable="true" />
+                <EditText
+                    android:id="@+id/input_time"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:inputType="time"
+                    />
+
+
+            </LinearLayout>
+        <TextView
+            android:id="@+id/lblCategoria"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_categoria" />
+        <Spinner
+            android:id="@+id/comboCategorias"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/createExpense"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:src="@drawable/ic_check"
+            android:layout_gravity="center"/>
+
 
     </LinearLayout>
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
