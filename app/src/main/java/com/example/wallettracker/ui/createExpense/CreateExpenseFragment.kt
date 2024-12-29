@@ -41,9 +41,12 @@ class CreateExpenseFragment : Fragment() {
 
 
         //app logic
+        val args : Bundle = requireArguments()
+        val categoryId = args.getLong("catId")
         try {
             InitListeners()
             LoadData()
+            SelectCategory(categoryId)
         }
         catch(e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
@@ -53,6 +56,14 @@ class CreateExpenseFragment : Fragment() {
 
 
         return root
+    }
+
+    private fun SelectCategory(categoryId: Long) {
+        try{
+
+        }catch (e: Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -20,5 +20,6 @@
     <string name="menu_createcategories">Create Category</string>
     <string name="button_createcategory">Creates a category</string>
     <string name="button_savechanges">Saves changes</string>
+    <string name="button_delete">Deletes the category</string>
 
 </resources>

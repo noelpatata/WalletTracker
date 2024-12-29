@@ -81,4 +81,18 @@ class ExpenseCategoryDAO : Closeable {
 
         return Expense
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getById(catId: Long): ExpenseCategory {
+        var cat:ExpenseCategory? = null
+        val cursor = database!!.rawQuery("SELECT * FROM ExpenseCategory WHERE _id = ${catId}", null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            if(cursor.isFirst){
+                cat = cursor(cursor)
+            }
+            cursor.close()
+        }
+        return cat!!
+    }
 }

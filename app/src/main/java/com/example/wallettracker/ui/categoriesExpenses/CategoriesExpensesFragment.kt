@@ -1,14 +1,21 @@
 package com.example.wallettracker.ui.categoriesExpenses
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.wallettracker.R
+import com.example.wallettracker.data.Expense.ExpenseCategory
+import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
 import com.example.wallettracker.data.ExpenseCategory.Expense
 import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
@@ -34,14 +41,12 @@ class CategoriesExpensesFragment() : Fragment() {
             ViewModelProvider(this).get(CategoriesExpensesViewModel::class.java)
 
         _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
+
+
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
         InitListeners()
         LoadData()
-
-
-
-
 
 
 
@@ -51,8 +56,30 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadData() {
+        LoadCategoryInfo()
+        LoadExpenses()
+    }
 
+    @SuppressLint("NewApi")
+    private fun LoadCategoryInfo() {
+        var catName: String = ""
+        try {
+            var cat: ExpenseCategory
+            ExpenseCategoryDAO(requireContext()).use { sCat ->
+                cat = sCat.getById(categoryId)
+            }
+            catName = cat.getName()
 
+        }
+        catch (e:Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+
+        binding.inputName.setText(catName)
+    }
+
+    @SuppressLint("NewApi")
+    private fun LoadExpenses() {
         try {
             var lista: List<Expense>
             ExpenseDAO(requireContext()).use { sCat ->
@@ -62,26 +89,52 @@ class CategoriesExpensesFragment() : Fragment() {
             binding.rviewExpenses.adapter = RViewExpensesAdapter(lista)
         }
         catch (e:Exception){
-            val a = e
-            val b = a
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
-
-
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun InitListeners() {
         binding.saveChanges.setOnClickListener {
+            SaveChanges()
             LoadData()
+        }
+        binding.addExpense.setOnClickListener{
+            val bundle = Bundle()
+            bundle.putLong("catId", categoryId)
+            findNavController().navigate(R.id.nav_createexpense, bundle)
         }
         binding.delete.setOnClickListener {
             DeleteCategory()
         }
     }
 
+    private fun SaveChanges() {
+        try {
+            val cat = GetCategory()
+            ExpenseCategoryDAO(requireContext()).use { sCat ->
+                sCat.update(cat)
+            }
+        }catch (e: Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun GetCategory(): ExpenseCategory {
+        val cat = ExpenseCategory(categoryId)
+        cat.setName(binding.inputName.text.toString())
+        return cat
+    }
+
     private fun DeleteCategory() {
-        TODO("Not yet implemented")
+        try {
+            ExpenseCategoryDAO(requireContext()).use { sCat ->
+                sCat.delete(categoryId)
+            }
+            findNavController().navigate(R.id.nav_categories)
+        }catch (e:Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onDestroyView() {
