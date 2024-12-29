@@ -79,9 +79,26 @@ class ExpenseDAO : Closeable{
         }
         return ExpenseList
     }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getByCategory(catId: Long): List<Expense>? {
+        val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
+        val cursor = database!!.rawQuery("SELECT * from Expense where category = ${catId}", null)
+
+        if (cursor != null) {
+            cursor.moveToFirst()
+            while (!cursor.isAfterLast) {
+                val Expense: Expense = cursorToExpense(cursor)
+                ExpenseList.add(Expense)
+                cursor.moveToNext()
+            }
+            cursor.close()
+        }
+        return ExpenseList
+    }
     @SuppressLint("Range")
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getByCategory(categoryId: Long): Double {
+    fun getByTotalCategory(categoryId: Long): Double {
+        val catid = categoryId.toInt()
         val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
         val cursor = database!!.rawQuery("SELECT SUM(price) as total from Expense where category = ${categoryId}", null)
         var total: Double = 0.0
@@ -96,7 +113,7 @@ class ExpenseDAO : Closeable{
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun cursorToExpense(cursor: Cursor): Expense {
-        val Expense = Expense()
+        val Expense = Expense(cursor.getLong(cursor.getColumnIndex("_id")))
         Expense.setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
 
         val datestring = cursor.getString(cursor.getColumnIndex("expenseDate"))

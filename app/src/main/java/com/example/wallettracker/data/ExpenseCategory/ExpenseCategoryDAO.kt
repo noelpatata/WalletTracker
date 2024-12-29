@@ -76,7 +76,7 @@ class ExpenseCategoryDAO : Closeable {
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun cursor(cursor: Cursor): ExpenseCategory {
-        val Expense = ExpenseCategory()
+        val Expense = ExpenseCategory(cursor.getLong(cursor.getColumnIndex("_id")))
         Expense.setName(cursor.getString(cursor.getColumnIndex("name")))
 
         return Expense

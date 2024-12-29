@@ -1,10 +1,12 @@
 package com.example.wallettracker.ui.adapters
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +33,14 @@ class RViewCategoriesAdapter(list: List<ExpenseCategory>) : RecyclerView.Adapter
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
         holder.categoryName.text = list[position].getName()
         holder.categoryTotal.text = list[position].getTotal().toString()
+
+        //listeners
+        holder.itemView.setOnClickListener {
+            val catId = list[position].getId()
+            val bundle = Bundle()
+            bundle.putLong("catId", catId)
+            holder.itemView.findNavController().navigate(R.id.nav_categoriesexpenses, bundle)
+        }
 
     }
 }

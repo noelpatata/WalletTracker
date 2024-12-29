@@ -13,7 +13,7 @@ import com.example.wallettracker.data.Expense.ExpenseCategory
 class ComboCategoriasAdapter(private val context: Context, private val items: List<ExpenseCategory>) : BaseAdapter() {
     override fun getCount(): Int = items.size
 
-    override fun getItem(position: Int): Any = items[position]
+    override fun getItem(position: Int): ExpenseCategory = items[position]
 
     override fun getItemId(position: Int): Long = position.toLong()
 

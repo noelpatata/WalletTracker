@@ -64,7 +64,7 @@ class CategoriesFragment : Fragment() {
             }
             ExpenseDAO(requireContext()).use{expenseDB ->
                 for (cat in lista){
-                    val total = expenseDB.getByCategory(cat.getId())
+                    val total = expenseDB.getByTotalCategory(cat.getId())
 
                     cat.setTotal(total)
                 }

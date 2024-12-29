@@ -2,12 +2,15 @@ package com.example.wallettracker.data.Expense
 
 
 class ExpenseCategory {
-    private val id: Long = 0
+    private var id: Long = 0
     private var name: String = ""
     private var total: Double = 0.0
     constructor()
     constructor(name: String) {
         this.name = name
+    }
+    constructor(id: Long) {
+        this.id = id
     }
     fun getId(): Long{
         return this.id

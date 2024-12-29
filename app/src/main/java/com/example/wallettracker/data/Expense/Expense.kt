@@ -4,7 +4,7 @@ import java.sql.Date
 
 
 class Expense {
-    private val id: Long = 0
+    private var id: Long = 0
     private var price: Double? = null
     private var expenseDate: Date? = null
     private var category: Long? = null
@@ -13,6 +13,9 @@ class Expense {
         this.price = price
         this.expenseDate = expenseDate
         this.category = category
+    }
+    constructor(id: Long) {
+        this.id = id
     }
     fun getId(): Long{
         return this.id

@@ -103,8 +103,6 @@ class CreateExpenseFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun Save() {
         try {
-            val selectedCategory = binding.comboCategorias.adapter.getItem(binding.comboCategorias.selectedItemPosition) as String
-
             val expense = GetExpense()
 
             ExpenseDAO(requireContext()).use { expenseDB ->
@@ -141,9 +139,9 @@ class CreateExpenseFragment : Fragment() {
                 date = Date.valueOf(dateString)
             }
 
-            //todo deal with harcoded categoryId
-            val catId: Long = 0
-
+            val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
+            val category = adapter.getItem(binding.comboCategorias.selectedItemPosition) as ExpenseCategory
+            val catId: Long = category.getId()
             val expense = Expense(price, date, catId)
             return expense
         }
