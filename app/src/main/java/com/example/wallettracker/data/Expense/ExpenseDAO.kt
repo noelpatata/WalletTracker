@@ -63,22 +63,18 @@ class ExpenseDAO : Closeable{
     fun delete(ExpenseId: Long) {
         database!!.delete("Expense", "_id = ?", arrayOf(ExpenseId.toString()))
     }
-
-    // Retrieve a list of all Expenses from the database
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getAllExpenses(): List<Expense>? {
-        val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
-        val cursor = database!!.query("Expense", null, null, null, null, null, null)
+    fun getById(catId: Long): Expense {
+        var cat: Expense? = null
+        val cursor = database!!.rawQuery("SELECT * FROM Expense WHERE _id = ${catId}", null)
         if (cursor != null) {
             cursor.moveToFirst()
-            while (!cursor.isAfterLast) {
-                val Expense: Expense = cursor(cursor)
-                ExpenseList.add(Expense)
-                cursor.moveToNext()
+            if(cursor.isFirst){
+                cat = cursor(cursor)
             }
             cursor.close()
         }
-        return ExpenseList
+        return cat!!
     }
     @RequiresApi(Build.VERSION_CODES.O)
     fun getByCategory(catId: Long): List<Expense>? {
@@ -99,9 +95,8 @@ class ExpenseDAO : Closeable{
     @SuppressLint("Range")
     @RequiresApi(Build.VERSION_CODES.O)
     fun getByTotalCategory(categoryId: Long): Double {
-        val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
         val cursor = database!!.rawQuery("SELECT SUM(price) as total from Expense where category = ${categoryId}", null)
-        var total: Double = 0.0
+        var total = 0.0
         if(cursor.count > 0){
             cursor.moveToFirst()
             total = cursor.getDouble(cursor.getColumnIndex("total"))
@@ -125,17 +120,5 @@ class ExpenseDAO : Closeable{
         return Expense
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getById(catId: Long): Expense {
-        var cat: Expense? = null
-        val cursor = database!!.rawQuery("SELECT * FROM Expense WHERE _id = ${catId}", null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            if(cursor.isFirst){
-                cat = cursor(cursor)
-            }
-            cursor.close()
-        }
-        return cat!!
-    }
+
 }

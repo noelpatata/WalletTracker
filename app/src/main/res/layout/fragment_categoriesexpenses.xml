@@ -33,6 +33,7 @@
                 android:id="@+id/input_name"
                 android:layout_height="wrap_content"
                 android:layout_width="300dp"
+                android:textSize="40sp"
                 android:inputType="text"
                 />
             <com.google.android.material.floatingactionbutton.FloatingActionButton
