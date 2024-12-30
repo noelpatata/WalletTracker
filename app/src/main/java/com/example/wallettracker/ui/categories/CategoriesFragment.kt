@@ -17,7 +17,6 @@ import com.example.wallettracker.data.Expense.ExpenseCategory
 import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
 import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
-import com.example.wallettracker.databinding.FragmentHomeBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 import kotlin.math.exp
 

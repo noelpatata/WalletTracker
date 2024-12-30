@@ -3,13 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_categories">
 
-    <fragment
-        android:id="@+id/nav_home"
-        android:name="com.example.wallettracker.ui.home.HomeFragment"
-        android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/nav_settings"
@@ -20,8 +15,13 @@
     <fragment
         android:id="@+id/nav_categories"
         android:name="com.example.wallettracker.ui.categories.CategoriesFragment"
-        android:label="@string/menu_categories"
+        android:label="@string/menu_home"
         tools:layout="@layout/fragment_categories" />
+    <fragment
+        android:id="@+id/nav_importsheet"
+        android:name="com.example.wallettracker.ui.importSheet.ImportSheet"
+        android:label="@string/menu_sheet"
+        tools:layout="@layout/fragment_import_sheet" />
     <fragment
         android:id="@+id/nav_categoriesexpenses"
         android:name="com.example.wallettracker.ui.categoriesExpenses.CategoriesExpensesFragment"

@@ -8,6 +8,7 @@
     <string name="action_settings">Settings</string>
 
     <string name="menu_home">Home</string>
+    <string name="menu_sheet">.CSV import</string>
     <string name="menu_categories" tools:ignore="ExtraTranslation">Categories</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_createexpense">Create Expense</string>

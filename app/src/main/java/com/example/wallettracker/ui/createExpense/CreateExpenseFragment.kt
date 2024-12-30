@@ -25,6 +25,8 @@ import java.time.format.DateTimeFormatter
 
 class CreateExpenseFragment : Fragment() {
 
+    var isFromCatForm: Boolean = false
+
     private var _binding: FragmentCreateexpenseBinding? = null
 
     private val binding get() = _binding!!
@@ -41,8 +43,14 @@ class CreateExpenseFragment : Fragment() {
 
 
         //app logic
-        val args : Bundle = requireArguments()
-        val categoryId = args.getLong("catId")
+        var categoryId: Long = -1
+        val args : Bundle? = arguments
+        if(args != null){
+            categoryId = args.getLong("catId")
+            isFromCatForm = categoryId != null
+        }
+
+
         try {
             InitListeners()
             LoadData()
@@ -60,7 +68,10 @@ class CreateExpenseFragment : Fragment() {
 
     private fun SelectCategory(categoryId: Long) {
         try{
-
+            val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
+            val pos = adapter.getById(categoryId)
+            if(pos >= 0)
+                binding.comboCategorias.setSelection(pos)
         }catch (e: Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
@@ -120,7 +131,9 @@ class CreateExpenseFragment : Fragment() {
                 val id = expenseDB.insertExpense(expense)
                 if (id > 0 ){
                     Toast.makeText(requireContext(), "Expense ${id} saved successfully", Toast.LENGTH_LONG).show()
-                    findNavController().navigate(R.id.nav_home)
+                    findNavController().navigate(R.id.nav_categories)
+
+
                 }
             }
         }

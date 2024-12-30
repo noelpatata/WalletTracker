@@ -29,4 +29,13 @@ class ComboCategoriasAdapter(private val context: Context, private val items: Li
 
         return view
     }
+    fun getById(catId: Long): Int{
+        var position = 0
+        for (item in items){
+            if(item.getId() == catId)
+                return position
+            position ++
+        }
+        return -1
+    }
 }
