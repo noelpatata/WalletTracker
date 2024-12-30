@@ -32,7 +32,7 @@ class RViewCategoriesAdapter(list: List<ExpenseCategory>) : RecyclerView.Adapter
     }
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
         holder.categoryName.text = list[position].getName()
-        holder.categoryTotal.text = list[position].getTotal().toString()
+        holder.categoryTotal.text = String.format("%.2f", list[position].getTotal())+"€"
 
         //listeners
         holder.itemView.setOnClickListener {

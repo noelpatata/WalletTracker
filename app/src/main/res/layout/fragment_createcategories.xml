@@ -20,19 +20,27 @@
             android:id="@+id/lblName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             android:text="@string/label_name" />
         <EditText
             android:id="@+id/input_name"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:inputType="text"
+            android:textSize="20sp"
             />
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/createCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
+            android:focusable="true"
             android:src="@drawable/ic_check"
+            app:borderWidth="2dp"
+            android:backgroundTint="@color/white"
+            app:backgroundTint="@color/black"
             android:layout_gravity="center"/>
 
 

@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
+import com.example.wallettracker.data.Expense.ExpenseCategory
 import java.io.Closeable
 import java.lang.String
 import java.sql.Date
@@ -40,7 +41,7 @@ class ExpenseDAO : Closeable{
     }
 
     // Insert a new Expense into the database
-    fun insertExpense(Expense: Expense): Long {
+    fun insert(Expense: Expense): Long {
         val values = ContentValues()
         values.put("price", Expense.getPrice())
         val format = SimpleDateFormat("yyyy-MM-dd")
@@ -50,7 +51,7 @@ class ExpenseDAO : Closeable{
     }
 
     // Update an existing Expense in the database
-    fun updateExpense(Expense: Expense): Int {
+    fun update(Expense: Expense): Int {
         val values = ContentValues()
         values.put("price", Expense.getPrice())
         val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -59,7 +60,7 @@ class ExpenseDAO : Closeable{
     }
 
     // Delete a Expense from the database
-    fun deleteExpense(ExpenseId: Long) {
+    fun delete(ExpenseId: Long) {
         database!!.delete("Expense", "_id = ?", arrayOf(ExpenseId.toString()))
     }
 
@@ -71,7 +72,7 @@ class ExpenseDAO : Closeable{
         if (cursor != null) {
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
-                val Expense: Expense = cursorToExpense(cursor)
+                val Expense: Expense = cursor(cursor)
                 ExpenseList.add(Expense)
                 cursor.moveToNext()
             }
@@ -87,7 +88,7 @@ class ExpenseDAO : Closeable{
         if (cursor != null) {
             cursor.moveToFirst()
             while (!cursor.isAfterLast) {
-                val Expense: Expense = cursorToExpense(cursor)
+                val Expense: Expense = cursor(cursor)
                 ExpenseList.add(Expense)
                 cursor.moveToNext()
             }
@@ -111,13 +112,30 @@ class ExpenseDAO : Closeable{
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
-    private fun cursorToExpense(cursor: Cursor): Expense {
+    private fun cursor(cursor: Cursor): Expense {
         val Expense = Expense(cursor.getLong(cursor.getColumnIndex("_id")))
         Expense.setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
 
         val datestring = cursor.getString(cursor.getColumnIndex("expenseDate"))
         Expense.setDate(Date.valueOf(datestring))
 
+        val categoryId = cursor.getLong(cursor.getColumnIndex("category"))
+        Expense.setCategoryId(categoryId)
+
         return Expense
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getById(catId: Long): Expense {
+        var cat: Expense? = null
+        val cursor = database!!.rawQuery("SELECT * FROM Expense WHERE _id = ${catId}", null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            if(cursor.isFirst){
+                cat = cursor(cursor)
+            }
+            cursor.close()
+        }
+        return cat!!
     }
 }

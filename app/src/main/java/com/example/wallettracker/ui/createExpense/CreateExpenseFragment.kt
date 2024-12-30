@@ -19,6 +19,7 @@ import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import java.sql.Date
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -26,6 +27,7 @@ import java.time.format.DateTimeFormatter
 class CreateExpenseFragment : Fragment() {
 
     var isFromCatForm: Boolean = false
+    var expenseId: Long = 0
 
     private var _binding: FragmentCreateexpenseBinding? = null
 
@@ -48,12 +50,16 @@ class CreateExpenseFragment : Fragment() {
         if(args != null){
             categoryId = args.getLong("catId")
             isFromCatForm = categoryId != null
+
+            expenseId = args.getLong("expenseId")
+
+
         }
 
 
         try {
             InitListeners()
-            LoadData()
+            LoadData(expenseId)
             SelectCategory(categoryId)
         }
         catch(e:Exception){
@@ -78,9 +84,55 @@ class CreateExpenseFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun LoadData() {
+    private fun LoadData(expenseId: Long) {
         LoadDefaultDateTime()
         LoadComboCategorias()
+        if(expenseId > 0 ){
+            val expense = GetExpenseFromSQL()
+            if(expense != null){
+                LoadExpense(expense)
+            }
+        }
+
+        }
+
+    private fun LoadExpense(expense: Expense) {
+        try {
+            //price
+            binding.inputPrice.setText(expense.getPrice().toString())
+
+            //date
+            val format = SimpleDateFormat("yyyy-MM-dd")
+            val stringDate = format.format(expense.getDate())
+            binding.inputDate.setText(stringDate)
+
+            //category
+            val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
+            val position = adapter.getById(expense.getCategoryId())
+            if(position >= 0){
+                binding.comboCategorias.setSelection(position)
+            }
+
+        }
+        catch (e: Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+}
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun GetExpenseFromSQL(): Expense? {
+        try {
+            var expense: Expense? = null
+            ExpenseDAO(requireContext()).use { expenseDB ->
+                expense = expenseDB.getById(expenseId)
+            }
+            return expense
+        }catch (e: Exception){
+
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            return null
+
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -117,9 +169,61 @@ class CreateExpenseFragment : Fragment() {
             ShowDatePickerDialog()
         }
         binding.createExpense.setOnClickListener {
-            Save()
+            val expense = GetExpense()
+            val isValid = CheckValidation(expense)
+            if(isValid){
+                if(expenseId > 0){
+                    Edit()
+                }else{
+                    Save()
+                }
+            }else{
+                Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+            }
+
+
+        }
+        if (expenseId > 0){
+            binding.delete.setOnClickListener {
+                Delete(expenseId)
+            }
         }
 
+
+    }
+
+    private fun CheckValidation(expense: Expense): Boolean {
+        if(expense.getPrice() <= 0){
+            return false
+        }
+
+        return true
+    }
+
+    private fun Delete(expenseId: Long) {
+        try {
+            ExpenseDAO(requireContext()).use { expenseDB ->
+                expenseDB.delete(expenseId)
+            }
+            findNavController().navigate(R.id.nav_categories)
+        }
+        catch (e: Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun Edit() {
+        try {
+            val expense = GetExpense()
+
+            ExpenseDAO(requireContext()).use { expenseDB ->
+                expenseDB.update(expense)
+                findNavController().navigate(R.id.nav_categories)
+            }
+        }catch (e:Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -128,9 +232,8 @@ class CreateExpenseFragment : Fragment() {
             val expense = GetExpense()
 
             ExpenseDAO(requireContext()).use { expenseDB ->
-                val id = expenseDB.insertExpense(expense)
+                val id = expenseDB.insert(expense)
                 if (id > 0 ){
-                    Toast.makeText(requireContext(), "Expense ${id} saved successfully", Toast.LENGTH_LONG).show()
                     findNavController().navigate(R.id.nav_categories)
 
 

@@ -41,6 +41,9 @@
                 android:layout_width="match_parent"
                 app:fabCustomSize="40dp"
                 android:layout_height="wrap_content"
+                app:borderWidth="2dp"
+                android:backgroundTint="@color/white"
+                app:backgroundTint="@color/black"
                 android:contentDescription="@string/button_savechanges"
                 app:srcCompat="@drawable/ic_check"
                 android:layout_gravity="center"/>
@@ -49,7 +52,7 @@
             android:id="@+id/rview_expenses"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="26dp"
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -61,7 +64,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="26dp"
+            android:padding="20dp"
 
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="1dp"
@@ -75,14 +79,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/button_createexpense"
+                app:borderWidth="2dp"
+                android:backgroundTint="@color/white"
+                app:backgroundTint="@color/black"
                 app:srcCompat="@drawable/ic_add"/>
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="26dp"
                 android:contentDescription="@string/button_delete"
+                app:borderWidth="2dp"
+                android:backgroundTint="@color/white"
+                app:backgroundTint="@color/black"
                 app:srcCompat="@drawable/id_delete"/>
         </LinearLayout>
 

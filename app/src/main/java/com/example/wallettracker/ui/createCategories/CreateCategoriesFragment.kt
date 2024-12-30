@@ -48,8 +48,25 @@ class CreateCategoriesFragment : Fragment() {
 
     private fun InitListeners() {
         binding.createCategory.setOnClickListener {
-            Save()
+            val category = GetCategory()
+            val isValid = CheckValidation(category)
+            if(isValid){
+                Save()
+            }else{
+                Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+
+            }
+
+
         }
+    }
+
+    private fun CheckValidation(category: ExpenseCategory): Boolean {
+        if(category.getName().isEmpty()){
+            return false
+        }
+
+        return true
     }
 
     private fun Save() {
@@ -58,7 +75,6 @@ class CreateCategoriesFragment : Fragment() {
             ExpenseCategoryDAO(requireContext()).use { categoryDB ->
                 val id = categoryDB.insert(cat)
                 if (id > 0 ){
-                    Toast.makeText(requireContext(), "Category ${id} saved successfully", Toast.LENGTH_LONG).show()
                     findNavController().navigate(R.id.nav_categories)
                 }
             }

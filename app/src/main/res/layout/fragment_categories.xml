@@ -27,5 +27,8 @@
         android:contentDescription="@string/button_createcategory"
         app:srcCompat="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:borderWidth="2dp"
+        android:backgroundTint="@color/white"
+        app:backgroundTint="@color/black"
         app:layout_constraintEnd_toEndOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

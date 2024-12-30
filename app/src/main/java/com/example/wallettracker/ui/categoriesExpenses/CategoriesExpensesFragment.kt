@@ -96,8 +96,16 @@ class CategoriesExpensesFragment() : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun InitListeners() {
         binding.saveChanges.setOnClickListener {
-            SaveChanges()
-            LoadData()
+            val category = GetCategory()
+            val isValid = CheckValidation(category)
+            if (isValid){
+                SaveChanges()
+                LoadData()
+            }
+            else{
+                Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+            }
+
         }
         binding.addExpense.setOnClickListener{
             val bundle = Bundle()
@@ -107,6 +115,13 @@ class CategoriesExpensesFragment() : Fragment() {
         binding.delete.setOnClickListener {
             DeleteCategory()
         }
+    }
+
+    private fun CheckValidation(category: ExpenseCategory): Boolean {
+        if(category.getName().isNullOrEmpty()){
+            return false
+        }
+        return true
     }
 
     private fun SaveChanges() {

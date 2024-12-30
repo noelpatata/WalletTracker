@@ -22,21 +22,31 @@
             android:id="@+id/lblPrecio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             android:text="@string/label_precio" />
         <EditText
             android:id="@+id/input_price"
+            android:layout_marginTop="26dp"
+            android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:inputType="numberDecimal"
              />
         <TextView
             android:id="@+id/lblFecha"
+            android:layout_marginTop="36dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             android:text="@string/label_fecha" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
             android:orientation="horizontal"
 
             tools:layout_editor_absoluteX="1dp"
@@ -49,6 +59,11 @@
                 android:id="@+id/pickDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                app:fabSize="mini"
+                app:borderWidth="2dp"
+                android:backgroundTint="@color/white"
+                app:backgroundTint="@color/black"
                 android:clickable="true"
                 android:src="@drawable/ic_date" />
             <EditText
@@ -56,26 +71,63 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:inputType="date"
+                android:textSize="20sp"
                 />
         </LinearLayout>
 
         <TextView
             android:id="@+id/lblCategoria"
+            android:layout_marginTop="36dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             android:text="@string/label_categoria" />
         <Spinner
             android:id="@+id/comboCategorias"
+            android:layout_marginTop="26dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/createExpense"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:src="@drawable/ic_check"
-            android:layout_gravity="center"/>
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+
+            tools:layout_editor_absoluteX="1dp"
+            tools:layout_editor_absoluteY="1dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/createExpense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_check"
+                android:backgroundTint="@color/white"
+                app:borderWidth="2dp"
+                app:backgroundTint="@color/black"
+                android:layout_gravity="center"/>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:contentDescription="@string/button_deleteExpense"
+                app:borderWidth="2dp"
+                android:backgroundTint="@color/white"
+                app:backgroundTint="@color/black"
+                app:srcCompat="@drawable/id_delete"/>
+        </LinearLayout>
+
+
 
 
     </LinearLayout>
