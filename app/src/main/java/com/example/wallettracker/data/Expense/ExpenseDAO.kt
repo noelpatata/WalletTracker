@@ -14,6 +14,7 @@ import java.lang.String
 import java.sql.Date
 import java.sql.SQLException
 import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlin.Int
 import kotlin.Long
 import kotlin.Throws
@@ -44,7 +45,7 @@ class ExpenseDAO : Closeable{
     fun insert(Expense: Expense): Long {
         val values = ContentValues()
         values.put("price", Expense.getPrice())
-        val format = SimpleDateFormat("yyyy-MM-dd")
+        val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         values.put("expenseDate", format.format(Expense.getDate()))
         values.put("category", Expense.getCategoryId())
         return database!!.insert("Expense", null, values)
@@ -111,8 +112,11 @@ class ExpenseDAO : Closeable{
         val Expense = Expense(cursor.getLong(cursor.getColumnIndex("_id")))
         Expense.setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
 
-        val datestring = cursor.getString(cursor.getColumnIndex("expenseDate"))
-        Expense.setDate(Date.valueOf(datestring))
+        val dateString = cursor.getString(cursor.getColumnIndex("expenseDate"))
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val parsedDate = format.parse(dateString)
+        val sqlDate = java.sql.Date(parsedDate.time)
+        Expense.setDate(sqlDate)
 
         val categoryId = cursor.getLong(cursor.getColumnIndex("category"))
         Expense.setCategoryId(categoryId)

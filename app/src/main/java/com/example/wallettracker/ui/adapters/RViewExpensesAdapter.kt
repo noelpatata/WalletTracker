@@ -14,6 +14,7 @@ import com.example.wallettracker.data.Expense.ExpenseCategory
 import com.example.wallettracker.data.ExpenseCategory.Expense
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpensesAdapter.ExpenseViewHolder>() {
     val list = list
@@ -35,7 +36,7 @@ class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpe
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         holder.expensePrice.text = String.format("%.2f", list[position].getPrice())+"€"
-        val format = SimpleDateFormat("yyyy-MM-dd")
+        val format = SimpleDateFormat("dd 'de' MMMM 'del' yyyy", Locale("es", "ES"))
         holder.expenseDate.text = format.format(list[position].getDate())
 
         //listeners

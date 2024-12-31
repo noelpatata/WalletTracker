@@ -12,7 +12,7 @@
     <string name="menu_categories" tools:ignore="ExtraTranslation">Categories</string>
     <string name="menu_categoriesexpenses">Expenses</string>
     <string name="menu_settings">Settings</string>
-    <string name="menu_createexpense">Create Expense</string>
+    <string name="menu_createexpense">Expense</string>
     <string name="button_createexpense">Creates an expense</string>
     <string name="label_precio">Precio</string>
     <string name="label_fecha">Fecha</string>

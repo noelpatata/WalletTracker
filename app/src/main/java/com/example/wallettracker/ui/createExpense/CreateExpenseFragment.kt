@@ -85,6 +85,7 @@ class CreateExpenseFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadData(expenseId: Long) {
+        binding.inputDate.isEnabled = false
         LoadDefaultDateTime()
         LoadComboCategorias()
         if(expenseId > 0 ){
@@ -187,6 +188,9 @@ class CreateExpenseFragment : Fragment() {
             binding.delete.setOnClickListener {
                 Delete(expenseId)
             }
+        }
+        else{
+            binding.delete.visibility = View.GONE
         }
 
 

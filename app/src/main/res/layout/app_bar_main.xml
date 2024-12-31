@@ -16,8 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/gray"
-            app:popupTheme="@style/Theme.WalletTracker.PopupOverlay" />
+            android:background="@color/gray" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

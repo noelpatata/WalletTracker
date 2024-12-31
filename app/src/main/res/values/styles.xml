@@ -1,0 +1,5 @@
+<resources>
+    <style name="AppTheme.MenuItemText" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="android:textColor">@color/red</item> <!-- Red text color -->
+    </style>
+</resources>
