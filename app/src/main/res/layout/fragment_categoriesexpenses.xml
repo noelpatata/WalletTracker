@@ -41,18 +41,20 @@
                 android:layout_marginStart="16dp"
                 android:layout_width="match_parent"
                 app:fabCustomSize="40dp"
+                android:layout_marginTop="10sp"
                 android:layout_height="wrap_content"
                 app:borderWidth="2dp"
                 android:backgroundTint="@color/white"
                 app:backgroundTint="@color/black"
                 android:contentDescription="@string/button_savechanges"
                 app:srcCompat="@drawable/ic_check"
+
                 android:layout_gravity="center"/>
         </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rview_expenses"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="500sp"
             android:layout_marginTop="26dp"
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="1dp"

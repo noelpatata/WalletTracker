@@ -79,7 +79,7 @@ class ExpenseDAO : Closeable{
     @RequiresApi(Build.VERSION_CODES.O)
     fun getByCategory(catId: Long): List<Expense>? {
         val ExpenseList: MutableList<Expense> = ArrayList<Expense>()
-        val cursor = database!!.rawQuery("SELECT * from Expense where category = ${catId} ORDER BY expenseDate DESC", null)
+        val cursor = database!!.rawQuery("SELECT * from Expense where category = ${catId} ORDER BY _id DESC", null)
 
         if (cursor != null) {
             cursor.moveToFirst()
