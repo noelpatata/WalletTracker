@@ -61,15 +61,19 @@ class CategoriesFragment : Fragment() {
             ExpenseCategoryDAO(requireContext()).use { sCat ->
                 lista = sCat.getAll()!!
             }
+            var totales = 0.0
             ExpenseDAO(requireContext()).use{expenseDB ->
                 for (cat in lista){
                     val total = expenseDB.getByTotalCategory(cat.getId())
 
                     cat.setTotal(total)
+
+                    totales += total
                 }
             }
             binding.rviewCategories.layoutManager = LinearLayoutManager(requireContext() )
             binding.rviewCategories.adapter = RViewCategoriesAdapter(lista)
+            binding.lblTotal.text = String.format("%.2f",totales) + "€"
         }
         catch (e:Exception){
             val a = e

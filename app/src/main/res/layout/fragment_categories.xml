@@ -5,6 +5,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.categories.CategoriesFragment">
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_marginTop="22dp"
+        android:padding="16dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/frameLayout"
+        android:background="@drawable/roundedshape">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/linearLayo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+            <TextView
+                android:id="@+id/label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:text="Total: "
+                tools:layout_editor_absoluteX="119dp"
+                tools:layout_editor_absoluteY="142dp"
+
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/rview_categories"/>
+            <TextView
+                android:id="@+id/lblTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:text="00.00€"
+                tools:layout_editor_absoluteX="119dp"
+                tools:layout_editor_absoluteY="142dp"
+
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/rview_categories"/>
+        </LinearLayout>
+    </FrameLayout>
+
 
 
     <androidx.recyclerview.widget.RecyclerView
@@ -17,7 +65,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/frameLayout"/>
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/createCategory"
         android:layout_width="wrap_content"
@@ -31,4 +79,6 @@
         android:backgroundTint="@color/white"
         app:backgroundTint="@color/black"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
