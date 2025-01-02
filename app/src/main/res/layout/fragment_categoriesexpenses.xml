@@ -35,6 +35,7 @@
                 android:layout_width="300dp"
                 android:textSize="40sp"
                 android:inputType="text"
+                android:gravity="center_horizontal"
                 />
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/saveChanges"
