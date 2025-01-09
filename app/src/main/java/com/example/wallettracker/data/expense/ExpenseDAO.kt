@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.expenseCategory
+package com.example.wallettracker.data.expense
 
 import android.annotation.SuppressLint
 import android.content.ContentValues

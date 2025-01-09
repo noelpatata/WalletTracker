@@ -11,8 +11,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
-import com.example.wallettracker.data.expense.ExpenseCategory
+import com.example.wallettracker.data.LoginRequest
+import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
 
 class CreateCategoriesFragment : Fragment() {
@@ -22,6 +24,9 @@ class CreateCategoriesFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+
+    private lateinit var expenseCategoryDAO: ExpenseCategoryDAO
+    private val userId = 1
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -33,7 +38,8 @@ class CreateCategoriesFragment : Fragment() {
             ViewModelProvider(this).get(CreateCategoriesViewModel::class.java)
 
         _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
-
+        val credentials = LoginRequest("hugo", "noel")
+        expenseCategoryDAO = ExpenseCategoryDAO(credentials)
 
         InitListeners()
 
@@ -70,12 +76,22 @@ class CreateCategoriesFragment : Fragment() {
     private fun Save() {
         try{
             val cat = GetCategory()
-            bakExpenseCategoryDAO(requireContext()).use { categoryDB ->
-                val id = categoryDB.insert(cat)
-                if (id > 0 ){
-                    findNavController().navigate(R.id.nav_categories)
+            expenseCategoryDAO.login(
+                onSuccess = {
+                    expenseCategoryDAO.createExpenseCategories(
+                        userId,
+                        cat,
+                        onSuccess = { categoryList ->
+                            findNavController().navigate(R.id.nav_categories)
+                        },
+                        onFailure = { error ->
+                            showError("Error creating category: $error")
+                        })
+                },
+                onFailure = { error ->
+                    showError("Login error: $error")
                 }
-            }
+            )
         }
         catch (e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
@@ -89,5 +105,8 @@ class CreateCategoriesFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 }

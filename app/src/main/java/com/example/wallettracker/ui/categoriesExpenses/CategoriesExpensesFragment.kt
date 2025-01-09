@@ -13,10 +13,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
-import com.example.wallettracker.data.expense.ExpenseCategory
+import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
-import com.example.wallettracker.data.expenseCategory.Expense
-import com.example.wallettracker.data.expenseCategory.ExpenseDAO
+import com.example.wallettracker.data.expense.Expense
+import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
 

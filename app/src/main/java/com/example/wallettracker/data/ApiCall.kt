@@ -5,7 +5,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiCall {
-    private const val BASE_URL = "http://192.168.33.96:8081/"
+    private const val BASE_URL = "http://192.168.1.137:8081"
 
     val expenseCategory: ExpenseCategoryEPs by lazy {
         Retrofit.Builder()
@@ -15,11 +15,11 @@ object ApiCall {
             .create(ExpenseCategoryEPs::class.java)
     }
 
-    val expense: ExpenseAPI by lazy {
+    val expense: ExpenseCategoryEPs by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(ExpenseAPI::class.java)
+            .create(ExpenseCategoryEPs::class.java)
     }
 }

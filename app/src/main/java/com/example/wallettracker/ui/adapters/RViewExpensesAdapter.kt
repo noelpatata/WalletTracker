@@ -10,7 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
-import com.example.wallettracker.data.expenseCategory.Expense
+import com.example.wallettracker.data.expense.Expense
 import java.text.SimpleDateFormat
 import java.util.Locale
 

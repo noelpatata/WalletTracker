@@ -55,7 +55,6 @@ class CategoriesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadData() {
-        // Log in and fetch data from the API
         expenseCategoryDAO.login(
             onSuccess = {
                 expenseCategoryDAO.getExpenseCategories(userId,

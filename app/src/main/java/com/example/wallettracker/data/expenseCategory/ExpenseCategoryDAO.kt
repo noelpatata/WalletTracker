@@ -67,4 +67,41 @@ class ExpenseCategoryDAO(private val credentials: LoginRequest) {
             }
         })
     }
+    fun createExpenseCategories(
+        userId: Int,
+        category: ExpenseCategory,
+        onSuccess: (ExpenseCategory) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        if (token == null) {
+            onFailure("Token not available. Login first.")
+            return
+        }
+        val categoryRequest = ExpenseCategoryRequest(category.getName(), userId)
+        ApiCall.expenseCategory.createExpenseCategories("Bearer $token", userId, categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
+            override fun onResponse(
+                call: Call<ExpenseCategoryResponse>,
+                response: Response<ExpenseCategoryResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val catFromResponse = response.body()
+                    if (catFromResponse != null) {
+                        val expenseCategory = ExpenseCategory(catFromResponse.id).apply {
+                            setName(catFromResponse.name)
+                            setTotal(catFromResponse.total)
+                        }
+                        expenseCategory.let {
+                            onSuccess(it)
+                        }
+                    } else {
+                        onFailure("Failed to create category: ${response.message()}")
+                    }
+                }
+
+            }
+            override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
+                onFailure("Failed to create category: ${t.message}")
+            }
+        })
+    }
 }
