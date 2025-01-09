@@ -28,12 +28,12 @@ class RViewCategoriesAdapter(list: List<ExpenseCategory>) : RecyclerView.Adapter
         return list.size
     }
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
-        holder.categoryName.text = list[position].name
-        holder.categoryTotal.text = String.format("%.2f", 200.00)+"€"
+        holder.categoryName.text = list[position].getName()
+        holder.categoryTotal.text = String.format("%.2f", list[position].getTotal())+"€"
 
         //listeners
         holder.itemView.setOnClickListener {
-            val catId = list[position].id
+            val catId = list[position].getId()
             val bundle = Bundle()
             bundle.putLong("catId", catId)
             holder.itemView.findNavController().navigate(R.id.nav_categoriesexpenses, bundle)

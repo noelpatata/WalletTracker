@@ -13,14 +13,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expenseCategory.expenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 
 class CategoriesFragment : Fragment() {
 
     private var _binding: FragmentCategoriesBinding? = null
-    private lateinit var expenseCategoryDAO: expenseCategoryDAO // Retrofit-based DAO
+    private lateinit var expenseCategoryDAO: ExpenseCategoryDAO // Retrofit-based DAO
     private val userId = 1
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -37,7 +37,7 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        expenseCategoryDAO = expenseCategoryDAO("hugo", "noel")
+        expenseCategoryDAO = ExpenseCategoryDAO("hugo", "noel")
         initListeners()
         loadData()
 
@@ -78,7 +78,8 @@ class CategoriesFragment : Fragment() {
         binding.rviewCategories.adapter = RViewCategoriesAdapter(categories)
 
         // Display the total
-        binding.lblTotal.text = String.format("%.2f", 200.00) + "€"
+        val totalSum = categories.sumOf { it.getTotal() }
+        binding.lblTotal.text = String.format("%.2f", totalSum) + "€"
     }
 
     private fun showError(message: String) {

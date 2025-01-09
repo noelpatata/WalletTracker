@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.expense
+package com.example.wallettracker.data.expenseCategory
 
 
 class ExpenseCategory {

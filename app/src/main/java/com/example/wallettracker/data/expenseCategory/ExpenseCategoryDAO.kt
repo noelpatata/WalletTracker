@@ -8,15 +8,14 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class expenseCategoryDAO(private val username: String, private val password: String) {
+class ExpenseCategoryDAO(private val credentials: LoginRequest) {
     private var token: String? = null
 
-    // Login and retrieve the token
     fun login(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        val credentials = "$username:$password"
+        val credentials = "${credentials.username}:${credentials.password}"
         val basicAuth = "Basic " + Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
 
-        ApiCall.api.login(basicAuth).enqueue(object : Callback<LoginResponse> {
+        ApiCall.expenseCategory.login(basicAuth).enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
                     token = response.body()?.token
@@ -32,26 +31,38 @@ class expenseCategoryDAO(private val username: String, private val password: Str
         })
     }
 
-    // Fetch expense categories for a specific user
-    fun getExpenseCategories(userId: Int, onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (String) -> Unit) {
+
+    fun getExpenseCategories(
+        userId: Int,
+        onSuccess: (List<ExpenseCategory>) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         if (token == null) {
             onFailure("Token not available. Login first.")
             return
         }
 
-        ApiCall.api.getExpenseCategories("Bearer $token", userId).enqueue(object : Callback<List<ExpenseCategory>> {
+        ApiCall.expenseCategory.getExpenseCategories("Bearer $token", userId).enqueue(object : Callback<List<ExpenseCategoryResponse>> {
             override fun onResponse(
-                call: Call<List<ExpenseCategory>>,
-                response: Response<List<ExpenseCategory>>
+                call: Call<List<ExpenseCategoryResponse>>,
+                response: Response<List<ExpenseCategoryResponse>>
             ) {
                 if (response.isSuccessful) {
-                    response.body()?.let { onSuccess(it) } ?: onFailure("No data received")
+                    val expenseCategories = response.body()?.map { responseItem ->
+                        ExpenseCategory(responseItem.id).apply {
+                            setName(responseItem.name)
+                            setTotal(responseItem.total)
+                        }
+                    }
+                    expenseCategories?.let {
+                        onSuccess(it)
+                    } ?: onFailure("No data received")
                 } else {
                     onFailure("Failed to fetch categories: ${response.message()}")
                 }
             }
 
-            override fun onFailure(call: Call<List<ExpenseCategory>>, t: Throwable) {
+            override fun onFailure(call: Call<List<ExpenseCategoryResponse>>, t: Throwable) {
                 onFailure("Failed to fetch categories: ${t.message}")
             }
         })
