@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
+import com.example.wallettracker.data.LoginRequest
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
@@ -37,7 +38,8 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        expenseCategoryDAO = ExpenseCategoryDAO("hugo", "noel")
+        val credentials = LoginRequest("hugo", "noel")
+        expenseCategoryDAO = ExpenseCategoryDAO(credentials)
         initListeners()
         loadData()
 
