@@ -10,10 +10,8 @@ import androidx.annotation.RequiresApi
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
-import com.example.wallettracker.data.ExpenseCategory.Expense
+import com.example.wallettracker.data.expenseCategory.Expense
 import java.text.SimpleDateFormat
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpensesAdapter.ExpenseViewHolder>() {

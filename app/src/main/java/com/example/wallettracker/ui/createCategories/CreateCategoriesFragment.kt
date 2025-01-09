@@ -11,10 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
-import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
-import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
-import com.example.wallettracker.databinding.FragmentCategoriesBinding
+import com.example.wallettracker.data.expense.ExpenseCategory
+import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
 
 class CreateCategoriesFragment : Fragment() {
@@ -72,7 +70,7 @@ class CreateCategoriesFragment : Fragment() {
     private fun Save() {
         try{
             val cat = GetCategory()
-            ExpenseCategoryDAO(requireContext()).use { categoryDB ->
+            bakExpenseCategoryDAO(requireContext()).use { categoryDB ->
                 val id = categoryDB.insert(cat)
                 if (id > 0 ){
                     findNavController().navigate(R.id.nav_categories)

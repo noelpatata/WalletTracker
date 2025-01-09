@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.ExpenseCategory
+package com.example.wallettracker.data.expenseCategory
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -8,10 +8,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
-import com.example.wallettracker.data.Expense.ExpenseCategory
 import java.io.Closeable
 import java.lang.String
-import java.sql.Date
 import java.sql.SQLException
 import java.text.SimpleDateFormat
 import java.util.Locale

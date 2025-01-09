@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
@@ -13,17 +12,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
-import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
-import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
+import com.example.wallettracker.data.expenseCategory.ExpenseCategory
+import com.example.wallettracker.data.expenseCategory.expenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
-import kotlin.math.exp
 
 class CategoriesFragment : Fragment() {
 
     private var _binding: FragmentCategoriesBinding? = null
-
+    private lateinit var expenseCategoryDAO: expenseCategoryDAO // Retrofit-based DAO
+    private val userId = 1
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -39,8 +37,9 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        InitListeners()
-        LoadData()
+        expenseCategoryDAO = expenseCategoryDAO("hugo", "noel")
+        initListeners()
+        loadData()
 
 
 
@@ -53,38 +52,41 @@ class CategoriesFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun LoadData() {
-
-
-        try {
-            var lista: List<ExpenseCategory>
-            ExpenseCategoryDAO(requireContext()).use { sCat ->
-                lista = sCat.getAll()!!
+    private fun loadData() {
+        // Log in and fetch data from the API
+        expenseCategoryDAO.login(
+            onSuccess = {
+                expenseCategoryDAO.getExpenseCategories(userId,
+                    onSuccess = { categoryList ->
+                        displayCategories(categoryList)
+                    },
+                    onFailure = { error ->
+                        showError("Error fetching categories: $error")
+                    })
+            },
+            onFailure = { error ->
+                showError("Login error: $error")
             }
-            var totales = 0.0
-            ExpenseDAO(requireContext()).use{expenseDB ->
-                for (cat in lista){
-                    val total = expenseDB.getByTotalCategory(cat.getId())
-
-                    cat.setTotal(total)
-
-                    totales += total
-                }
-            }
-            binding.rviewCategories.layoutManager = LinearLayoutManager(requireContext() )
-            binding.rviewCategories.adapter = RViewCategoriesAdapter(lista)
-            binding.lblTotal.text = String.format("%.2f",totales) + "€"
-        }
-        catch (e:Exception){
-            val a = e
-            val b = a
-        }
-
-
-
+        )
     }
 
-    private fun InitListeners() {
+    private fun displayCategories(categories: List<ExpenseCategory>) {
+
+
+        // Bind the categories to the RecyclerView
+        binding.rviewCategories.layoutManager = LinearLayoutManager(requireContext())
+        binding.rviewCategories.adapter = RViewCategoriesAdapter(categories)
+
+        // Display the total
+        binding.lblTotal.text = String.format("%.2f", 200.00) + "€"
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
+
+    private fun initListeners() {
         binding.createCategory.setOnClickListener {
             findNavController().navigate(R.id.nav_createcategories)
         }

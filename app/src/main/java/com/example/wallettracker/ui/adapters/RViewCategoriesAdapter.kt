@@ -4,14 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.navigation.findNavController
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
+import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 
 class RViewCategoriesAdapter(list: List<ExpenseCategory>) : RecyclerView.Adapter<RViewCategoriesAdapter.ExpenseCategoryViewHolder>() {
     val list = list
@@ -31,12 +28,12 @@ class RViewCategoriesAdapter(list: List<ExpenseCategory>) : RecyclerView.Adapter
         return list.size
     }
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
-        holder.categoryName.text = list[position].getName()
-        holder.categoryTotal.text = String.format("%.2f", list[position].getTotal())+"€"
+        holder.categoryName.text = list[position].name
+        holder.categoryTotal.text = String.format("%.2f", 200.00)+"€"
 
         //listeners
         holder.itemView.setOnClickListener {
-            val catId = list[position].getId()
+            val catId = list[position].id
             val bundle = Bundle()
             bundle.putLong("catId", catId)
             holder.itemView.findNavController().navigate(R.id.nav_categoriesexpenses, bundle)

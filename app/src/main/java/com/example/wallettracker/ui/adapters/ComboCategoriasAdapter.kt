@@ -1,14 +1,12 @@
 package com.example.wallettracker.ui.adapters
-import android.content.ClipData
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.ImageView
 import android.widget.TextView
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
+import com.example.wallettracker.data.expense.ExpenseCategory
 
 class ComboCategoriasAdapter(private val context: Context, private val items: List<ExpenseCategory>) : BaseAdapter() {
     override fun getCount(): Int = items.size

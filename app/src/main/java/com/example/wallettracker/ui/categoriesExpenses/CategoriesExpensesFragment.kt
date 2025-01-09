@@ -10,14 +10,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
-import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
-import com.example.wallettracker.data.ExpenseCategory.Expense
-import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
+import com.example.wallettracker.data.expense.ExpenseCategory
+import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.Expense
+import com.example.wallettracker.data.expenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
 
@@ -65,7 +64,7 @@ class CategoriesExpensesFragment() : Fragment() {
         var catName: String = ""
         try {
             var cat: ExpenseCategory
-            ExpenseCategoryDAO(requireContext()).use { sCat ->
+            bakExpenseCategoryDAO(requireContext()).use { sCat ->
                 cat = sCat.getById(categoryId)
             }
             catName = cat.getName()
@@ -127,7 +126,7 @@ class CategoriesExpensesFragment() : Fragment() {
     private fun SaveChanges() {
         try {
             val cat = GetCategory()
-            ExpenseCategoryDAO(requireContext()).use { sCat ->
+            bakExpenseCategoryDAO(requireContext()).use { sCat ->
                 sCat.update(cat)
             }
         }catch (e: Exception){
@@ -143,7 +142,7 @@ class CategoriesExpensesFragment() : Fragment() {
 
     private fun DeleteCategory() {
         try {
-            ExpenseCategoryDAO(requireContext()).use { sCat ->
+            bakExpenseCategoryDAO(requireContext()).use { sCat ->
                 sCat.delete(categoryId)
             }
             findNavController().navigate(R.id.nav_categories)

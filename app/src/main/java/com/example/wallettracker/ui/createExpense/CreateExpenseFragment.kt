@@ -12,10 +12,10 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
-import com.example.wallettracker.data.Expense.ExpenseCategory
-import com.example.wallettracker.data.Expense.ExpenseCategoryDAO
-import com.example.wallettracker.data.ExpenseCategory.Expense
-import com.example.wallettracker.data.ExpenseCategory.ExpenseDAO
+import com.example.wallettracker.data.expense.ExpenseCategory
+import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.Expense
+import com.example.wallettracker.data.expenseCategory.ExpenseDAO
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import java.sql.Date
@@ -139,7 +139,7 @@ class CreateExpenseFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadComboCategorias() {
         var categories = listOf<ExpenseCategory>()
-        ExpenseCategoryDAO(requireContext()).use { categoryDB ->
+        bakExpenseCategoryDAO(requireContext()).use { categoryDB ->
             categories = categoryDB.getAll()!!
         }
 

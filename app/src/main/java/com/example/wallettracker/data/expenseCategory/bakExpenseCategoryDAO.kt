@@ -1,4 +1,4 @@
-package com.example.wallettracker.data.Expense
+package com.example.wallettracker.data.expense
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -17,7 +17,7 @@ import kotlin.Throws
 import kotlin.arrayOf
 
 
-class ExpenseCategoryDAO : Closeable {
+class bakExpenseCategoryDAO : Closeable {
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
