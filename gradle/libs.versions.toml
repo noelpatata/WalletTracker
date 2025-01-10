@@ -15,6 +15,7 @@ androidx-junit = "1.1.5"
 espresso-core = "3.5.1"
 retrofit = "2.9.0"
 gson = "2.9.0"
+activity = "1.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
@@ -32,5 +33,6 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "a
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "gson" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 
 
