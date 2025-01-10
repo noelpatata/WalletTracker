@@ -26,12 +26,12 @@
             android:textColor="@color/black"
             android:text="@string/label_username" />
         <EditText
-            android:id="@+id/input_price"
+            android:id="@+id/input_username"
             android:layout_marginTop="26dp"
             android:textSize="20sp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:inputType="numberDecimal"
+            android:inputType="text"
             />
         <TextView
             android:id="@+id/lblPassword"

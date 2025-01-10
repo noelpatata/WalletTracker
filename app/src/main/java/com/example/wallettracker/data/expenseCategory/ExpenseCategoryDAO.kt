@@ -1,39 +1,14 @@
 package com.example.wallettracker.data.expenseCategory
 
-import android.util.Base64
 import com.example.wallettracker.data.ApiCall
-import com.example.wallettracker.data.LoginRequest
-import com.example.wallettracker.data.LoginResponse
+import com.example.wallettracker.data.BaseDAO
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ExpenseCategoryDAO(private val credentials: LoginRequest) {
-    private var token: String? = null
-
-    fun login(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        val credentials = "${credentials.username}:${credentials.password}"
-        val basicAuth = "Basic " + Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
-
-        ApiCall.expenseCategory.login(basicAuth).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                if (response.isSuccessful) {
-                    token = response.body()?.token
-                    onSuccess()
-                } else {
-                    onFailure("Login failed: ${response.message()}")
-                }
-            }
-
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                onFailure("${t.message}")
-            }
-        })
-    }
-
+class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
 
     fun getExpenseCategories(
-        userId: Int,
         onSuccess: (List<ExpenseCategory>) -> Unit,
         onFailure: (String) -> Unit
     ) {
@@ -68,7 +43,6 @@ class ExpenseCategoryDAO(private val credentials: LoginRequest) {
         })
     }
     fun createExpenseCategories(
-        userId: Int,
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (String) -> Unit
@@ -77,7 +51,7 @@ class ExpenseCategoryDAO(private val credentials: LoginRequest) {
             onFailure("Token not available. Login first.")
             return
         }
-        val categoryRequest = ExpenseCategoryRequest(category.getName(), userId)
+        val categoryRequest = ExpenseCategoryRequest(category.getName())
         ApiCall.expenseCategory.createExpenseCategories("Bearer $token", userId, categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
             override fun onResponse(
                 call: Call<ExpenseCategoryResponse>,

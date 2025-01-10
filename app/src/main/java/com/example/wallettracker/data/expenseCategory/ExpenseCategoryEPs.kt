@@ -1,6 +1,5 @@
 package com.example.wallettracker.data.expenseCategory
 
-import com.example.wallettracker.data.LoginResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -9,10 +8,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface ExpenseCategoryEPs {
-    @GET("login")
-    fun login(
-        @Header("Authorization") authHeader: String
-    ): Call<LoginResponse>
+
 
     @GET("ExpenseCategory/")
     fun getExpenseCategories(

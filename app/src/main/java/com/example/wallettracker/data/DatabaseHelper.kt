@@ -7,15 +7,11 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHelper(context: Context?) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(db: SQLiteDatabase) {
-        // Create both tables
-        db.execSQL(CREATE_TABLE_EXPENSE_CATEGORY)
-        db.execSQL(CREATE_TABLE_EXPENSE)
+        db.execSQL(CREATE_TABLE_SESSION)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Drop old tables if they exist
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE_CATEGORY)
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE)
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSION)
         // Recreate tables
         onCreate(db)
     }
@@ -26,21 +22,13 @@ class DatabaseHelper(context: Context?) :
         private const val DATABASE_VERSION = 1
 
         // Table names
-        private const val TABLE_EXPENSE = "Expense"
-        private const val TABLE_EXPENSE_CATEGORY = "ExpenseCategory"
+        private const val TABLE_SESSION = "Session"
 
         // SQL statement to create the Expense table
-        private const val CREATE_TABLE_EXPENSE = "CREATE TABLE " + TABLE_EXPENSE + " (" +
+        private const val CREATE_TABLE_SESSION = "CREATE TABLE " + TABLE_SESSION + " (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "price DOUBLE, " +
                 "expenseDate DATE, " +
-                "category INTEGER, " +
-                "FOREIGN KEY(category) REFERENCES " + TABLE_EXPENSE_CATEGORY + "(_id) ON DELETE CASCADE);"
-
-        // SQL statement to create the ExpenseCategory table
-        private const val CREATE_TABLE_EXPENSE_CATEGORY =
-            "CREATE TABLE " + TABLE_EXPENSE_CATEGORY + " (" +
-                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "name TEXT NOT NULL);"
+                "category INTEGER, ;"
     }
 }

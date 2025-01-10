@@ -1,6 +1,16 @@
 package com.example.wallettracker.data.expenseCategory
 
-data class ExpenseCategoryRequest (
-    val name: String,
-    val userId: Int
-)
+
+class ExpenseCategoryRequest() {
+    private lateinit var name: String
+    constructor(name: String) : this() {
+        this.name = name
+    }
+
+    fun getName(): String{
+        return this.name
+    }
+    fun setName(value: String){
+        this.name = value
+    }
+}

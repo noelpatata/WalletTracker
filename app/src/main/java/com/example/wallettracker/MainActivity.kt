@@ -16,14 +16,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    var TOKEN: String = ""
+    var USER_ID: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TOKEN = intent.getStringExtra("TOKEN_KEY").toString()
+        USER_ID = intent.getIntExtra("USER_ID", 0)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.appBarMain.toolbar)
+
 
 
         val drawerLayout: DrawerLayout = binding.drawerLayout

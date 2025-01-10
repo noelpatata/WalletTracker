@@ -18,14 +18,15 @@ class ExpenseCategory {
     fun getName(): String{
         return this.name
     }
+    fun setName(value: String){
+        this.name = value
+    }
     fun getTotal(): Double{
         return this.total
     }
     fun setTotal(value: Double){
         this.total = value
     }
-    fun setName(value: String){
-        this.name = value
-    }
+
 
 }

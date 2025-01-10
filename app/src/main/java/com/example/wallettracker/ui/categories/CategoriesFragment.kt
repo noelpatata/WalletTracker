@@ -11,8 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
-import com.example.wallettracker.data.LoginRequest
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
@@ -21,11 +21,10 @@ import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 class CategoriesFragment : Fragment() {
 
     private var _binding: FragmentCategoriesBinding? = null
-    private lateinit var expenseCategoryDAO: ExpenseCategoryDAO // Retrofit-based DAO
-    private val userId = 1
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+
+    var TOKEN: String = ""
+    var USER_ID: Int = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -37,15 +36,12 @@ class CategoriesFragment : Fragment() {
             ViewModelProvider(this).get(CategoriesViewModel::class.java)
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
+        val mainActivity = requireActivity() as MainActivity
+        TOKEN = mainActivity.TOKEN
+        USER_ID = mainActivity.USER_ID
 
-        val credentials = LoginRequest("hugo", "noel")
-        expenseCategoryDAO = ExpenseCategoryDAO(credentials)
         initListeners()
         loadData()
-
-
-
-
 
 
 
@@ -55,9 +51,10 @@ class CategoriesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadData() {
-        expenseCategoryDAO.login(
+        val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+        expenseCategoryDAO.getExpenseCategories(
             onSuccess = {
-                expenseCategoryDAO.getExpenseCategories(userId,
+                expenseCategoryDAO.getExpenseCategories(
                     onSuccess = { categoryList ->
                         displayCategories(categoryList)
                     },

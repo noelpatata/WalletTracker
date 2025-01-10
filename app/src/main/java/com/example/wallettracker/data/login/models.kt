@@ -1,4 +1,4 @@
-package com.example.wallettracker.data
+package com.example.wallettracker.data.login
 
 data class LoginRequest(
     val username: String,
@@ -6,9 +6,6 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
+    val userId: Int,
     val token: String
 )
-data class ErrorResponse(
-    val message: String
-)
-

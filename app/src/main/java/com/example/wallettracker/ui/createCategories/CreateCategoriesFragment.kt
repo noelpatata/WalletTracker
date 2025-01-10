@@ -10,10 +10,9 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
-import com.example.wallettracker.data.LoginRequest
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
 
@@ -25,8 +24,8 @@ class CreateCategoriesFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    private lateinit var expenseCategoryDAO: ExpenseCategoryDAO
-    private val userId = 1
+    var TOKEN: String = ""
+    var USER_ID: Int = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -38,8 +37,9 @@ class CreateCategoriesFragment : Fragment() {
             ViewModelProvider(this).get(CreateCategoriesViewModel::class.java)
 
         _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
-        val credentials = LoginRequest("hugo", "noel")
-        expenseCategoryDAO = ExpenseCategoryDAO(credentials)
+        val mainActivity = requireActivity() as MainActivity
+        TOKEN = mainActivity.TOKEN
+        USER_ID = mainActivity.USER_ID
 
         InitListeners()
 
@@ -76,22 +76,15 @@ class CreateCategoriesFragment : Fragment() {
     private fun Save() {
         try{
             val cat = GetCategory()
-            expenseCategoryDAO.login(
+            val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            expenseCategoryDAO.createExpenseCategories(
+                cat,
                 onSuccess = {
-                    expenseCategoryDAO.createExpenseCategories(
-                        userId,
-                        cat,
-                        onSuccess = { categoryList ->
-                            findNavController().navigate(R.id.nav_categories)
-                        },
-                        onFailure = { error ->
-                            showError("Error creating category: $error")
-                        })
+                    findNavController().navigate(R.id.nav_categories)
                 },
                 onFailure = { error ->
-                    showError("Login error: $error")
-                }
-            )
+                    showError("Error creating category: $error")
+                })
         }
         catch (e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
