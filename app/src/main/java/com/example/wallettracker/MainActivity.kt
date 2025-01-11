@@ -2,6 +2,9 @@ package com.example.wallettracker
 
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
+import android.widget.TextView
+import android.widget.Toast
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -10,6 +13,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -29,8 +33,6 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.appBarMain.toolbar)
 
-
-
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -46,6 +48,10 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        val headerView = navView.getHeaderView(0) // Get the first header view
+        val lblUsername = headerView.findViewById<TextView>(R.id.lblUsername)
+        lblUsername.text = "Welcome, User $USER_ID"
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -57,5 +63,29 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.resetExpenses -> {
+                ResetExpenses()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun ResetExpenses() {
+        ExpenseDAO(TOKEN, USER_ID).deleteAll(
+            onSuccess = { response ->
+                if (response.success) {
+                    Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Failed to reset expenses", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onFailure = { error ->
+                Toast.makeText(this, "Error: $error", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 }

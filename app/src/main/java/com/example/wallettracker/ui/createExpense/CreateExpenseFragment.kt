@@ -15,7 +15,7 @@ import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expense.Expense
-import com.example.wallettracker.data.expense.ExpenseDAO
+import com.example.wallettracker.data.expense.bakExpenseDAO
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import java.sql.Date
@@ -124,7 +124,7 @@ class CreateExpenseFragment : Fragment() {
     private fun GetExpenseFromSQL(): Expense? {
         try {
             var expense: Expense? = null
-            ExpenseDAO(requireContext()).use { expenseDB ->
+            bakExpenseDAO(requireContext()).use { expenseDB ->
                 expense = expenseDB.getById(expenseId)
             }
             return expense
@@ -206,7 +206,7 @@ class CreateExpenseFragment : Fragment() {
 
     private fun Delete(expenseId: Long) {
         try {
-            ExpenseDAO(requireContext()).use { expenseDB ->
+            bakExpenseDAO(requireContext()).use { expenseDB ->
                 expenseDB.delete(expenseId)
             }
             findNavController().navigate(R.id.nav_categories)
@@ -221,7 +221,7 @@ class CreateExpenseFragment : Fragment() {
         try {
             val expense = GetExpense()
 
-            ExpenseDAO(requireContext()).use { expenseDB ->
+            bakExpenseDAO(requireContext()).use { expenseDB ->
                 expenseDB.update(expense)
                 findNavController().navigate(R.id.nav_categories)
             }
@@ -235,7 +235,7 @@ class CreateExpenseFragment : Fragment() {
         try {
             val expense = GetExpense()
 
-            ExpenseDAO(requireContext()).use { expenseDB ->
+            bakExpenseDAO(requireContext()).use { expenseDB ->
                 val id = expenseDB.insert(expense)
                 if (id > 0 ){
                     findNavController().navigate(R.id.nav_categories)

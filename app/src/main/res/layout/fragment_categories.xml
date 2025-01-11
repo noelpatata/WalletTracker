@@ -5,81 +5,82 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.categories.CategoriesFragment">
+
     <FrameLayout
+        android:id="@+id/total"
         android:layout_width="wrap_content"
-        android:layout_marginTop="22dp"
-        android:padding="16dp"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="22dp"
+        android:background="@drawable/roundedshape"
+        android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/frameLayout"
-        android:background="@drawable/roundedshape">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
         <LinearLayout
+            android:id="@+id/linearLayo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:id="@+id/linearLayo"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
+
             <TextView
                 android:id="@+id/label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Total: "
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:text="Total: "
-                tools:layout_editor_absoluteX="119dp"
-                tools:layout_editor_absoluteY="142dp"
-
+                app:layout_constraintBottom_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
+
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/rview_categories"/>
+                tools:layout_editor_absoluteX="119dp"
+                tools:layout_editor_absoluteY="142dp" />
+
             <TextView
                 android:id="@+id/lblTotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="00.00€"
+                android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
-                android:text="00.00€"
-                tools:layout_editor_absoluteX="119dp"
-                tools:layout_editor_absoluteY="142dp"
-
+                app:layout_constraintBottom_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
+
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/rview_categories"/>
+                tools:layout_editor_absoluteX="119dp"
+                tools:layout_editor_absoluteY="142dp" />
         </LinearLayout>
     </FrameLayout>
 
-
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rview_categories"
-        android:layout_width="409dp"
-        android:layout_marginTop="80dp"
-        android:layout_height="729dp"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="1dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/frameLayout"/>
+        app:layout_constraintTop_toBottomOf="@id/total" />
+
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/createCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
-        android:contentDescription="@string/button_createcategory"
-        app:srcCompat="@android:drawable/ic_input_add"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:borderWidth="2dp"
         android:backgroundTint="@color/white"
+        android:contentDescription="@string/button_createcategory"
         app:backgroundTint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:borderWidth="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_input_add" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

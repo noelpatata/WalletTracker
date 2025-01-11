@@ -16,7 +16,7 @@ import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expense.Expense
-import com.example.wallettracker.data.expense.ExpenseDAO
+import com.example.wallettracker.data.expense.bakExpenseDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
 
@@ -81,7 +81,7 @@ class CategoriesExpensesFragment() : Fragment() {
     private fun LoadExpenses() {
         try {
             var lista: List<Expense>
-            ExpenseDAO(requireContext()).use { sCat ->
+            bakExpenseDAO(requireContext()).use { sCat ->
                 lista = sCat.getByCategory(categoryId)!!
             }
             binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )

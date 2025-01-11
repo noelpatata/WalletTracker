@@ -1,5 +1,6 @@
 package com.example.wallettracker.data
 
+import com.example.wallettracker.data.expense.ExpenseEPs
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryEPs
 import com.example.wallettracker.data.login.LoginEPs
 import retrofit2.Retrofit
@@ -24,12 +25,12 @@ object ApiCall {
             .create(ExpenseCategoryEPs::class.java)
     }
 
-    val expense: ExpenseCategoryEPs by lazy {
+    val expense: ExpenseEPs by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(ExpenseCategoryEPs::class.java)
+            .create(ExpenseEPs::class.java)
     }
 
 
