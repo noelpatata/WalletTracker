@@ -1,7 +1,9 @@
 package com.example.wallettracker.data.expense
 
 data class ExpenseResponse(
+    val category: Long,
+    val expenseDate: String,
     val id: Long,
-    val name: String,
-    val total: Double
+    val price: Double,
+    val user: Long
 )

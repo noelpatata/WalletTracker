@@ -17,4 +17,11 @@ interface ExpenseEPs {
         @Header("Authorization") token: String,
         @Query("userId") userId: Int
     ): Call<SuccessResponse>
+
+    @GET("Expense/")
+    fun getByCatId(
+        @Header("Authorization") token: String,
+        @Query("userId") userId: Int,
+        @Query("catId") catId: Long
+    ): Call<List<ExpenseResponse>>
 }

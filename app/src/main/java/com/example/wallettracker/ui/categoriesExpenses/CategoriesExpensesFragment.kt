@@ -17,6 +17,7 @@ import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expense.Expense
+import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.data.expense.bakExpenseDAO
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
@@ -62,6 +63,8 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LoadData() {
+        binding.loadingPanel.visibility = View.VISIBLE
+        binding.form.visibility = View.GONE
         LoadCategoryInfo()
         LoadExpenses()
     }
@@ -80,23 +83,32 @@ class CategoriesExpensesFragment() : Fragment() {
             catId = categoryId
         )
 
-
-
-
     }
 
     @SuppressLint("NewApi")
     private fun LoadExpenses() {
         try {
-            var lista: List<Expense>
-            bakExpenseDAO(requireContext()).use { sCat ->
-                lista = sCat.getByCategory(categoryId)!!
-            }
-            binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
-            binding.rviewExpenses.adapter = RViewExpensesAdapter(lista)
+            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            expenseDAO.getById(
+                onSuccess = { lista ->
+                    binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
+                    binding.rviewExpenses.adapter = RViewExpensesAdapter(lista)
+                    binding.loadingPanel.visibility = View.GONE
+                    binding.form.visibility = View.VISIBLE
+                },
+                onFailure = { error ->
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                    binding.loadingPanel.visibility = View.GONE
+                    binding.form.visibility = View.VISIBLE
+                },
+                catId = categoryId
+            )
+
         }
         catch (e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            binding.loadingPanel.visibility = View.GONE
+            binding.form.visibility = View.VISIBLE
         }
     }
 

@@ -9,6 +9,12 @@ class Expense {
     private var expenseDate: Date? = null
     private var category: Long? = null
     constructor()
+    constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?) {
+        this.id = id
+        this.price = price
+        this.expenseDate = expenseDate
+        this.category = category
+    }
     constructor(price: Double?, expenseDate: Date?, category: Long?) {
         this.price = price
         this.expenseDate = expenseDate

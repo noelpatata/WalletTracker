@@ -34,7 +34,7 @@ class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpe
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         holder.expensePrice.text = String.format("%.2f", list[position].getPrice())+"€"
-        val format = SimpleDateFormat("dd 'de' MMMM 'del' yyyy", Locale("es", "ES"))
+        val format = SimpleDateFormat("EEEE dd 'de' MMMM 'del' yyyy", Locale("es", "ES"))
         holder.expenseDate.text = format.format(list[position].getDate())
 
         //listeners

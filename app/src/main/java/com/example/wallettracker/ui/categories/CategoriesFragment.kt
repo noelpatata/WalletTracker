@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
@@ -53,19 +52,27 @@ class CategoriesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadData() {
+        binding.loadingPanel.visibility = View.VISIBLE
+        binding.rviewCategories.visibility = View.GONE
         val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
         expenseCategoryDAO.getExpenseCategories(
             onSuccess = {
                 expenseCategoryDAO.getExpenseCategories(
                     onSuccess = { categoryList ->
                         displayCategories(categoryList)
+                        binding.loadingPanel.visibility = View.GONE
+                        binding.rviewCategories.visibility = View.VISIBLE
                     },
                     onFailure = { error ->
                         showError("Error fetching categories: $error")
+                        binding.loadingPanel.visibility = View.GONE
+                        binding.rviewCategories.visibility = View.VISIBLE
                     })
             },
             onFailure = { error ->
                 showError("Login error: $error")
+                binding.loadingPanel.visibility = View.GONE
+                binding.rviewCategories.visibility = View.VISIBLE
             }
         )
     }

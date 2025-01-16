@@ -16,7 +16,7 @@ interface ExpenseCategoryEPs {
         @Query("userId") userId: Int
     ): Call<List<ExpenseCategoryResponse>>
 
-    @GET("ExpenseCategory/Id")
+    @GET("ExpenseCategory/Id/")
     fun getExpenseCategoryById(
         @Header("Authorization") token: String,
         @Query("userId") userId: Int,
