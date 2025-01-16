@@ -17,6 +17,7 @@ retrofit = "2.9.0"
 gson = "2.9.0"
 activity = "1.8.0"
 ui-android = "1.7.6"
+swiperefreshlayout = "1.2.0-alpha01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
@@ -36,5 +37,6 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "gson" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "ui-android" }
+swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 
 

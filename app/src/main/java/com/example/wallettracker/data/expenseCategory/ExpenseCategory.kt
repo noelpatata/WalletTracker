@@ -9,6 +9,9 @@ class ExpenseCategory {
     constructor(name: String) {
         this.name = name
     }
+    constructor(id:Long, name: String) {
+        this.name = name
+    }
     constructor(id: Long) {
         this.id = id
     }

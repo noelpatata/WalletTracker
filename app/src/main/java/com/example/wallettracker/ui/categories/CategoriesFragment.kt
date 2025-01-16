@@ -11,12 +11,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
+
 
 class CategoriesFragment : Fragment() {
 
@@ -85,9 +87,15 @@ class CategoriesFragment : Fragment() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.createCategory.setOnClickListener {
             findNavController().navigate(R.id.nav_createcategories)
+        }
+        binding.swiperefresh.setOnRefreshListener {
+            loadData()
+            binding.swiperefresh.isRefreshing = false
+
         }
     }
 

@@ -42,6 +42,38 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
             }
         })
     }
+
+    fun getExpenseCategoryById(
+        onSuccess: (ExpenseCategory) -> Unit,
+        onFailure: (String) -> Unit,
+        catId: Long
+    ) {
+        if (token == null) {
+            onFailure("Token not available. Login first.")
+            return
+        }
+
+        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", userId, catId).enqueue(object : Callback<ExpenseCategoryResponse> {
+            override fun onResponse(
+                call: Call<ExpenseCategoryResponse>,
+                response: Response<ExpenseCategoryResponse>
+            ) {
+                if (response.isSuccessful) {
+                    var resp = response.body()!!
+                    val category = ExpenseCategory(resp.id, resp.name)
+                    category.let {
+                        onSuccess(it)
+                    }
+                } else {
+                    onFailure("Failed to fetch category: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
+                onFailure("Failed to fetch category: ${t.message}")
+            }
+        })
+    }
     fun createExpenseCategories(
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,

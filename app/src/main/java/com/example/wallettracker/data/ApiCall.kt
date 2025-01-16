@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiCall {
-    private const val BASE_URL = "http://192.168.1.137:8081"
+    private const val BASE_URL = "http://192.168.178.96:8000"
 
     val login: LoginEPs by lazy {
         Retrofit.Builder()

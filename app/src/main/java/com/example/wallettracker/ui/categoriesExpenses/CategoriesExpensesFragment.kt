@@ -12,11 +12,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expense.bakExpenseDAO
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
 
@@ -30,6 +32,9 @@ class CategoriesExpensesFragment() : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    var TOKEN: String = ""
+    var USER_ID: Int = 0
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,7 +45,9 @@ class CategoriesExpensesFragment() : Fragment() {
             ViewModelProvider(this).get(CategoriesExpensesViewModel::class.java)
 
         _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
-
+        val mainActivity = requireActivity() as MainActivity
+        TOKEN = mainActivity.TOKEN
+        USER_ID = mainActivity.USER_ID
 
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
@@ -61,20 +68,21 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @SuppressLint("NewApi")
     private fun LoadCategoryInfo() {
-        var catName: String = ""
-        try {
-            var cat: ExpenseCategory
-            bakExpenseCategoryDAO(requireContext()).use { sCat ->
-                cat = sCat.getById(categoryId)
-            }
-            catName = cat.getName()
 
-        }
-        catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-        }
+        val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+        expenseCategoryDAO.getExpenseCategoryById(
+            onSuccess = { category ->
+                binding.inputName.setText(category.getName())
+            },
+            onFailure = { error ->
+                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+            },
+            catId = categoryId
+        )
 
-        binding.inputName.setText(catName)
+
+
+
     }
 
     @SuppressLint("NewApi")
