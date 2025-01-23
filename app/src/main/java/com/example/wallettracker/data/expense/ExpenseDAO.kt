@@ -81,4 +81,35 @@ class ExpenseDAO(token: String, userId: Int): BaseDAO(token, userId) {
             }
         })
     }
+
+    fun deleteById(
+        onSuccess: (SuccessResponse) -> Unit,
+        onFailure: (String) -> Unit,
+        expenseId: Long
+    ) {
+        if (token == null) {
+            onFailure("Token not available. Login first.")
+            return
+        }
+
+        ApiCall.expense.deleteById("Bearer $token", userId, expenseId).enqueue(object : Callback<SuccessResponse> {
+            override fun onResponse(
+                call: Call<SuccessResponse>,
+                response: Response<SuccessResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val success = response.body()
+                    success?.let {
+                        onSuccess(it)
+                    } ?: onFailure("Failed deleting expense")
+                } else {
+                    onFailure(response.message())
+                }
+            }
+
+            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
+                onFailure(t.message.toString())
+            }
+        })
+    }
 }

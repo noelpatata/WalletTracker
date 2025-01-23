@@ -24,4 +24,11 @@ interface ExpenseEPs {
         @Query("userId") userId: Int,
         @Query("catId") catId: Long
     ): Call<List<ExpenseResponse>>
+
+    @DELETE("Expense/")
+    fun deleteById(
+        @Header("Authorization") token: String,
+        @Query("userId") userId: Int,
+        @Query("userId") expenseId: Long
+    ): Call<SuccessResponse>
 }

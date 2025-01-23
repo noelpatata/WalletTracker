@@ -1,7 +1,9 @@
 package com.example.wallettracker.data.expenseCategory
 
+import com.example.wallettracker.data.SuccessResponse
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Header
@@ -29,4 +31,11 @@ interface ExpenseCategoryEPs {
         @Query("userId") userId: Int,
         @Body expenseCategory: ExpenseCategoryRequest
     ): Call<ExpenseCategoryResponse>
+
+    @DELETE("ExpenseCategory/")
+    fun deleteById(
+        @Header("Authorization") token: String,
+        @Query("userId") userId: Int,
+        @Query("catId") catId: Long
+    ): Call<SuccessResponse>
 }
