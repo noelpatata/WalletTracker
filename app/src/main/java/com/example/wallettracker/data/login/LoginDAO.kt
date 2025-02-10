@@ -2,8 +2,6 @@ package com.example.wallettracker.data.login
 
 import android.util.Base64
 import com.example.wallettracker.data.ApiCall
-import com.example.wallettracker.data.login.LoginRequest
-import com.example.wallettracker.data.login.LoginResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

@@ -7,6 +7,7 @@ data class ErrorResponse(
     val message: String
 )
 data class SuccessResponse(
-    val success: Boolean
+    val success: Boolean,
+    val message: String
 )
 

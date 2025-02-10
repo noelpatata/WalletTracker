@@ -2,9 +2,12 @@ package com.example.wallettracker.data.expenseCategory
 
 
 class ExpenseCategoryRequest() {
+    private var id: Long = -1
     private lateinit var name: String
-    constructor(name: String) : this() {
-        this.name = name
+
+    constructor(category: ExpenseCategory) : this() {
+        this.id = category.getId()
+        this.name = category.getName()
     }
 
     fun getName(): String{
@@ -12,5 +15,8 @@ class ExpenseCategoryRequest() {
     }
     fun setName(value: String){
         this.name = value
+    }
+    fun setId(value: Long){
+        this.id = value
     }
 }

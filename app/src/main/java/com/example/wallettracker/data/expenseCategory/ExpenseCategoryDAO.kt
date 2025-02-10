@@ -3,6 +3,7 @@ package com.example.wallettracker.data.expenseCategory
 import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.BaseDAO
 import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.expense.Expense
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -84,7 +85,7 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
             onFailure("Token not available. Login first.")
             return
         }
-        val categoryRequest = ExpenseCategoryRequest(category.getName())
+        val categoryRequest = ExpenseCategoryRequest(category)
         ApiCall.expenseCategory.createExpenseCategories("Bearer $token", userId, categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
             override fun onResponse(
                 call: Call<ExpenseCategoryResponse>,
@@ -139,6 +140,38 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
 
             override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
                 onFailure(t.message.toString())
+            }
+        })
+    }
+    fun editName(
+        onSuccess: (SuccessResponse) -> Unit,
+        onFailure: (String) -> Unit,
+        category: ExpenseCategory
+    ) {
+        if (token == null) {
+            onFailure("Token not available. Login first.")
+            return
+        }
+        val categoryRequest = ExpenseCategoryRequest(category)
+        ApiCall.expenseCategory.editName("Bearer $token", userId, categoryRequest).enqueue(object : Callback<SuccessResponse> {
+            override fun onResponse(
+                call: Call<SuccessResponse>,
+                response: Response<SuccessResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val success = response.body()
+                    success?.let {
+                        onSuccess(it)
+                    } ?: onFailure("Failed editing category")
+                } else {
+                    val r: SuccessResponse = SuccessResponse(false, response.message())
+                    onFailure(r.message)
+                }
+            }
+
+            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
+                val response = SuccessResponse(false, t.message.toString())
+                onFailure(response.message)
             }
         })
     }

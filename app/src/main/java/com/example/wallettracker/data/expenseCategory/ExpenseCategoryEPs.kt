@@ -38,4 +38,11 @@ interface ExpenseCategoryEPs {
         @Query("userId") userId: Int,
         @Query("catId") catId: Long
     ): Call<SuccessResponse>
+
+    @POST("ExpenseCategory/editName")
+    fun editName(
+        @Header("Authorization") token: String,
+        @Query("userId") userId: Int,
+        @Body expenseCategory: ExpenseCategoryRequest
+    ): Call<SuccessResponse>
 }

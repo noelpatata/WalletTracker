@@ -145,10 +145,15 @@ class CategoriesExpensesFragment() : Fragment() {
 
     private fun SaveChanges() {
         try {
-            val cat = GetCategory()
-            bakExpenseCategoryDAO(requireContext()).use { sCat ->
-                sCat.update(cat)
-            }
+            val category = GetCategory()
+            val categoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            categoryDAO.editName(
+                onSuccess = { },
+                onFailure = { error ->
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                },
+                category
+            )
         }catch (e: Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
@@ -162,9 +167,15 @@ class CategoriesExpensesFragment() : Fragment() {
 
     private fun DeleteCategory() {
         try {
-            bakExpenseCategoryDAO(requireContext()).use { sCat ->
-                sCat.delete(categoryId)
-            }
+            val categoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            categoryDAO.deleteById(
+                onSuccess = { lista ->
+                },
+                onFailure = { error ->
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                },
+                catId = categoryId
+            )
             findNavController().navigate(R.id.nav_categories)
         }catch (e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
