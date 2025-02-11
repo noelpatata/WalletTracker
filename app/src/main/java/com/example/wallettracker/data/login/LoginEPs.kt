@@ -1,6 +1,5 @@
 package com.example.wallettracker.data.login
 
-import com.example.wallettracker.data.login.LoginResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Header

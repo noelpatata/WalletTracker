@@ -5,14 +5,10 @@ import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.BaseDAO
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.sql.Date
-import java.time.format.DateTimeFormatter
 
 class ExpenseDAO(token: String, userId: Int): BaseDAO(token, userId) {
 

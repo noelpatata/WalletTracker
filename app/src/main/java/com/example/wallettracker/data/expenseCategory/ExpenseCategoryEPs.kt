@@ -15,6 +15,7 @@ interface ExpenseCategoryEPs {
     @GET("ExpenseCategory/")
     fun getExpenseCategories(
         @Header("Authorization") token: String,
+        @Query("ciphered") ciphered: String
     ): Call<List<ExpenseCategoryResponse>>
 
     @GET("ExpenseCategory/Id/")

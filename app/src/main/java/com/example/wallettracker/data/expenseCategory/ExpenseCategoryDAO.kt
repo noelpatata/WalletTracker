@@ -1,15 +1,18 @@
 package com.example.wallettracker.data.expenseCategory
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.BaseDAO
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.expense.Expense
+import encrypt
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getExpenseCategories(
         onSuccess: (List<ExpenseCategory>) -> Unit,
         onFailure: (SuccessResponse) -> Unit
@@ -18,8 +21,8 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
             onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
-
-        ApiCall.expenseCategory.getExpenseCategories("Bearer $token").enqueue(object : Callback<List<ExpenseCategoryResponse>> {
+        val cipheredText = encrypt("somerandomtext")
+        ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText).enqueue(object : Callback<List<ExpenseCategoryResponse>> {
             override fun onResponse(
                 call: Call<List<ExpenseCategoryResponse>>,
                 response: Response<List<ExpenseCategoryResponse>>

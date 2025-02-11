@@ -2,7 +2,9 @@ package com.example.wallettracker.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wallettracker.MainActivity
@@ -10,6 +12,7 @@ import com.example.wallettracker.data.login.LoginDAO
 import com.example.wallettracker.data.login.LoginRequest
 import com.example.wallettracker.databinding.ActivityLoginBinding
 import com.example.wallettracker.util.Util
+import generateKeys
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -19,6 +22,7 @@ class LoginActivity : AppCompatActivity() {
             putExtra("TOKEN_KEY", token)
             putExtra("USER_ID", userId)
         }
+        generateKeys("noel")
         startActivity(intent)
         finish()
     }
@@ -47,6 +51,17 @@ class LoginActivity : AppCompatActivity() {
             doLogin()
 
 
+        }
+
+        binding.inputPassword.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+
+                doLogin()
+
+                return@setOnEditorActionListener true
+            }
+            false
         }
     }
 

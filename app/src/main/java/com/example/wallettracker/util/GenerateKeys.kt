@@ -9,10 +9,6 @@ import java.util.Base64
 import javax.crypto.Cipher
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun start(){
-    generateKeys()
-}
-@RequiresApi(Build.VERSION_CODES.O)
 fun encrypt(text: String): String{
     val privateKey = loadPrivateKey("private_key.pem")
 
@@ -21,7 +17,7 @@ fun encrypt(text: String): String{
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun generateKeys() {
+fun generateKeys(username: String) {
     // Generate RSA key pair
     val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
     keyPairGenerator.initialize(2048) // Key size: 2048 bits
@@ -29,15 +25,19 @@ fun generateKeys() {
     val privateKey = keyPair.private as RSAPrivateKey
     val publicKey = keyPair.public as RSAPublicKey
 
-    // Save private key to PEM file
-    savePrivateKey(privateKey, "private_key.pem")
+    // Save private key to PEM file with username in the filename
+    savePrivateKey(privateKey, "private_key_$username.pem")
 
-    // Save public key to PEM file
-    savePublicKey(publicKey, "public_key.pem")
+    // Save public key to PEM file with username in the filename
+    savePublicKey(publicKey, "public_key_$username.pem")
 
-    println("Keys generated successfully:")
-    println("- private_key.pem")
-    println("- public_key.pem")
+    val pblic = readFile("public_key_$username.pem")
+    val prblic = readFile("private_key_$username.pem")
+    val a = pblic
+
+    println("Keys generated successfully for user '$username':")
+    println("- private_key_$username.pem")
+    println("- public_key_$username.pem")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -76,4 +76,9 @@ fun encryptWithPrivateKey(privateKey: PrivateKey, data: String): ByteArray {
     val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
     cipher.init(Cipher.ENCRYPT_MODE, privateKey)
     return cipher.doFinal(data.toByteArray(Charsets.UTF_8))
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun readFile(fileName: String): String {
+    return File(fileName).readText()
 }
