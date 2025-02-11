@@ -1,6 +1,9 @@
 package com.example.wallettracker.data.login
 
+import Cryptography
+import android.os.Build
 import android.util.Base64
+import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import retrofit2.Call
 import retrofit2.Callback
@@ -31,9 +34,10 @@ class LoginDAO(private val credentials: LoginRequest) {
         })
     }
     companion object {
+        @RequiresApi(Build.VERSION_CODES.O)
         fun autologin(userId:Int, onSuccess: (LoginResponse) -> Unit, onFailure: (String) -> Unit) {
-
-            ApiCall.login.autologin(userId).enqueue(object : Callback<LoginResponse> {
+            val ciphered = Cryptography(null, userId).encrypt("somerandomtext") //encrypts with private key
+            ApiCall.login.autologin(userId, ciphered).enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful) {
                         val loginReponse = response.body()

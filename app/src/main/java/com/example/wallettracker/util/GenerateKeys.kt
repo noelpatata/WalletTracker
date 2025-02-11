@@ -3,7 +3,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
-import com.example.wallettracker.data.Session.SessionDAO
+import com.example.wallettracker.data.session.SessionDAO
 import java.io.File
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
@@ -12,14 +12,9 @@ import java.security.interfaces.RSAPublicKey
 import java.util.Base64
 import javax.crypto.Cipher
 
-class Cryptography{
-    private var context: Context? = null
-    private var userId: Int? = null
+class Cryptography(private var context: Context?, userId: Int) {
+    private var userId: Int? = userId
 
-    constructor(context: Context?, userId: Int) {
-        this.context = context
-        this.userId = userId
-    }//wtf
     @RequiresApi(Build.VERSION_CODES.O)
     fun encrypt(text: String): String {
         SessionDAO(this.context).use { sSess ->

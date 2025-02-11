@@ -9,16 +9,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiCall {
-    private const val BASE_URL = "http://172.20.0.190:8080"
+    private const val BASE_URL = "http://192.168.1.140:8080"
 
-    private val okHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
-            .addInterceptor(RSACipherInterceptor()) // Add the encryption interceptor
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
 
     val login: LoginEPs by lazy {
         Retrofit.Builder()

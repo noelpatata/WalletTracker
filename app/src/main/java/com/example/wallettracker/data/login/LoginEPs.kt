@@ -13,6 +13,7 @@ interface LoginEPs {
 
     @GET("autologin")
     fun autologin(
-        @Query("userId") userId: Int
+        @Query("userId") userId: Int,
+        @Query("ciphered") ciphered: String
     ): Call<LoginResponse>
 }

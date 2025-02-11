@@ -1,5 +1,6 @@
 package com.example.wallettracker.ui.login
 
+import Cryptography
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -11,7 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.wallettracker.MainActivity
-import com.example.wallettracker.data.Session.SessionDAO
+import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.data.login.LoginDAO
 import com.example.wallettracker.data.login.LoginRequest
 import com.example.wallettracker.data.session.Session
@@ -38,6 +39,14 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+//        val list = Cryptography(this, userId).generateKeys("noel")
+//        val privateKey = list[0]
+//        SessionDAO(this).use { sSess ->
+//            sSess.insert(Session().apply {
+//                this.userId = userId
+//                this.publicKey = privateKey
+//            })
+//        }
 
         checkAutoLogin()
 
@@ -109,17 +118,19 @@ class LoginActivity : AppCompatActivity() {
             val userId = string.toInt()
             SessionDAO(this).use { sSess ->
                 val session = sSess.getByUserId(userId = userId)
-                if(session != null && session.id >= 0){
-                    LoginDAO.autologin(
-                        userId,
-                        onSuccess = { login ->
-                            startMainActivity(login.token, login.userId)
-                        },
-                        onFailure = {
-                            binding.loadingPanel.visibility = View.GONE
-                            binding.loginForm.visibility = View.VISIBLE
-                        }
-                    )
+                if(session != null){
+                    if(session.id >= 0){
+                        LoginDAO.autologin(
+                            userId,
+                            onSuccess = { login ->
+                                startMainActivity(login.token, login.userId)
+                            },
+                            onFailure = {
+                                binding.loadingPanel.visibility = View.GONE
+                                binding.loginForm.visibility = View.VISIBLE
+                            }
+                        )
+                    }
                 }
 
             }

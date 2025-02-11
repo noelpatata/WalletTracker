@@ -17,7 +17,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
-import generateKeys
 
 class MainActivity : AppCompatActivity() {
 
