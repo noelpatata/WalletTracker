@@ -3,9 +3,11 @@ package com.example.wallettracker.ui.categoriesExpenses
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
@@ -15,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expense.bakExpenseCategoryDAO
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.data.expense.bakExpenseDAO
@@ -78,7 +79,7 @@ class CategoriesExpensesFragment() : Fragment() {
                 binding.inputName.setText(category.getName())
             },
             onFailure = { error ->
-                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
             },
             catId = categoryId
         )
@@ -89,7 +90,7 @@ class CategoriesExpensesFragment() : Fragment() {
     private fun LoadExpenses() {
         try {
             val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
-            expenseDAO.getById(
+            expenseDAO.getByCatId(
                 onSuccess = { lista ->
                     binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
                     binding.rviewExpenses.adapter = RViewExpensesAdapter(lista)
@@ -97,7 +98,7 @@ class CategoriesExpensesFragment() : Fragment() {
                     binding.form.visibility = View.VISIBLE
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                     binding.loadingPanel.visibility = View.GONE
                     binding.form.visibility = View.VISIBLE
                 },
@@ -115,16 +116,18 @@ class CategoriesExpensesFragment() : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun InitListeners() {
         binding.saveChanges.setOnClickListener {
-            val category = GetCategory()
-            val isValid = CheckValidation(category)
-            if (isValid){
-                SaveChanges()
-                LoadData()
-            }
-            else{
-                Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
-            }
+            SaveIfValid()
 
+        }
+        binding.inputName.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+
+                SaveIfValid()
+
+                return@setOnEditorActionListener true
+            }
+            false
         }
         binding.addExpense.setOnClickListener{
             val bundle = Bundle()
@@ -133,6 +136,19 @@ class CategoriesExpensesFragment() : Fragment() {
         }
         binding.delete.setOnClickListener {
             DeleteCategory()
+        }
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun SaveIfValid() {
+        val category = GetCategory()
+        val isValid = CheckValidation(category)
+        if (isValid){
+            SaveChanges()
+        }
+        else{
+            Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -150,7 +166,7 @@ class CategoriesExpensesFragment() : Fragment() {
             categoryDAO.editName(
                 onSuccess = { },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                 },
                 category
             )
@@ -172,7 +188,7 @@ class CategoriesExpensesFragment() : Fragment() {
                 onSuccess = { lista ->
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                 },
                 catId = categoryId
             )

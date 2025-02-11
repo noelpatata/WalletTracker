@@ -12,14 +12,14 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
 
     fun getExpenseCategories(
         onSuccess: (List<ExpenseCategory>) -> Unit,
-        onFailure: (String) -> Unit
+        onFailure: (SuccessResponse) -> Unit
     ) {
         if (token == null) {
-            onFailure("Token not available. Login first.")
+            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
 
-        ApiCall.expenseCategory.getExpenseCategories("Bearer $token", userId).enqueue(object : Callback<List<ExpenseCategoryResponse>> {
+        ApiCall.expenseCategory.getExpenseCategories("Bearer $token").enqueue(object : Callback<List<ExpenseCategoryResponse>> {
             override fun onResponse(
                 call: Call<List<ExpenseCategoryResponse>>,
                 response: Response<List<ExpenseCategoryResponse>>
@@ -33,29 +33,29 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                     }
                     expenseCategories?.let {
                         onSuccess(it)
-                    } ?: onFailure("No data received")
+                    } ?: onFailure(SuccessResponse(success = false, message = response.message()))
                 } else {
-                    onFailure("Failed to fetch categories: ${response.message()}")
+                    onFailure(SuccessResponse(success = false, message = response.message()))
                 }
             }
 
             override fun onFailure(call: Call<List<ExpenseCategoryResponse>>, t: Throwable) {
-                onFailure("Failed to fetch categories: ${t.message}")
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
     }
 
     fun getExpenseCategoryById(
         onSuccess: (ExpenseCategory) -> Unit,
-        onFailure: (String) -> Unit,
+        onFailure: (SuccessResponse) -> Unit,
         catId: Long
     ) {
         if (token == null) {
-            onFailure("Token not available. Login first.")
+            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
 
-        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", userId, catId).enqueue(object : Callback<ExpenseCategoryResponse> {
+        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", catId).enqueue(object : Callback<ExpenseCategoryResponse> {
             override fun onResponse(
                 call: Call<ExpenseCategoryResponse>,
                 response: Response<ExpenseCategoryResponse>
@@ -67,26 +67,26 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                         onSuccess(it)
                     }
                 } else {
-                    onFailure("Failed to fetch category: ${response.message()}")
+                    onFailure(SuccessResponse(success = false, message = response.message()))
                 }
             }
 
             override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
-                onFailure("Failed to fetch category: ${t.message}")
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
     }
     fun createExpenseCategories(
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,
-        onFailure: (String) -> Unit
+        onFailure: (SuccessResponse) -> Unit
     ) {
         if (token == null) {
-            onFailure("Token not available. Login first.")
+            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
         val categoryRequest = ExpenseCategoryRequest(category)
-        ApiCall.expenseCategory.createExpenseCategories("Bearer $token", userId, categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
+        ApiCall.expenseCategory.createExpenseCategories("Bearer $token", categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
             override fun onResponse(
                 call: Call<ExpenseCategoryResponse>,
                 response: Response<ExpenseCategoryResponse>
@@ -102,28 +102,28 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                             onSuccess(it)
                         }
                     } else {
-                        onFailure("Failed to create category: ${response.message()}")
+                        onFailure(SuccessResponse(success = false, message = response.message()))
                     }
                 }
 
             }
             override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
-                onFailure("Failed to create category: ${t.message}")
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
     }
 
     fun deleteById(
         onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit,
+        onFailure: (SuccessResponse) -> Unit,
         catId: Long
     ) {
         if (token == null) {
-            onFailure("Token not available. Login first.")
+            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
 
-        ApiCall.expenseCategory.deleteById("Bearer $token", userId, catId).enqueue(object : Callback<SuccessResponse> {
+        ApiCall.expenseCategory.deleteById("Bearer $token", catId).enqueue(object : Callback<SuccessResponse> {
             override fun onResponse(
                 call: Call<SuccessResponse>,
                 response: Response<SuccessResponse>
@@ -132,28 +132,28 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                     val success = response.body()
                     success?.let {
                         onSuccess(it)
-                    } ?: onFailure("Failed deleting category")
+                    } ?: onFailure(SuccessResponse(success = false, message = response.message()))
                 } else {
-                    onFailure(response.message())
+                    onFailure(SuccessResponse(success = false, message = response.message()))
                 }
             }
 
             override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
-                onFailure(t.message.toString())
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
     }
     fun editName(
         onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit,
+        onFailure: (SuccessResponse) -> Unit,
         category: ExpenseCategory
     ) {
         if (token == null) {
-            onFailure("Token not available. Login first.")
+            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
             return
         }
         val categoryRequest = ExpenseCategoryRequest(category)
-        ApiCall.expenseCategory.editName("Bearer $token", userId, categoryRequest).enqueue(object : Callback<SuccessResponse> {
+        ApiCall.expenseCategory.editName("Bearer $token", categoryRequest).enqueue(object : Callback<SuccessResponse> {
             override fun onResponse(
                 call: Call<SuccessResponse>,
                 response: Response<SuccessResponse>
@@ -162,16 +162,15 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                     val success = response.body()
                     success?.let {
                         onSuccess(it)
-                    } ?: onFailure("Failed editing category")
+                    } ?: onFailure(SuccessResponse(success = false, message = response.message()))
                 } else {
-                    val r: SuccessResponse = SuccessResponse(false, response.message())
-                    onFailure(r.message)
+                    onFailure(SuccessResponse(success = false, message = response.message()))
                 }
             }
 
             override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
                 val response = SuccessResponse(false, t.message.toString())
-                onFailure(response.message)
+                onFailure(SuccessResponse(success = false, message = response.message))
             }
         })
     }

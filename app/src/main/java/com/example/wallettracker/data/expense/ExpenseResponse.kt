@@ -5,5 +5,5 @@ data class ExpenseResponse(
     val expenseDate: String,
     val id: Long,
     val price: Double,
-    val user: Long
+    val user: Int
 )

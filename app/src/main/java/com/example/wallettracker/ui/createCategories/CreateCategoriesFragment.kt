@@ -2,9 +2,11 @@ package com.example.wallettracker.ui.createCategories
 
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
@@ -52,15 +54,29 @@ class CreateCategoriesFragment : Fragment() {
 
     private fun InitListeners() {
         binding.createCategory.setOnClickListener {
-            val category = GetCategory()
-            val isValid = CheckValidation(category)
-            if(isValid){
-                Save()
-            }else{
-                Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+            SaveChanges()
 
+
+        }
+        binding.inputName.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+
+                SaveChanges()
+
+                return@setOnEditorActionListener true
             }
+            false
+        }
+    }
 
+    private fun SaveChanges() {
+        val category = GetCategory()
+        val isValid = CheckValidation(category)
+        if(isValid){
+            Save()
+        }else{
+            Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
 
         }
     }

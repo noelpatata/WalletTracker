@@ -8,6 +8,7 @@ class Expense {
     private var price: Double? = null
     private var expenseDate: Date? = null
     private var category: Long? = null
+    private var userId: Long? = null
     constructor()
     constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?) {
         this.id = id
@@ -45,4 +46,8 @@ class Expense {
     fun setCategoryId(value: Long){
         this.category = value
     }
+    fun getUserId(): Long{
+        return this.userId!!
+    }
+
 }

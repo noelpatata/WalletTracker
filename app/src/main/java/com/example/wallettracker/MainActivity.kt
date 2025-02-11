@@ -48,11 +48,11 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        val headerView = navView.getHeaderView(0) // Get the first header view
-        val lblUsername = headerView.findViewById<TextView>(R.id.lblUsername)
-        lblUsername.text = "Welcome, User $USER_ID"
+        val headerView = navView.getHeaderView(0)
+
 
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

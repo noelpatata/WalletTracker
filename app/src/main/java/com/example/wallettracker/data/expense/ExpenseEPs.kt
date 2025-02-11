@@ -1,6 +1,8 @@
 package com.example.wallettracker.data.expense
 
 import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -15,20 +17,35 @@ interface ExpenseEPs {
     @DELETE("Expense/all/")
     fun deleteAll(
         @Header("Authorization") token: String,
-        @Query("userId") userId: Int
     ): Call<SuccessResponse>
 
     @GET("Expense/")
     fun getByCatId(
         @Header("Authorization") token: String,
-        @Query("userId") userId: Int,
         @Query("catId") catId: Long
     ): Call<List<ExpenseResponse>>
+
+    @POST("Expense/edit")
+    fun edit(
+        @Header("Authorization") token: String,
+        @Body expenseCategory: ExpenseRequest
+    ): Call<SuccessResponse>
+
+    @POST("Expense/")
+    fun createExpense(
+        @Header("Authorization") token: String,
+        @Body expense: ExpenseRequest
+    ): Call<SuccessResponse>
+
+    @GET("Expense/Id/")
+    fun getById(
+        @Header("Authorization") token: String,
+        @Query("expenseId") expenseId: Long
+    ): Call<ExpenseResponse>
 
     @DELETE("Expense/")
     fun deleteById(
         @Header("Authorization") token: String,
-        @Query("userId") userId: Int,
-        @Query("userId") expenseId: Long
+        @Query("expenseId") expenseId: Long
     ): Call<SuccessResponse>
 }

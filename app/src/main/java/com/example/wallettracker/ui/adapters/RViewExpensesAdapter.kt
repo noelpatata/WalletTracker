@@ -40,7 +40,9 @@ class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpe
         //listeners
         holder.itemView.setOnClickListener {
             val expenseId = list[position].getId()
+            val categoryId = list[position].getCategoryId()
             val bundle = Bundle()
+            bundle.putLong("catId", categoryId)
             bundle.putLong("expenseId", expenseId)
             holder.itemView.findNavController().navigate(R.id.nav_createexpense, bundle)
         }
