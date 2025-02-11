@@ -49,10 +49,13 @@ class SessionDAO : Closeable{
     fun delete(SessionId: Long) {
         database!!.delete("Session", "_id = ?", arrayOf(SessionId.toString()))
     }
+    fun deleteByUserId(userId: Int) {
+        database!!.delete("Session", "userId = ?", arrayOf(userId.toString()))
+    }
     @RequiresApi(Build.VERSION_CODES.O)
     fun getById(catId: Int): Session {
         var cat: Session? = null
-        val cursor = database!!.rawQuery("SELECT * FROM Session WHERE id = ${catId}", null)
+        val cursor = database!!.rawQuery("SELECT * FROM Session WHERE userId = ${catId}", null)
         if (cursor != null) {
             cursor.moveToFirst()
             if(cursor.isFirst){
@@ -62,7 +65,6 @@ class SessionDAO : Closeable{
         }
         return cat!!
     }
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun getByUserId(userId: Int): Session {
         var cat: Session? = null
@@ -75,6 +77,22 @@ class SessionDAO : Closeable{
             cursor.close()
         }
         return cat!!
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getAll(): ArrayList<Session> {
+        var cat: Session? = null
+        val cursor = database!!.rawQuery("SELECT * FROM Session", null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            if(cursor.isFirst){
+                cat = cursor(cursor)
+            }
+            cursor.close()
+        }
+        val a = ArrayList<Session>()
+        a.add(cat!!)
+        return a
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

@@ -1,10 +1,12 @@
 package com.example.wallettracker.data.login
 
 import Cryptography
+import android.content.Context
 import android.os.Build
 import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
+import com.example.wallettracker.data.SuccessResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -35,8 +37,8 @@ class LoginDAO(private val credentials: LoginRequest) {
     }
     companion object {
         @RequiresApi(Build.VERSION_CODES.O)
-        fun autologin(userId:Int, onSuccess: (LoginResponse) -> Unit, onFailure: (String) -> Unit) {
-            val ciphered = Cryptography(null, userId).encrypt("somerandomtext") //encrypts with private key
+        fun autologin(context: Context, userId:Int, onSuccess: (LoginResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+            val ciphered = Cryptography(context, userId).encrypt("somerandomtext") //encrypts with private key
             ApiCall.login.autologin(userId, ciphered).enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful) {
@@ -46,12 +48,12 @@ class LoginDAO(private val credentials: LoginRequest) {
                         }
 
                     } else {
-                        onFailure("Login failed: ${response.message()}")
+                        onFailure(SuccessResponse(success = false, message = response.message()))
                     }
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    onFailure("${t.message}")
+                    onFailure(SuccessResponse(success = false, message = t.message.toString()))
                 }
             })
         }

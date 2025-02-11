@@ -39,11 +39,12 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-//        val list = Cryptography(this, userId).generateKeys("noel")
+//        val list = Cryptography(this, 1).generateKeys("noel")
 //        val privateKey = list[0]
 //        SessionDAO(this).use { sSess ->
+//            sSess.deleteByUserId(1)
 //            sSess.insert(Session().apply {
-//                this.userId = userId
+//                this.userId = 1
 //                this.publicKey = privateKey
 //            })
 //        }
@@ -121,6 +122,7 @@ class LoginActivity : AppCompatActivity() {
                 if(session != null){
                     if(session.id >= 0){
                         LoginDAO.autologin(
+                            this,
                             userId,
                             onSuccess = { login ->
                                 startMainActivity(login.token, login.userId)
