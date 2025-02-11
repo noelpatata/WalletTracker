@@ -19,7 +19,7 @@ class Cryptography{
     constructor(context: Context?, userId: Int) {
         this.context = context
         this.userId = userId
-    }
+    }//wtf
     @RequiresApi(Build.VERSION_CODES.O)
     fun encrypt(text: String): String {
         SessionDAO(this.context).use { sSess ->
