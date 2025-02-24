@@ -9,3 +9,16 @@ data class LoginResponse(
     val userId: Int,
     val token: String
 )
+data class AutoLoginRequest(
+    val userId: Int,
+    val ciphered: String
+)
+data class ServerPubKeyRequest(
+    val username: String,
+    val password: String,
+    val publicKey: String
+)
+data class ServerPubKeyResponse(
+    val userId: Int,
+    val public_key: String
+)

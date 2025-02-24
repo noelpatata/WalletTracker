@@ -38,8 +38,9 @@ class LoginDAO(private val credentials: LoginRequest) {
     companion object {
         @RequiresApi(Build.VERSION_CODES.O)
         fun autologin(context: Context, userId:Int, onSuccess: (LoginResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-            val ciphered = Cryptography(context, userId).encrypt("somerandomtext") //encrypts with private key
-            ApiCall.login.autologin(userId, ciphered).enqueue(object : Callback<LoginResponse> {
+            val signatureb64 = Cryptography(context, userId).sign() //encrypts with private key
+            val requestBody = AutoLoginRequest(userId, signatureb64)
+            ApiCall.login.autologin(requestBody).enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful) {
                         val loginReponse = response.body()
@@ -57,6 +58,52 @@ class LoginDAO(private val credentials: LoginRequest) {
                 }
             })
         }
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setUserClientPubKey(request: ServerPubKeyRequest, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+        ApiCall.login.setUserClientPubKey(request).enqueue(object : Callback<SuccessResponse> {
+            override fun onResponse(call: Call<SuccessResponse>, response: Response<SuccessResponse>) {
+                if (response.isSuccessful) {
+                    val loginReponse = response.body()
+                    loginReponse?.let{
+                        onSuccess(it)
+                    }
+
+                } else {
+                    onFailure(SuccessResponse(success = false, message = response.message()))
+                }
+            }
+
+            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
+            }
+        })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getUserServerPubKey(request: LoginRequest,
+                            onSuccess: (ServerPubKeyResponse) -> Unit,
+                            onFailure: (SuccessResponse) -> Unit) {
+        ApiCall.login.getUserServerPubKey(request).enqueue(object : Callback<ServerPubKeyResponse> {
+            override fun onResponse(
+                call: Call<ServerPubKeyResponse>,
+                response: Response<ServerPubKeyResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val loginReponse = response.body()
+                    loginReponse?.let{
+                        onSuccess(it)
+                    }
+
+                } else {
+                    onFailure(SuccessResponse(success = false, message = response.message()))
+                }
+            }
+
+            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
+                onFailure(SuccessResponse(success = false, message = t.message.toString()))
+            }
+        })
     }
 
 

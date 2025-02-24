@@ -22,6 +22,7 @@ class DatabaseHelper(context: Context?) :
         private const val CREATE_TABLE_SESSION = "CREATE TABLE " + TABLE_SESSION + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "userId Integer, " +
-                "publicKey TEXT);"
+                "privateKey TEXT, " +
+                "serverPublicKey TEXT);"
     }
 }

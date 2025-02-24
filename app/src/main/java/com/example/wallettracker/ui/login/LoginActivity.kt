@@ -15,6 +15,7 @@ import com.example.wallettracker.MainActivity
 import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.data.login.LoginDAO
 import com.example.wallettracker.data.login.LoginRequest
+import com.example.wallettracker.data.login.ServerPubKeyRequest
 import com.example.wallettracker.data.session.Session
 import com.example.wallettracker.databinding.ActivityLoginBinding
 import com.example.wallettracker.util.Util
@@ -39,15 +40,6 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-//        val list = Cryptography(this, 1).generateKeys("noel")
-//        val privateKey = list[0]
-//        SessionDAO(this).use { sSess ->
-//            sSess.deleteByUserId(1)
-//            sSess.insert(Session().apply {
-//                this.userId = 1
-//                this.publicKey = privateKey
-//            })
-//        }
 
         checkAutoLogin()
 
@@ -55,6 +47,7 @@ class LoginActivity : AppCompatActivity() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.login.setOnClickListener {
 
@@ -82,6 +75,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun doLogin() {
         val credentials = LoginRequest(
             binding.inputUsername.text.toString(),
@@ -95,11 +89,28 @@ class LoginActivity : AppCompatActivity() {
                 token = login.token
                 user = login.userId
 
-                Util.createAndWriteToCache(
-                    applicationContext,
-                    "autologin.txt",
-                    user.toString(),
-                    isSuccess = {})
+                //generate client keys
+                val keys = Cryptography(this, user).generateKeys()
+                val privateKey = keys[0] //save to session
+                val publicKey = keys[1] //send to server
+
+                //certificate handshakes
+                val request = ServerPubKeyRequest(credentials.username, credentials.password, publicKey)
+                LoginDAO.setUserClientPubKey(request,
+                    onSuccess = {
+                        LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
+                            onSuccess={},
+                            onFailure = {}
+                        )
+                    },
+                    onFailure = { it
+                        showError("Error sending public key:\n ${it.message}")
+                    }
+                )
+
+                //send public key
+                //get server public key
+                //clear sessions and create a new one for this user
 
 
                 startMainActivity(token, user)
@@ -114,32 +125,24 @@ class LoginActivity : AppCompatActivity() {
     private fun checkAutoLogin() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.loginForm.visibility = View.GONE
-        val string = Util.readFromCache(applicationContext, "autologin.txt")
-        if (string.isNotEmpty()) {
-            val userId = string.toInt()
-            SessionDAO(this).use { sSess ->
-                val session = sSess.getByUserId(userId = userId)
-                if(session != null){
-                    if(session.id >= 0){
-                        LoginDAO.autologin(
-                            this,
-                            userId,
-                            onSuccess = { login ->
-                                startMainActivity(login.token, login.userId)
-                            },
-                            onFailure = {
-                                binding.loadingPanel.visibility = View.GONE
-                                binding.loginForm.visibility = View.VISIBLE
-                            }
-                        )
-                    }
+        SessionDAO(this).use { sSess ->
+            val session = sSess.getFirstSession()
+            if(session != null){
+                if(session.id >= 0){
+                    LoginDAO.autologin(
+                        this,
+                        userId,
+                        onSuccess = { login ->
+                            startMainActivity(login.token, login.userId)
+                        },
+                        onFailure = {
+                            binding.loadingPanel.visibility = View.GONE
+                            binding.loginForm.visibility = View.VISIBLE
+                        }
+                    )
                 }
-
             }
 
-        }else {
-            binding.loadingPanel.visibility = View.GONE
-            binding.loginForm.visibility = View.VISIBLE
         }
     }
 

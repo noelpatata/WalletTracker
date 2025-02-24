@@ -49,13 +49,26 @@ class SessionDAO : Closeable{
     fun delete(SessionId: Long) {
         database!!.delete("Session", "_id = ?", arrayOf(SessionId.toString()))
     }
-    fun deleteByUserId(userId: Int) {
-        database!!.delete("Session", "userId = ?", arrayOf(userId.toString()))
+    fun deleteAll() {
+        database!!.delete("Session", "", arrayOf(""))
     }
     @RequiresApi(Build.VERSION_CODES.O)
     fun getById(catId: Int): Session {
         var cat: Session? = null
         val cursor = database!!.rawQuery("SELECT * FROM Session WHERE userId = ${catId}", null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            if(cursor.isFirst){
+                cat = cursor(cursor)
+            }
+            cursor.close()
+        }
+        return cat!!
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getFirstSession(): Session {
+        var cat: Session? = null
+        val cursor = database!!.rawQuery("SELECT * FROM Session LIMIT 1", null)
         if (cursor != null) {
             cursor.moveToFirst()
             if(cursor.isFirst){
@@ -101,7 +114,9 @@ class SessionDAO : Closeable{
         val sess = Session()
         sess.id = cursor.getInt(cursor.getColumnIndex("id"))
         sess.userId = cursor.getInt(cursor.getColumnIndex("userId"))
-        sess.publicKey = cursor.getString(cursor.getColumnIndex("publicKey"))
+        sess.privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
+        sess.serverPublicKey = cursor.getString(cursor.getColumnIndex("publicKey"))
+
         return sess
     }
 

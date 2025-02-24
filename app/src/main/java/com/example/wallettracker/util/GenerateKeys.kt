@@ -7,6 +7,7 @@ import com.example.wallettracker.data.session.SessionDAO
 import java.io.File
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
+import java.security.Signature
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.Base64
@@ -14,26 +15,31 @@ import javax.crypto.Cipher
 
 class Cryptography(private var context: Context?, userId: Int) {
     private var userId: Int? = userId
+    private val randomText = "s0m3r4nd0mt3xt"
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun encrypt(text: String): String {
+    fun sign(): String {
         SessionDAO(this.context).use { sSess ->
             val session = sSess.getByUserId(userId = this.userId!!)
             if (session != null && session.id > 0) {
                 val privateKey =
-                    loadPrivateKey(session.publicKey) //column missnamed (instead of publicKey is privateKey)
-                val encryptedData = encryptWithPrivateKey(privateKey, text)
-                return Base64.getEncoder().encodeToString(encryptedData)
+                    loadPrivateKey(session.privateKey)
+                val signedData = signWithPrivateKey(privateKey, randomText)
+                return Base64.getEncoder().encodeToString(signedData)
             }
-
         }
 
         return ""
-
+    }
+    fun signWithPrivateKey(privateKey: PrivateKey, text: String): ByteArray {
+        val signature = Signature.getInstance("SHA256withRSA")
+        signature.initSign(privateKey)
+        signature.update(text.toByteArray())
+        return signature.sign()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateKeys(username: String) : ArrayList<String> {
+    fun generateKeys(): ArrayList<String> {
         // Generate RSA key pair
         val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
         keyPairGenerator.initialize(2048) // Key size: 2048 bits
@@ -42,11 +48,9 @@ class Cryptography(private var context: Context?, userId: Int) {
         val publicKey = keyPair.public as RSAPublicKey
 
         val keys = ArrayList<String>()
-        // Save private key to PEM file with username in the filename
-        val privateKeyEncoded = savePrivateKey(privateKey, "private_key_$username.pem")
-
-        // Save public key to PEM file with username in the filename
-        val publicKeyEncoded = savePublicKey(publicKey, "public_key_$username.pem")
+        // Base64 encode private and public keys without the PEM formatting
+        val privateKeyEncoded = getPrivateKeyB64(privateKey)
+        val publicKeyEncoded = getPublicKeyB64(publicKey)
 
         keys.add(privateKeyEncoded)
         keys.add(publicKeyEncoded)
@@ -55,22 +59,17 @@ class Cryptography(private var context: Context?, userId: Int) {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun savePrivateKey(privateKey: RSAPrivateKey, fileName: String) :String{
-        val header = "-----BEGIN PRIVATE KEY-----\n"
-        val footer = "\n-----END PRIVATE KEY-----"
+    fun getPrivateKeyB64(privateKey: RSAPrivateKey): String {
         val encoded = privateKey.encoded
-        val base64Encoded = Base64.getEncoder().encodeToString(encoded)
-        return header + base64Encoded.chunked(64).joinToString("\n") + footer
+        return Base64.getEncoder().encodeToString(encoded) // Return Base64 encoded string
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun savePublicKey(publicKey: RSAPublicKey, fileName: String) :String{
-        val header = "-----BEGIN PUBLIC KEY-----\n"
-        val footer = "\n-----END PUBLIC KEY-----"
+    fun getPublicKeyB64(publicKey: RSAPublicKey): String {
         val encoded = publicKey.encoded
-        val base64Encoded = Base64.getEncoder().encodeToString(encoded)
-        return header + base64Encoded.chunked(64).joinToString("\n") + footer
+        return Base64.getEncoder().encodeToString(encoded) // Return Base64 encoded string
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadPrivateKey(privateKeyEncoded: String): PrivateKey {
