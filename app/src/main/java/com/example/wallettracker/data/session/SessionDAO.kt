@@ -40,7 +40,8 @@ class SessionDAO : Closeable{
     fun insert(session: Session): Long {
         val values = ContentValues()
         values.put("userId", session.userId)
-        values.put("publicKey", session.publicKey)
+        values.put("privateKey", session.privateKey)
+        values.put("serverPublicKey", session.serverPublicKey)
         return database!!.insert("Session", null, values)
     }
 
@@ -66,7 +67,7 @@ class SessionDAO : Closeable{
         return cat!!
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getFirstSession(): Session {
+    fun getFirstSession(): Session? {
         var cat: Session? = null
         val cursor = database!!.rawQuery("SELECT * FROM Session LIMIT 1", null)
         if (cursor != null) {
@@ -76,7 +77,7 @@ class SessionDAO : Closeable{
             }
             cursor.close()
         }
-        return cat!!
+        return cat
     }
     @RequiresApi(Build.VERSION_CODES.O)
     fun getByUserId(userId: Int): Session {

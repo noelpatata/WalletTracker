@@ -3,13 +3,11 @@ package com.example.wallettracker.data
 import com.example.wallettracker.data.expense.ExpenseEPs
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryEPs
 import com.example.wallettracker.data.login.LoginEPs
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
 object ApiCall {
-    private const val BASE_URL = "http://192.168.1.140:8080"
+    private const val BASE_URL = "http://172.20.0.190:8080"
 
 
     val login: LoginEPs by lazy {

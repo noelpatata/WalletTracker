@@ -6,7 +6,6 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    val userId: Int,
     val token: String
 )
 data class AutoLoginRequest(
@@ -20,5 +19,5 @@ data class ServerPubKeyRequest(
 )
 data class ServerPubKeyResponse(
     val userId: Int,
-    val public_key: String
+    val publicKey: String
 )

@@ -23,7 +23,7 @@ interface ExpenseCategoryEPs {
         @Query("catId") catId: Long
     ): Call<ExpenseCategoryResponse>
 
-    @POST("ExpenseCategory/")
+    @POST("ExpenseCategory/create")
     fun createExpenseCategories(
         @Header("Authorization") token: String,
         @Body expenseCategory: ExpenseCategoryRequest

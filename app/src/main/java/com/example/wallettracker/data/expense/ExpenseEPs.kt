@@ -31,7 +31,7 @@ interface ExpenseEPs {
         @Body expenseCategory: ExpenseRequest
     ): Call<SuccessResponse>
 
-    @POST("Expense/")
+    @POST("Expense/create")
     fun createExpense(
         @Header("Authorization") token: String,
         @Body expense: ExpenseRequest

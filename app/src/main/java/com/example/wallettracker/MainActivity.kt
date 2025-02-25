@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TOKEN = intent.getStringExtra("TOKEN_KEY").toString()
-        USER_ID = intent.getIntExtra("USER_ID", 0)
+        USER_ID = 5 //load userId from current session
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -22,14 +22,11 @@ import com.example.wallettracker.util.Util
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private var userId: Int = -1
 
 
-    private fun startMainActivity(token: String, userId: Int) {
-        this.userId = userId
+    private fun startMainActivity(token: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("TOKEN_KEY", token)
-            putExtra("USER_ID", userId)
         }
 
         startActivity(intent)
@@ -87,20 +84,38 @@ class LoginActivity : AppCompatActivity() {
         LoginDAO.login(
             onSuccess = { login ->
                 token = login.token
-                user = login.userId
 
                 //generate client keys
                 val keys = Cryptography(this, user).generateKeys()
-                val privateKey = keys[0] //save to session
-                val publicKey = keys[1] //send to server
+                val privateKey = keys[0]
+                val publicKey = keys[1]
 
-                //certificate handshakes
+                //send to server
                 val request = ServerPubKeyRequest(credentials.username, credentials.password, publicKey)
                 LoginDAO.setUserClientPubKey(request,
                     onSuccess = {
+                        //get server's public key
                         LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
-                            onSuccess={},
-                            onFailure = {}
+                            onSuccess={
+                                val serverPublicKey = it.publicKey
+                                SessionDAO(this).use { sSess ->
+                                    sSess.deleteAll()//clears all sessions
+
+                                    //creates a new session
+                                    val newSess = Session()
+                                    newSess.userId = it.userId
+                                    newSess.serverPublicKey = serverPublicKey
+                                    newSess.privateKey = privateKey
+                                    sSess.insert(newSess)
+
+                                    //start activity
+                                    startMainActivity(token)
+                                }
+
+                            },
+                            onFailure = {
+                                showError("Error getting server public key:\n ${it.message}")
+                            }
                         )
                     },
                     onFailure = { it
@@ -108,12 +123,7 @@ class LoginActivity : AppCompatActivity() {
                     }
                 )
 
-                //send public key
-                //get server public key
-                //clear sessions and create a new one for this user
 
-
-                startMainActivity(token, user)
             },
             onFailure = { error ->
                 showError("Login error: $error")
@@ -127,20 +137,20 @@ class LoginActivity : AppCompatActivity() {
         binding.loginForm.visibility = View.GONE
         SessionDAO(this).use { sSess ->
             val session = sSess.getFirstSession()
-            if(session != null){
-                if(session.id >= 0){
-                    LoginDAO.autologin(
-                        this,
-                        userId,
-                        onSuccess = { login ->
-                            startMainActivity(login.token, login.userId)
-                        },
-                        onFailure = {
-                            binding.loadingPanel.visibility = View.GONE
-                            binding.loginForm.visibility = View.VISIBLE
-                        }
-                    )
-                }
+            if(session != null && session.id >= 0){
+                LoginDAO.autologin(
+                    this,
+                    onSuccess = { login ->
+                        startMainActivity(login.token)
+                    },
+                    onFailure = {
+                        binding.loadingPanel.visibility = View.GONE
+                        binding.loginForm.visibility = View.VISIBLE
+                    }
+                )
+            }else{
+                binding.loadingPanel.visibility = View.GONE
+                binding.loginForm.visibility = View.VISIBLE
             }
 
         }

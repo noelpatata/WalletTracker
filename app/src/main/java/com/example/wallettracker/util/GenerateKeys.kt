@@ -21,7 +21,7 @@ class Cryptography(private var context: Context?, userId: Int) {
     fun sign(): String {
         SessionDAO(this.context).use { sSess ->
             val session = sSess.getByUserId(userId = this.userId!!)
-            if (session != null && session.id > 0) {
+            if (session.id > 0) {
                 val privateKey =
                     loadPrivateKey(session.privateKey)
                 val signedData = signWithPrivateKey(privateKey, randomText)
@@ -84,15 +84,4 @@ class Cryptography(private var context: Context?, userId: Int) {
             .generatePrivate(java.security.spec.PKCS8EncodedKeySpec(decodedBytes))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun encryptWithPrivateKey(privateKey: PrivateKey, data: String): ByteArray {
-        val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
-        cipher.init(Cipher.ENCRYPT_MODE, privateKey)
-        return cipher.doFinal(data.toByteArray(Charsets.UTF_8))
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun readFile(fileName: String): String {
-        return File(fileName).readText()
-    }
 }
