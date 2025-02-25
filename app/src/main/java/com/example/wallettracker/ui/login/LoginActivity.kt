@@ -38,7 +38,8 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        checkAutoLogin()
+        doLogin("jordi", "jordi")
+        //checkAutoLogin()
 
         initListeners()
 
@@ -55,7 +56,8 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            doLogin()
+            doLogin(binding.inputUsername.text.toString(),
+                binding.inputPassword.text.toString())
 
 
         }
@@ -64,7 +66,8 @@ class LoginActivity : AppCompatActivity() {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
-                doLogin()
+                doLogin(binding.inputUsername.text.toString(),
+                    binding.inputPassword.text.toString())
 
                 return@setOnEditorActionListener true
             }
@@ -73,10 +76,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun doLogin() {
+    private fun doLogin(username: String, password: String) {
         val credentials = LoginRequest(
-            binding.inputUsername.text.toString(),
-            binding.inputPassword.text.toString()
+            username,
+            password
         )
         val LoginDAO = LoginDAO(credentials)
         var token = ""
@@ -86,7 +89,7 @@ class LoginActivity : AppCompatActivity() {
                 token = login.token
 
                 //generate client keys
-                val keys = Cryptography(this, user).generateKeys()
+                val keys = Cryptography().generateKeys()
                 val privateKey = keys[0]
                 val publicKey = keys[1]
 
@@ -139,21 +142,23 @@ class LoginActivity : AppCompatActivity() {
             val session = sSess.getFirstSession()
             if(session != null && session.id >= 0){
                 LoginDAO.autologin(
-                    this,
+                    session,
                     onSuccess = { login ->
-                        startMainActivity(login.token)
+                        if(login.token != null){
+                            startMainActivity(login.token)
+                        }
+
                     },
                     onFailure = {
                         binding.loadingPanel.visibility = View.GONE
                         binding.loginForm.visibility = View.VISIBLE
                     }
                 )
-            }else{
-                binding.loadingPanel.visibility = View.GONE
-                binding.loginForm.visibility = View.VISIBLE
             }
 
         }
+        binding.loadingPanel.visibility = View.GONE
+        binding.loginForm.visibility = View.VISIBLE
     }
 
     private fun showError(message: String) {

@@ -7,7 +7,7 @@ import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.session.SessionDAO
+import com.example.wallettracker.data.session.Session
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -38,30 +38,27 @@ class LoginDAO(private val credentials: LoginRequest) {
     }
     companion object {
         @RequiresApi(Build.VERSION_CODES.O)
-        fun autologin(context: Context, onSuccess: (LoginResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-            SessionDAO(context).use { sSess ->
-                val sess = sSess.getFirstSession()
-                val userId = sess!!.userId
-                val signatureb64 = Cryptography(context, userId).sign() //encrypts with private key
-                val requestBody = AutoLoginRequest(userId, signatureb64)
-                ApiCall.login.autologin(requestBody).enqueue(object : Callback<LoginResponse> {
-                    override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                        if (response.isSuccessful) {
-                            val loginReponse = response.body()
-                            loginReponse?.let{
-                                onSuccess(it)
-                            }
-
-                        } else {
-                            onFailure(SuccessResponse(success = false, message = response.message()))
+        fun autologin(session: Session, onSuccess: (LoginResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+            val userId = session.userId
+            val signatureb64 = Cryptography().sign(session.privateKey) //encrypts with private key
+            val requestBody = AutoLoginRequest(userId, signatureb64)
+            ApiCall.login.autologin(requestBody).enqueue(object : Callback<LoginResponse> {
+                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                    if (response.isSuccessful) {
+                        val loginReponse = response.body()
+                        loginReponse?.let{
+                            onSuccess(it)
                         }
-                    }
 
-                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                        onFailure(SuccessResponse(success = false, message = t.message.toString()))
+                    } else {
+                        onFailure(SuccessResponse(success = false, message = response.message()))
                     }
-                })
-            }
+                }
+
+                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    onFailure(SuccessResponse(success = false, message = t.message.toString()))
+                }
+            })
 
         }
     }
