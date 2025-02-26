@@ -44,7 +44,7 @@ class Cryptography {
                 Base64.getEncoder().encodeToString(encoded).chunked(64).joinToString("\n") + "\n" +
                 "-----END PRIVATE KEY-----"
 
-        return pem
+        return Base64.getEncoder().encodeToString(pem.toByteArray(Charsets.UTF_8))
     }
 
     /**
@@ -59,7 +59,7 @@ class Cryptography {
                 Base64.getEncoder().encodeToString(encoded).chunked(64).joinToString("\n") + "\n" +
                 "-----END PUBLIC KEY-----"
 
-        return pem
+        return Base64.getEncoder().encodeToString(pem.toByteArray(Charsets.UTF_8))
     }
 
     /**
