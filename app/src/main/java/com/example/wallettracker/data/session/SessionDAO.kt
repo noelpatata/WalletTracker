@@ -36,20 +36,29 @@ class SessionDAO : Closeable{
         dbHelper?.close()
     }
 
+    // Update an existing Session in the database
+    fun edit(session: Session): Int {
+        val values = ContentValues()
+        values.put("userId", session.userId)
+        values.put("token", session.token)
+        values.put("privateKey", session.privateKey)
+        values.put("serverPublicKey", session.serverPublicKey)
+
+        return database!!.update("Session", values, "id = ?", arrayOf(session.id.toString()))
+    }
+
+
     // Insert a new Session into the database
     fun insert(session: Session): Long {
         val values = ContentValues()
         values.put("userId", session.userId)
+        values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
         return database!!.insert("Session", null, values)
     }
 
 
-    // Delete a Session from the database
-    fun delete(SessionId: Long) {
-        database!!.delete("Session", "_id = ?", arrayOf(SessionId.toString()))
-    }
     fun deleteAll() {
         database!!.delete("Session", null, null)
     }
@@ -66,35 +75,6 @@ class SessionDAO : Closeable{
         }
         return cat
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getByUserId(userId: Int): Session {
-        var cat: Session? = null
-        val cursor = database!!.rawQuery("SELECT * FROM Session WHERE userId = ${userId}", null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            if(cursor.isFirst){
-                cat = cursor(cursor)
-            }
-            cursor.close()
-        }
-        return cat!!
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getAll(): ArrayList<Session> {
-        var cat: Session? = null
-        val cursor = database!!.rawQuery("SELECT * FROM Session", null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            if(cursor.isFirst){
-                cat = cursor(cursor)
-            }
-            cursor.close()
-        }
-        val a = ArrayList<Session>()
-        a.add(cat!!)
-        return a
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
@@ -102,6 +82,7 @@ class SessionDAO : Closeable{
         val sess = Session()
         sess.id = cursor.getInt(cursor.getColumnIndex("id"))
         sess.userId = cursor.getInt(cursor.getColumnIndex("userId"))
+        sess.token = cursor.getString(cursor.getColumnIndex("token"))
         sess.privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
         sess.serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
 

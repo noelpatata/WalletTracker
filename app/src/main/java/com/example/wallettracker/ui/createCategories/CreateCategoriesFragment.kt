@@ -26,9 +26,6 @@ class CreateCategoriesFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    var TOKEN: String = ""
-    var USER_ID: Int = 0
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,9 +36,6 @@ class CreateCategoriesFragment : Fragment() {
             ViewModelProvider(this).get(CreateCategoriesViewModel::class.java)
 
         _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
-        val mainActivity = requireActivity() as MainActivity
-        TOKEN = mainActivity.TOKEN
-        USER_ID = mainActivity.USER_ID
 
         InitListeners()
 
@@ -52,6 +46,7 @@ class CreateCategoriesFragment : Fragment() {
         return root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun InitListeners() {
         binding.createCategory.setOnClickListener {
             SaveChanges()
@@ -70,6 +65,7 @@ class CreateCategoriesFragment : Fragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun SaveChanges() {
         val category = GetCategory()
         val isValid = CheckValidation(category)
@@ -89,10 +85,11 @@ class CreateCategoriesFragment : Fragment() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun Save() {
         try{
             val cat = GetCategory()
-            val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
             expenseCategoryDAO.createExpenseCategories(
                 cat,
                 onSuccess = {

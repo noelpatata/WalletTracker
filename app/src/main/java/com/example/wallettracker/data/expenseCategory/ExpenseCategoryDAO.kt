@@ -1,78 +1,95 @@
 package com.example.wallettracker.data.expenseCategory
 
+import BaseDAO
+import Cryptography
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
-import com.example.wallettracker.data.BaseDAO
+import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.util.Constantes.authenticationErrorMessage
+import com.example.wallettracker.util.Constantes.noDataMessage
+
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
+@RequiresApi(Build.VERSION_CODES.O)
+class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getExpenseCategories(
         onSuccess: (List<ExpenseCategory>) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
-        if (token == null) {
-            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
-            return
-        }
-        ApiCall.expenseCategory.getExpenseCategories("Bearer $token").enqueue(object : Callback<List<ExpenseCategoryResponse>> {
+        ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText).enqueue(object : Callback<DataResponse> {
             override fun onResponse(
-                call: Call<List<ExpenseCategoryResponse>>,
-                response: Response<List<ExpenseCategoryResponse>>
+                call: Call<DataResponse>,
+                response: Response<DataResponse>
             ) {
                 if (response.isSuccessful) {
-                    val expenseCategories = response.body()?.map { responseItem ->
-                        ExpenseCategory(responseItem.id).apply {
-                            setName(responseItem.name)
-                            setTotal(responseItem.total)
+                    val data: DataResponse? = response.body()
+                    if (data != null) {
+                        val jsonData = verifyData(data)
+                        if(jsonData.isEmpty()){
+                            onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
                         }
+                        else{
+                            val expenseCategories =  map(jsonData)
+                            onSuccess(expenseCategories)
+                        }
+
                     }
-                    expenseCategories?.let {
-                        onSuccess(it)
-                    } ?: onFailure(SuccessResponse(success = false, message = response.message()))
-                } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    else{
+                        onFailure(SuccessResponse(success = false, message = noDataMessage))
+                    }
+
                 }
+
             }
 
-            override fun onFailure(call: Call<List<ExpenseCategoryResponse>>, t: Throwable) {
+            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
                 onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
     }
+
+
 
     fun getExpenseCategoryById(
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit,
         catId: Long
     ) {
-        if (token == null) {
-            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
-            return
-        }
-
-        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", catId).enqueue(object : Callback<ExpenseCategoryResponse> {
+        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, catId).enqueue(object : Callback<DataResponse> {
             override fun onResponse(
-                call: Call<ExpenseCategoryResponse>,
-                response: Response<ExpenseCategoryResponse>
+                call: Call<DataResponse>,
+                response: Response<DataResponse>
             ) {
                 if (response.isSuccessful) {
-                    var resp = response.body()!!
-                    val category = ExpenseCategory(resp.id, resp.name)
-                    category.let {
-                        onSuccess(it)
+                    val data: DataResponse? = response.body()
+                    if (data != null) {
+                        val jsonData = verifyData(data)
+                        if(jsonData.isEmpty()){
+                            onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
+                        }
+                        else{
+                            val expenseCategories =  singlemap(jsonData)
+                            if (expenseCategories != null) {
+                                onSuccess(expenseCategories)
+                            }
+                        }
+
                     }
-                } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    else{
+                        onFailure(SuccessResponse(success = false, message = noDataMessage))
+                    }
+
                 }
             }
 
-            override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
+            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
                 onFailure(SuccessResponse(success = false, message = t.message.toString()))
             }
         })
@@ -82,35 +99,39 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
-        if (token == null) {
-            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
-            return
-        }
         val categoryRequest = ExpenseCategoryRequest(category)
-        ApiCall.expenseCategory.createExpenseCategories("Bearer $token", categoryRequest).enqueue(object : Callback<ExpenseCategoryResponse> {
+        ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, categoryRequest).enqueue(object : Callback<DataResponse> {
             override fun onResponse(
-                call: Call<ExpenseCategoryResponse>,
-                response: Response<ExpenseCategoryResponse>
+                call: Call<DataResponse>,
+                response: Response<DataResponse>
             ) {
                 if (response.isSuccessful) {
-                    val catFromResponse = response.body()
-                    if (catFromResponse != null) {
-                        val expenseCategory = ExpenseCategory(catFromResponse.id).apply {
-                            setName(catFromResponse.name)
-                            setTotal(catFromResponse.total)
+                    val data: DataResponse? = response.body()
+                    if (data != null) {
+                        val jsonData = verifyData(data)
+                        if(jsonData.isEmpty()){
+                            onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
                         }
-                        expenseCategory.let {
-                            onSuccess(it)
+                        else{
+                            val expenseCategories =  singlemap(jsonData)
+                            if (expenseCategories != null) {
+                                onSuccess(expenseCategories)
+                            }
                         }
-                    } else {
-                        onFailure(SuccessResponse(success = false, message = response.message()))
+
                     }
+                    else{
+                        onFailure(SuccessResponse(success = false, message = noDataMessage))
+                    }
+
+                }
+                }
+                override fun onFailure(call: Call<DataResponse>, t: Throwable) {
+                    onFailure(SuccessResponse(success = false, message = t.message.toString()))
                 }
 
-            }
-            override fun onFailure(call: Call<ExpenseCategoryResponse>, t: Throwable) {
-                onFailure(SuccessResponse(success = false, message = t.message.toString()))
-            }
+
+
         })
     }
 
@@ -119,12 +140,8 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
         onFailure: (SuccessResponse) -> Unit,
         catId: Long
     ) {
-        if (token == null) {
-            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
-            return
-        }
 
-        ApiCall.expenseCategory.deleteById("Bearer $token", catId).enqueue(object : Callback<SuccessResponse> {
+        ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, catId).enqueue(object : Callback<SuccessResponse> {
             override fun onResponse(
                 call: Call<SuccessResponse>,
                 response: Response<SuccessResponse>
@@ -135,7 +152,7 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                         onSuccess(it)
                     } ?: onFailure(SuccessResponse(success = false, message = response.message()))
                 } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
                 }
             }
 
@@ -149,12 +166,8 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
         onFailure: (SuccessResponse) -> Unit,
         category: ExpenseCategory
     ) {
-        if (token == null) {
-            onFailure(SuccessResponse(success = false, message = "Token not available, login first"))
-            return
-        }
         val categoryRequest = ExpenseCategoryRequest(category)
-        ApiCall.expenseCategory.editName("Bearer $token", categoryRequest).enqueue(object : Callback<SuccessResponse> {
+        ApiCall.expenseCategory.editName("Bearer $token", cipheredText, categoryRequest).enqueue(object : Callback<SuccessResponse> {
             override fun onResponse(
                 call: Call<SuccessResponse>,
                 response: Response<SuccessResponse>
@@ -165,7 +178,7 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
                         onSuccess(it)
                     } ?: onFailure(SuccessResponse(success = false, message = response.message()))
                 } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
                 }
             }
 
@@ -175,4 +188,27 @@ class ExpenseCategoryDAO(token: String, userId: Int): BaseDAO(token, userId) {
             }
         })
     }
+    fun singlemap(jsonData: String): ExpenseCategory? {
+        return try {
+            val gson = com.google.gson.Gson()
+            val type = object : com.google.gson.reflect.TypeToken<ExpenseCategory>() {}.type
+            gson.fromJson(jsonData, type)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun map(jsonData: String): List<ExpenseCategory> {
+        return try {
+            val gson = com.google.gson.Gson()
+            val type = object : com.google.gson.reflect.TypeToken<List<ExpenseCategory>>() {}.type
+            gson.fromJson(jsonData, type)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+
 }

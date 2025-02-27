@@ -33,8 +33,6 @@ class CreateExpenseFragment : Fragment() {
     var expenseId: Long = 0
 
     private var _binding: FragmentCreateexpenseBinding? = null
-    var TOKEN: String = ""
-    var USER_ID: Int = 0
 
     private val binding get() = _binding!!
 
@@ -48,9 +46,6 @@ class CreateExpenseFragment : Fragment() {
         _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val mainActivity = requireActivity() as MainActivity
-        TOKEN = mainActivity.TOKEN
-        USER_ID = mainActivity.USER_ID
 
         //app logic
         var categoryId: Long = -1
@@ -100,7 +95,7 @@ class CreateExpenseFragment : Fragment() {
         LoadDefaultDateTime()
         LoadComboCategorias(catId)
         if(expenseId > 0 ){
-            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.getById(
                 onSuccess = { expense ->
                     LoadExpense(expense)
@@ -138,7 +133,7 @@ class CreateExpenseFragment : Fragment() {
 
         if (catId > 0){
             var categories = listOf<ExpenseCategory>()
-            val categoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            val categoryDAO = ExpenseCategoryDAO(this.requireContext())
             categoryDAO.getExpenseCategories(
                 onSuccess = {
                     LoadSpinner(it)
@@ -230,9 +225,10 @@ class CreateExpenseFragment : Fragment() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun Delete(expenseId: Long) {
         try {
-            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.deleteById(
                 onSuccess = { response ->
                     if (response.success)
@@ -257,7 +253,7 @@ class CreateExpenseFragment : Fragment() {
         try {
             val expense = GetExpense()
 
-            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.edit(
                 onSuccess = { state ->
                     if (state.success)
@@ -278,11 +274,12 @@ class CreateExpenseFragment : Fragment() {
         try {
             val expense = GetExpense()
 
-            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.createExpense(
                 onSuccess = { state ->
-                    if (state.success)
-                        findNavController().popBackStack()
+                    val createdExpense = state
+                    findNavController().popBackStack()
+
                 },
                 onFailure = { error ->
                     Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()

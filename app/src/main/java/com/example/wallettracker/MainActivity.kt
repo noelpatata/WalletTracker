@@ -16,20 +16,16 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wallettracker.data.expense.ExpenseDAO
+import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    var TOKEN: String = ""
-    var USER_ID: Int = 0
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        TOKEN = intent.getStringExtra("TOKEN_KEY").toString()
-        USER_ID = 5 //load userId from current session
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -45,7 +41,8 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.nav_categories,
                 R.id.nav_importsheet,
-                R.id.nav_settings
+                R.id.nav_settings,
+                R.id.nav_logout
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -67,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resetExpenses -> {
@@ -77,8 +75,9 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun ResetExpenses() {
-        ExpenseDAO(TOKEN, USER_ID).deleteAll(
+        ExpenseDAO(this).deleteAll(
             onSuccess = { response ->
                 if (response.success) {
                     Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()

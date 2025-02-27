@@ -10,7 +10,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.wallettracker.MainActivity
 import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.data.login.LoginDAO
@@ -18,16 +17,13 @@ import com.example.wallettracker.data.login.LoginRequest
 import com.example.wallettracker.data.login.ServerPubKeyRequest
 import com.example.wallettracker.data.session.Session
 import com.example.wallettracker.databinding.ActivityLoginBinding
-import com.example.wallettracker.util.Util
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
 
 
-    private fun startMainActivity(token: String) {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra("TOKEN_KEY", token)
-        }
+    private fun startMainActivity() {
+        val intent = Intent(this, MainActivity::class.java).apply {}
 
         startActivity(intent)
         finish()
@@ -38,8 +34,7 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        doLogin("jordi", "jordi")
-        //checkAutoLogin()
+        checkAutoLogin()
 
         initListeners()
 
@@ -107,12 +102,13 @@ class LoginActivity : AppCompatActivity() {
                                     //creates a new session
                                     val newSess = Session()
                                     newSess.userId = it.userId
+                                    newSess.token = token
                                     newSess.serverPublicKey = serverPublicKey
                                     newSess.privateKey = privateKey
                                     sSess.insert(newSess)
 
                                     //start activity
-                                    startMainActivity(token)
+                                    startMainActivity()
                                 }
 
                             },
@@ -138,28 +134,34 @@ class LoginActivity : AppCompatActivity() {
     private fun checkAutoLogin() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.loginForm.visibility = View.GONE
-        SessionDAO(this).use { sSess ->
-            val session = sSess.getFirstSession()
-            if(session != null && session.id >= 0){
-                LoginDAO.autologin(
-                    session,
-                    onSuccess = { login ->
-                        if(login.token != null){
-                            startMainActivity(login.token)
-                        }
 
-                    },
-                    onFailure = {
-                        binding.loadingPanel.visibility = View.GONE
-                        binding.loginForm.visibility = View.VISIBLE
+        val sSess = SessionDAO(this)  // Open SessionDAO manually
+        val session = sSess.getFirstSession()
+
+        if (session != null && session.id >= 0) {
+            LoginDAO.autologin(
+                session,
+                onSuccess = { login ->
+                    if (login.token != null) {
+                        session.token = login.token
+                        sSess.edit(session)  // Database is still open here
                     }
-                )
-            }
-
+                    sSess.close()  // Manually close SessionDAO after use
+                    startMainActivity()
+                },
+                onFailure = {
+                    sSess.close()  // Manually close SessionDAO even on failure
+                    binding.loadingPanel.visibility = View.GONE
+                    binding.loginForm.visibility = View.VISIBLE
+                }
+            )
+        } else {
+            sSess.close()  // Close if no session found
+            binding.loadingPanel.visibility = View.GONE
+            binding.loginForm.visibility = View.VISIBLE
         }
-        binding.loadingPanel.visibility = View.GONE
-        binding.loginForm.visibility = View.VISIBLE
     }
+
 
     private fun showError(message: String) {
         Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()

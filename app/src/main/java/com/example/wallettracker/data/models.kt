@@ -1,13 +1,16 @@
 package com.example.wallettracker.data
 
-open class BaseDAO(val token: String, val userId: Int) {
-}
-
-data class ErrorResponse(
-    val error: String
+data class DataResponse(
+    val signature: String,
+    val symmetric_keys: SymmetricResponse
+)
+data class SymmetricResponse(
+    val encrypted_aes_key: String,
+    val iv: String,
+    val ciphertext: String,
+    val tag: String
 )
 data class SuccessResponse(
     val success: Boolean,
     val message: String
 )
-

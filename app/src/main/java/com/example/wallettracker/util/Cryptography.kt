@@ -9,6 +9,8 @@ import java.security.spec.PSSParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import java.util.*
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 class Cryptography {
 
@@ -67,20 +69,12 @@ class Cryptography {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun sign(privateKeyBase64: String): String {
-        // Load the private key from the Base64 encoded string
         val privateKey = loadPrivateKey(privateKeyBase64)
 
-        // Initialize the Signature object with SHA256withRSA/PSS
         val signature = Signature.getInstance("SHA256withRSA/PSS")
         signature.initSign(privateKey)
-
-        // Set the PSS parameters (MGF1, Salt length, and trailer field)
         signature.setParameter(PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1))
-
-        // Update the signature with the data to be signed
         signature.update("s0m3r4nd0mt3xt".toByteArray())
-
-        // Generate the signed data
         val signBytes = signature.sign()
 
         // Return the Base64 encoded signature
@@ -88,11 +82,105 @@ class Cryptography {
     }
 
     /**
+     * Verifies a signature using the public key with X.509 format.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun verify(publicKeyB64: String, signatureB64: String): Boolean {
+        return try {
+            val publicKey = loadPublicKey(publicKeyB64)
+
+            // Decode Base64 signature
+            val signatureBytes = Base64.getDecoder().decode(signatureB64)
+
+            // Initialize Signature instance
+            val signature = Signature.getInstance("SHA256withRSA/PSS")
+            signature.initVerify(publicKey)
+
+            signature.setParameter(PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1))
+
+            signature.update("s0m3r4nd0mt3xt".toByteArray())
+
+            signature.verify(signatureBytes)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Decrypts the data using the private key with RSA/ECB/OAEPWithSHA-256AndMGF1Padding.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun decrypt(privateKeyBase64: String, cipherTextBase64: String): String {
+        return try {
+            val privateKey = loadPrivateKey(privateKeyBase64)
+
+            // Decode Base64 cipher text
+            val cipherTextBytes = Base64.getDecoder().decode(cipherTextBase64)
+
+            // Initialize Cipher for RSA decryption
+            val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
+            cipher.init(Cipher.DECRYPT_MODE, privateKey)
+
+            // Perform decryption
+            val decryptedBytes = cipher.doFinal(cipherTextBytes)
+
+            // Convert decrypted bytes to string (assuming it's a JSON string)
+            String(decryptedBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "" // Return empty JSON string in case of failure
+        }
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun hybridDecrypt(
+        privateKeyBase64: String,
+        encryptedAesKeyBase64: String,
+        ivBase64: String,
+        cipherTextBase64: String,
+        tagBase64: String
+    ): String {
+        return try {
+            val privateKey = loadPrivateKey(privateKeyBase64)
+
+            // Decode Base64 values
+            val encryptedAesKey = Base64.getDecoder().decode(encryptedAesKeyBase64)
+            val iv = Base64.getDecoder().decode(ivBase64)
+            val cipherText = Base64.getDecoder().decode(cipherTextBase64)
+            val tag = Base64.getDecoder().decode(tagBase64)
+
+            // 🔹 Step 1: Decrypt AES key using RSA
+            val rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
+            rsaCipher.init(Cipher.DECRYPT_MODE, privateKey)
+            val aesKey = rsaCipher.doFinal(encryptedAesKey)
+
+            // 🔹 Step 2: Decrypt data using AES-GCM
+            val aesCipher = Cipher.getInstance("AES/GCM/NoPadding")
+            val secretKey = SecretKeySpec(aesKey, "AES")
+            val gcmSpec = GCMParameterSpec(128, iv)
+            aesCipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec)
+
+            // 🔹 Append authentication tag to ciphertext
+            val fullCipherText = cipherText + tag
+            val decryptedBytes = aesCipher.doFinal(fullCipherText)
+
+            // Convert decrypted bytes to string
+            String(decryptedBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ""
+        }
+    }
+
+
+    /**
      * Load Private Key from Base64 encoded string (PKCS#8 format)
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadPrivateKey(privateKeyEncoded: String): RSAPrivateKey {
-        val base64String = privateKeyEncoded
+        val privateKeyDecodedBytes = Base64.getDecoder().decode(privateKeyEncoded)
+        val privateKeyDecoded = String(privateKeyDecodedBytes)
+        val base64String = privateKeyDecoded
             .replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
             .replace("\\s+".toRegex(), "")
@@ -107,7 +195,9 @@ class Cryptography {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadPublicKey(publicKeyEncoded: String): RSAPublicKey {
-        val base64String = publicKeyEncoded
+        val publicKeyDecodedBytes = Base64.getDecoder().decode(publicKeyEncoded)
+        val publicKeyDecoded = String(publicKeyDecodedBytes)
+        val base64String = publicKeyDecoded
             .replace("-----BEGIN PUBLIC KEY-----", "")
             .replace("-----END PUBLIC KEY-----", "")
             .replace("\\s+".toRegex(), "")

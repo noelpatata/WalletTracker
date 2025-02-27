@@ -1,5 +1,6 @@
 package com.example.wallettracker.data.expense
 
+import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryResponse
@@ -17,35 +18,41 @@ interface ExpenseEPs {
     @DELETE("Expense/all/")
     fun deleteAll(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
     ): Call<SuccessResponse>
 
     @GET("Expense/")
     fun getByCatId(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
         @Query("catId") catId: Long
-    ): Call<List<ExpenseResponse>>
+    ): Call<DataResponse>
 
-    @POST("Expense/edit")
+    @POST("Expense/edit/")
     fun edit(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
         @Body expenseCategory: ExpenseRequest
     ): Call<SuccessResponse>
 
-    @POST("Expense/create")
+    @POST("Expense/create/")
     fun createExpense(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
         @Body expense: ExpenseRequest
-    ): Call<SuccessResponse>
+    ): Call<DataResponse>
 
     @GET("Expense/Id/")
     fun getById(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
         @Query("expenseId") expenseId: Long
-    ): Call<ExpenseResponse>
+    ): Call<DataResponse>
 
     @DELETE("Expense/")
     fun deleteById(
         @Header("Authorization") token: String,
+        @Header("Cipher") cipher: String,
         @Query("expenseId") expenseId: Long
     ): Call<SuccessResponse>
 }

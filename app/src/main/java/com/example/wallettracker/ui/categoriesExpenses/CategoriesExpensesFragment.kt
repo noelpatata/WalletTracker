@@ -46,9 +46,6 @@ class CategoriesExpensesFragment() : Fragment() {
             ViewModelProvider(this).get(CategoriesExpensesViewModel::class.java)
 
         _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
-        val mainActivity = requireActivity() as MainActivity
-        TOKEN = mainActivity.TOKEN
-        USER_ID = mainActivity.USER_ID
 
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
@@ -72,7 +69,7 @@ class CategoriesExpensesFragment() : Fragment() {
     @SuppressLint("NewApi")
     private fun LoadCategoryInfo() {
 
-        val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+        val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
         expenseCategoryDAO.getExpenseCategoryById(
             onSuccess = { category ->
                 binding.inputName.setText(category.getName())
@@ -88,7 +85,7 @@ class CategoriesExpensesFragment() : Fragment() {
     @SuppressLint("NewApi")
     private fun LoadExpenses() {
         try {
-            val expenseDAO = ExpenseDAO(TOKEN, USER_ID)
+            val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.getByCatId(
                 onSuccess = { lista ->
                     binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
@@ -158,10 +155,11 @@ class CategoriesExpensesFragment() : Fragment() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun SaveChanges() {
         try {
             val category = GetCategory()
-            val categoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            val categoryDAO = ExpenseCategoryDAO(this.requireContext())
             categoryDAO.editName(
                 onSuccess = { },
                 onFailure = { error ->
@@ -180,9 +178,10 @@ class CategoriesExpensesFragment() : Fragment() {
         return cat
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun DeleteCategory() {
         try {
-            val categoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+            val categoryDAO = ExpenseCategoryDAO(this.requireContext())
             categoryDAO.deleteById(
                 onSuccess = { lista ->
                 },

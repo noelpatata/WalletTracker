@@ -24,8 +24,6 @@ class CategoriesFragment : Fragment() {
     private var _binding: FragmentCategoriesBinding? = null
     private val binding get() = _binding!!
 
-    var TOKEN: String = ""
-    var USER_ID: Int = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -37,9 +35,6 @@ class CategoriesFragment : Fragment() {
             ViewModelProvider(this).get(CategoriesViewModel::class.java)
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
-        val mainActivity = requireActivity() as MainActivity
-        TOKEN = mainActivity.TOKEN
-        USER_ID = mainActivity.USER_ID
 
         initListeners()
         loadData()
@@ -54,27 +49,18 @@ class CategoriesFragment : Fragment() {
     private fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.rviewCategories.visibility = View.GONE
-        val expenseCategoryDAO = ExpenseCategoryDAO(TOKEN, USER_ID)
+        val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
         expenseCategoryDAO.getExpenseCategories(
-            onSuccess = {
-                expenseCategoryDAO.getExpenseCategories(
-                    onSuccess = { categoryList ->
-                        displayCategories(categoryList)
-                        binding.loadingPanel.visibility = View.GONE
-                        binding.rviewCategories.visibility = View.VISIBLE
-                    },
-                    onFailure = { error ->
-                        showError("Error fetching categories: $error")
-                        binding.loadingPanel.visibility = View.GONE
-                        binding.rviewCategories.visibility = View.VISIBLE
-                    })
-            },
-            onFailure = { error ->
-                showError("Login error: $error")
+            onSuccess = { categoryList ->
+                displayCategories(categoryList)
                 binding.loadingPanel.visibility = View.GONE
                 binding.rviewCategories.visibility = View.VISIBLE
-            }
-        )
+            },
+            onFailure = { error ->
+                showError("$error")
+                binding.loadingPanel.visibility = View.GONE
+                binding.rviewCategories.visibility = View.VISIBLE
+            })
     }
 
     private fun displayCategories(categories: List<ExpenseCategory>) {
