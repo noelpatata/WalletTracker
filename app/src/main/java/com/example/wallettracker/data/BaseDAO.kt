@@ -1,6 +1,7 @@
 import Cryptography
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
@@ -46,16 +47,10 @@ abstract class BaseDAO<T>(private val context: Context) {
     fun verifyData(data: DataResponse): String{
         val signed = verifySignature(data.signature)
         if (signed){
-            val jsonData = decryptData(data.symmetric_keys)
-            if(jsonData.isNotEmpty()){
-                return jsonData
-            }else{
-                return ""
-            }
+            val jsonData = decryptData(data.encrypted_data)
+            if(jsonData != ""){ return jsonData }
 
         }
-        else{
-            return ""
-        }
+        return ""
     }
 }

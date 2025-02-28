@@ -4,8 +4,10 @@ import BaseDAO
 import Cryptography
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
+import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.util.Constantes.authenticationErrorMessage
@@ -62,7 +64,7 @@ class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
         onFailure: (SuccessResponse) -> Unit,
         catId: Long
     ) {
-        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, catId).enqueue(object : Callback<DataResponse> {
+        ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, CatIdRequest(catId)).enqueue(object : Callback<DataResponse> {
             override fun onResponse(
                 call: Call<DataResponse>,
                 response: Response<DataResponse>
@@ -71,7 +73,7 @@ class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
                     val data: DataResponse? = response.body()
                     if (data != null) {
                         val jsonData = verifyData(data)
-                        if(jsonData.isEmpty()){
+                        if(jsonData == "error"){
                             onFailure(SuccessResponse(success = false, message = authenticationErrorMessage))
                         }
                         else{
@@ -141,7 +143,7 @@ class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
         catId: Long
     ) {
 
-        ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, catId).enqueue(object : Callback<SuccessResponse> {
+        ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, CatIdRequest(catId)).enqueue(object : Callback<SuccessResponse> {
             override fun onResponse(
                 call: Call<SuccessResponse>,
                 response: Response<SuccessResponse>
@@ -190,6 +192,7 @@ class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
     }
     fun singlemap(jsonData: String): ExpenseCategory? {
         return try {
+            if(jsonData == "{}") return null
             val gson = com.google.gson.Gson()
             val type = object : com.google.gson.reflect.TypeToken<ExpenseCategory>() {}.type
             gson.fromJson(jsonData, type)
@@ -201,6 +204,7 @@ class ExpenseCategoryDAO(context: Context): BaseDAO<ExpenseCategory>(context) {
 
     fun map(jsonData: String): List<ExpenseCategory> {
         return try {
+            if(jsonData == "[]") return emptyList()
             val gson = com.google.gson.Gson()
             val type = object : com.google.gson.reflect.TypeToken<List<ExpenseCategory>>() {}.type
             gson.fromJson(jsonData, type)

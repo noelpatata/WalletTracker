@@ -255,9 +255,9 @@ class CreateExpenseFragment : Fragment() {
 
             val expenseDAO = ExpenseDAO(this.requireContext())
             expenseDAO.edit(
-                onSuccess = { state ->
-                    if (state.success)
-                        findNavController().popBackStack()
+                onSuccess = {
+                    findNavController().popBackStack()
+
                 },
                 onFailure = { error ->
                     Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()

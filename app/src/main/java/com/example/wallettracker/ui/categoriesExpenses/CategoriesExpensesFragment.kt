@@ -14,10 +14,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expense.ExpenseDAO
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
@@ -32,9 +30,6 @@ class CategoriesExpensesFragment() : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-
-    var TOKEN: String = ""
-    var USER_ID: Int = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -58,27 +53,22 @@ class CategoriesExpensesFragment() : Fragment() {
         return root
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("NewApi")
     private fun LoadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
-        LoadCategoryInfo()
-        LoadExpenses()
-    }
-
-    @SuppressLint("NewApi")
-    private fun LoadCategoryInfo() {
-
         val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
         expenseCategoryDAO.getExpenseCategoryById(
             onSuccess = { category ->
                 binding.inputName.setText(category.getName())
+                LoadExpenses()
             },
             onFailure = { error ->
                 Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
             },
             catId = categoryId
         )
+
 
     }
 

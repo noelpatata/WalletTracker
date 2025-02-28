@@ -1,6 +1,9 @@
 package com.example.wallettracker.data.expense
 
+import android.provider.ContactsContract.Data
+import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
+import com.example.wallettracker.data.ExpenseIdRequest
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryResponse
@@ -21,11 +24,11 @@ interface ExpenseEPs {
         @Header("Cipher") cipher: String,
     ): Call<SuccessResponse>
 
-    @GET("Expense/")
+    @POST("Expense/CatId/")
     fun getByCatId(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Query("catId") catId: Long
+        @Body catId: CatIdRequest
     ): Call<DataResponse>
 
     @POST("Expense/edit/")
@@ -33,7 +36,7 @@ interface ExpenseEPs {
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
         @Body expenseCategory: ExpenseRequest
-    ): Call<SuccessResponse>
+    ): Call<DataResponse>
 
     @POST("Expense/create/")
     fun createExpense(
@@ -42,17 +45,17 @@ interface ExpenseEPs {
         @Body expense: ExpenseRequest
     ): Call<DataResponse>
 
-    @GET("Expense/Id/")
+    @POST("Expense/Id")
     fun getById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Query("expenseId") expenseId: Long
+        @Body expenseId: ExpenseIdRequest
     ): Call<DataResponse>
 
-    @DELETE("Expense/")
+    @POST("Expense/delete/")
     fun deleteById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Query("expenseId") expenseId: Long
+        @Body expenseId : ExpenseIdRequest
     ): Call<SuccessResponse>
 }

@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.session.Session
+import com.example.wallettracker.util.Constantes.loginFailedMessage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -27,7 +28,7 @@ class LoginDAO(private val credentials: LoginRequest) {
                     }
 
                 } else {
-                    onFailure("Login failed: ${response.message()}")
+                    onFailure(loginFailedMessage)
                 }
             }
 
@@ -51,7 +52,7 @@ class LoginDAO(private val credentials: LoginRequest) {
                         }
 
                     } else {
-                        onFailure(SuccessResponse(success = false, message = response.message()))
+                        onFailure(SuccessResponse(success = false, message = loginFailedMessage))
                     }
                 }
 

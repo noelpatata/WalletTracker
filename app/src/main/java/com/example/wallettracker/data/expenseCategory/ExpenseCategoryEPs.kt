@@ -1,5 +1,6 @@
 package com.example.wallettracker.data.expenseCategory
 
+import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.DataResponse
 import retrofit2.Call
@@ -19,11 +20,11 @@ interface ExpenseCategoryEPs {
         @Header("Cipher") cipher: String
     ): Call<DataResponse>
 
-    @GET("ExpenseCategory/Id/")
+    @POST("ExpenseCategory/Id/")
     fun getExpenseCategoryById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Query("catId") catId: Long
+        @Body catId: CatIdRequest
     ): Call<DataResponse>
 
     @POST("ExpenseCategory/create/")
@@ -33,11 +34,11 @@ interface ExpenseCategoryEPs {
         @Body expenseCategory: ExpenseCategoryRequest
     ): Call<DataResponse>
 
-    @DELETE("ExpenseCategory/")
+    @POST("ExpenseCategory/delete/")
     fun deleteById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Query("catId") catId: Long
+        @Body catId: CatIdRequest
     ): Call<SuccessResponse>
 
     @POST("ExpenseCategory/editName/")
