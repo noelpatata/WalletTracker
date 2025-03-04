@@ -1,5 +1,10 @@
 package com.example.wallettracker.data.expenseCategory
 
+data class ExpenseCategoryResponse(
+    val id: Long,
+    val name: String,
+    val total: Double
+)
 
 class ExpenseCategory {
     private var id: Long = 0
@@ -33,3 +38,24 @@ class ExpenseCategory {
 
 
 }
+
+class ExpenseCategoryRequest() {
+    private var id: Long = -1
+    private lateinit var name: String
+
+    constructor(category: ExpenseCategory) : this() {
+        this.id = category.getId()
+        this.name = category.getName()
+    }
+
+    fun getName(): String{
+        return this.name
+    }
+    fun setName(value: String){
+        this.name = value
+    }
+    fun setId(value: Long){
+        this.id = value
+    }
+}
+

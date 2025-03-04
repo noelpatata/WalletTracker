@@ -12,11 +12,15 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
+import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import provideExpenseCategoryRepository
 
 class CreateCategoriesFragment : Fragment() {
 
@@ -70,7 +74,10 @@ class CreateCategoriesFragment : Fragment() {
         val category = GetCategory()
         val isValid = CheckValidation(category)
         if(isValid){
-            Save()
+            CoroutineScope(Dispatchers.Main).launch {
+                save()
+            }
+
         }else{
             Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
 
@@ -86,10 +93,11 @@ class CreateCategoriesFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun Save() {
+    private suspend fun save() {
         try{
             val cat = GetCategory()
-            val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
+            val expenseCategoryDAO: ExpenseCategoryRepository =
+                provideExpenseCategoryRepository(requireContext())
             expenseCategoryDAO.createExpenseCategories(
                 cat,
                 onSuccess = {

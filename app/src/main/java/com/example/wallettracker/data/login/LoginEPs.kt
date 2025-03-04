@@ -1,7 +1,6 @@
 package com.example.wallettracker.data.login
 
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET

@@ -11,12 +11,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.wallettracker.MainActivity
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
+import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
+import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import provideExpenseCategoryRepository
 
 
 class CategoriesFragment : Fragment() {
@@ -36,8 +40,11 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        initListeners()
-        loadData()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            initListeners()
+            loadData()
+        }
 
 
 
@@ -46,11 +53,13 @@ class CategoriesFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun loadData() {
+    private suspend fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.rviewCategories.visibility = View.GONE
-        val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
-        expenseCategoryDAO.getExpenseCategories(
+        val expenseCategoryRepository: ExpenseCategoryRepository =
+            provideExpenseCategoryRepository(requireContext())
+
+        expenseCategoryRepository.getExpenseCategories(
             onSuccess = { categoryList ->
                 displayCategories(categoryList)
                 binding.loadingPanel.visibility = View.GONE
@@ -60,7 +69,8 @@ class CategoriesFragment : Fragment() {
                 showError("$error")
                 binding.loadingPanel.visibility = View.GONE
                 binding.rviewCategories.visibility = View.VISIBLE
-            })
+            }
+        )
     }
 
     private fun displayCategories(categories: List<ExpenseCategory>) {
@@ -86,7 +96,9 @@ class CategoriesFragment : Fragment() {
             findNavController().navigate(R.id.nav_createcategories)
         }
         binding.swiperefresh.setOnRefreshListener {
-            loadData()
+            CoroutineScope(Dispatchers.Main).launch {
+                loadData()
+            }
             binding.swiperefresh.isRefreshing = false
 
         }

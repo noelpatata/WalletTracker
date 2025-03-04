@@ -43,6 +43,7 @@ class SessionDAO : Closeable{
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
+        values.put("remember", if (session.remember) 1 else 0)
 
         return database!!.update("Session", values, "id = ?", arrayOf(session.id.toString()))
     }
@@ -55,6 +56,8 @@ class SessionDAO : Closeable{
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
+        values.put("remember", if (session.remember) 1 else 0)
+        values.put("online", if (session.online) 1 else 0)
         return database!!.insert("Session", null, values)
     }
 
@@ -79,14 +82,15 @@ class SessionDAO : Closeable{
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun cursor(cursor: Cursor): Session {
-        val sess = Session()
-        sess.id = cursor.getInt(cursor.getColumnIndex("id"))
-        sess.userId = cursor.getInt(cursor.getColumnIndex("userId"))
-        sess.token = cursor.getString(cursor.getColumnIndex("token"))
-        sess.privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
-        sess.serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
-
-        return sess
+        return Session().apply {
+            id = cursor.getInt(cursor.getColumnIndex("id"))
+            userId = cursor.getInt(cursor.getColumnIndex("userId"))
+            token = cursor.getString(cursor.getColumnIndex("token"))
+            privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
+            serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
+            remember = cursor.getInt(cursor.getColumnIndex("remember")) == 1
+            online = cursor.getInt(cursor.getColumnIndex("online")) == 1
+        }
     }
 
 

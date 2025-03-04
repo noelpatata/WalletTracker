@@ -9,41 +9,43 @@ import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
-class ExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(context) {
+class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(context),
+    ExpenseCategoryRepository {
 
-    fun getExpenseCategories(onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun getExpenseCategories(onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText)
             .enqueue(handleListResponse(onSuccess, onFailure))
     }
 
-    fun getExpenseCategoryById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun getExpenseCategoryById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(CatIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    fun createExpenseCategories(category: ExpenseCategory, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun createExpenseCategories(category: ExpenseCategory, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    fun deleteById(catId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun deleteById(catId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(CatIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleSuccessResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    fun editName(category: ExpenseCategory, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun editName(category: ExpenseCategory, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleSuccessResponse(onSuccess, onFailure))

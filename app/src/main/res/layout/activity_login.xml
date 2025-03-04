@@ -66,7 +66,10 @@
             android:layout_width="match_parent"
             android:inputType="textPassword"
             android:textSize="20sp" />
-
+        <CheckBox android:id="@+id/cbox_rememberpassw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Remember password"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,7 +88,20 @@
                 app:borderWidth="2dp"
                 app:backgroundTint="@color/black"
                 android:layout_gravity="center" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/offline_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:layout_marginStart="10dp"
+                android:focusable="true"
+                android:src="@drawable/ic_offline"
+                android:backgroundTint="@color/white"
+                app:borderWidth="2dp"
+                app:backgroundTint="@color/black"
+                android:layout_gravity="center" />
         </LinearLayout>
+
 
     </LinearLayout>
 

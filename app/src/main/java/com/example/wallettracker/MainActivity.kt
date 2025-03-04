@@ -4,7 +4,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.android.material.navigation.NavigationView
@@ -15,8 +14,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import com.example.wallettracker.data.expense.ExpenseDAO
-import com.example.wallettracker.data.session.SessionDAO
+import com.example.wallettracker.data.expense.OnlineExpenseDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -77,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun ResetExpenses() {
-        ExpenseDAO(this).deleteAll(
+        OnlineExpenseDAO(this).deleteAll(
             onSuccess = { response ->
                 if (response.success) {
                     Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()

@@ -1,19 +1,15 @@
 package com.example.wallettracker.data.expenseCategory
 
-import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SymmetricResponse
 import retrofit2.Call
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.Query
 import retrofit2.http.Header
-import retrofit2.http.Headers
 import retrofit2.http.POST
 
-interface ExpenseCategoryEPs {
+interface OnlineExpenseCategoryEPs {
 
 
     @GET("ExpenseCategory/")

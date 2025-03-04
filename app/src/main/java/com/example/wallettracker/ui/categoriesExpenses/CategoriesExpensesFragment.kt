@@ -16,10 +16,17 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expense.ExpenseDAO
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryDAO
+import com.example.wallettracker.data.expense.OnlineExpenseDAO
+import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
+import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
+import com.example.wallettracker.data.interfaces.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import provideExpenseCategoryRepository
+import provideExpenseRepository
 
 class CategoriesExpensesFragment() : Fragment() {
     var categoryId: Long = 0
@@ -44,8 +51,11 @@ class CategoriesExpensesFragment() : Fragment() {
 
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
-        InitListeners()
-        LoadData()
+        initListeners()
+        CoroutineScope(Dispatchers.Main).launch {
+            loadData()
+        }
+
 
 
 
@@ -54,14 +64,19 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @SuppressLint("NewApi")
-    private fun LoadData() {
+    private suspend fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
-        val expenseCategoryDAO = ExpenseCategoryDAO(this.requireContext())
+
+        val expenseCategoryDAO: ExpenseCategoryRepository =
+            provideExpenseCategoryRepository(requireContext())
         expenseCategoryDAO.getExpenseCategoryById(
             onSuccess = { category ->
                 binding.inputName.setText(category.getName())
-                LoadExpenses()
+                CoroutineScope(Dispatchers.Main).launch {
+                    loadExpenses()
+                }
+
             },
             onFailure = { error ->
                 Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
@@ -73,9 +88,10 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @SuppressLint("NewApi")
-    private fun LoadExpenses() {
+    private suspend fun loadExpenses() {
         try {
-            val expenseDAO = ExpenseDAO(this.requireContext())
+            val expenseDAO: ExpenseRepository =
+                provideExpenseRepository(requireContext())
             expenseDAO.getByCatId(
                 onSuccess = { lista ->
                     binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
@@ -100,16 +116,16 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun InitListeners() {
+    private fun initListeners() {
         binding.saveChanges.setOnClickListener {
-            SaveIfValid()
+            saveIfValid()
 
         }
         binding.inputName.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
-                SaveIfValid()
+                saveIfValid()
 
                 return@setOnEditorActionListener true
             }
@@ -121,17 +137,22 @@ class CategoriesExpensesFragment() : Fragment() {
             findNavController().navigate(R.id.nav_createexpense, bundle)
         }
         binding.delete.setOnClickListener {
-            DeleteCategory()
+            CoroutineScope(Dispatchers.Main).launch {
+                deleteCategory()
+            }
         }
 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun SaveIfValid() {
+    private fun saveIfValid() {
         val category = GetCategory()
         val isValid = CheckValidation(category)
         if (isValid){
-            SaveChanges()
+            CoroutineScope(Dispatchers.Main).launch {
+                saveChanges()
+            }
+
         }
         else{
             Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
@@ -146,10 +167,11 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun SaveChanges() {
+    private suspend fun saveChanges() {
         try {
             val category = GetCategory()
-            val categoryDAO = ExpenseCategoryDAO(this.requireContext())
+            val categoryDAO: ExpenseCategoryRepository =
+                provideExpenseCategoryRepository(requireContext())
             categoryDAO.editName(
                 category,
                 onSuccess = { },
@@ -170,9 +192,10 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun DeleteCategory() {
+    private suspend fun deleteCategory() {
         try {
-            val categoryDAO = ExpenseCategoryDAO(this.requireContext())
+            val categoryDAO: ExpenseCategoryRepository =
+                provideExpenseCategoryRepository(requireContext())
             categoryDAO.deleteById(
                 onSuccess = { lista ->
                 },

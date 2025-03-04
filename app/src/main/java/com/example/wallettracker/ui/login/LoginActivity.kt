@@ -68,6 +68,23 @@ class LoginActivity : AppCompatActivity() {
             }
             false
         }
+
+        binding.offlineMode.setOnClickListener {
+            SessionDAO(this).use { sSess ->
+                sSess.deleteAll()//clears all sessions
+
+                //creates a new session
+                val newSess = Session().apply{
+                    online = false
+                }
+                sSess.insert(newSess)
+                sSess.close()
+
+                startMainActivity()
+
+
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -77,15 +94,15 @@ class LoginActivity : AppCompatActivity() {
             password
         )
         val LoginDAO = LoginDAO(credentials)
-        var token = ""
+        var tokenn = ""
         var user = 0
         LoginDAO.login(
             onSuccess = { login ->
-                token = login.token
+                tokenn = login.token
 
                 //generate client keys
                 val keys = Cryptography().generateKeys()
-                val privateKey = keys[0]
+                val privateKeyy = keys[0]
                 val publicKey = keys[1]
 
                 //send to server
@@ -95,21 +112,29 @@ class LoginActivity : AppCompatActivity() {
                         //get server's public key
                         LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
                             onSuccess={
-                                val serverPublicKey = it.publicKey
+                                val serverPublicKeyy = it.publicKey
                                 SessionDAO(this).use { sSess ->
                                     sSess.deleteAll()//clears all sessions
 
                                     //creates a new session
-                                    val newSess = Session()
-                                    newSess.userId = it.userId
-                                    newSess.token = token
-                                    newSess.serverPublicKey = serverPublicKey
-                                    newSess.privateKey = privateKey
-                                    sSess.insert(newSess)
+                                    val newSess = Session().apply{
+                                        userId = it.userId
+                                        token = tokenn
+                                        online = true
+                                        serverPublicKey = serverPublicKeyy
+                                        privateKey = privateKeyy
+                                        remember = binding.cboxRememberpassw.isChecked
+                                    }
 
-                                    //start activity
+                                    sSess.insert(newSess)
+                                    sSess.close()
+
                                     startMainActivity()
+
+
                                 }
+
+
 
                             },
                             onFailure = {
@@ -138,7 +163,7 @@ class LoginActivity : AppCompatActivity() {
         val sSess = SessionDAO(this)  // Open SessionDAO manually
         val session = sSess.getFirstSession()
 
-        if (session != null && session.id >= 0) {
+        if (session != null && session.id >= 0 && session.remember) {
             LoginDAO.autologin(
                 session,
                 onSuccess = { login ->

@@ -1,7 +1,8 @@
 package com.example.wallettracker.data.expense
 
 import java.sql.Date
-
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class Expense {
     private var id: Long = 0
@@ -34,7 +35,7 @@ class Expense {
     fun setPrice(value: Double){
         this.price = value
     }
-    fun getDate(): Date{
+    fun getDate(): Date {
         return this.expenseDate!!
     }
     fun setDate(value: Date){
@@ -51,3 +52,26 @@ class Expense {
     }
 
 }
+
+class ExpenseRequest() {
+    private var id: Long = -1
+    private var price: Double = -1.0
+    private lateinit var expenseDate: String
+    private var category: Long = -1
+    private var user: Int = -1
+    constructor(exp: Expense, userId: Int) : this() {
+        this.id = exp.getId()
+        this.price = exp.getPrice()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        this.expenseDate = dateFormat.format(exp.getDate())
+        this.category = exp.getCategoryId()
+        this.user = userId
+    }
+}
+data class ExpenseResponse(
+    val category: Long,
+    val expenseDate: String,
+    val id: Long,
+    val price: Double,
+    val user: Int
+)

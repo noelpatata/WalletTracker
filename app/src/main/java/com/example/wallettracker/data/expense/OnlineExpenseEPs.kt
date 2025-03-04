@@ -1,22 +1,15 @@
 package com.example.wallettracker.data.expense
 
-import android.provider.ContactsContract.Data
-import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
-import com.example.wallettracker.data.ExpenseIdRequest
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.SymmetricResponse
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRequest
-import com.example.wallettracker.data.expenseCategory.ExpenseCategoryResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Query
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-interface ExpenseEPs {
+interface OnlineExpenseEPs {
 
 
     @DELETE("Expense/all/")

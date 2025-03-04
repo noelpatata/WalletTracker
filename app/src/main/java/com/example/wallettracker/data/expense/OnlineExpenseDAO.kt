@@ -9,6 +9,7 @@ import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.ExpenseIdRequest
 import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.interfaces.ExpenseRepository
 import com.example.wallettracker.util.Constantes.authenticationErrorMessage
 import com.example.wallettracker.util.Constantes.noDataMessage
 import com.google.gson.GsonBuilder
@@ -17,39 +18,39 @@ import retrofit2.Callback
 import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
-class ExpenseDAO(context: Context) : BaseDAO<Expense>(context) {
+class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRepository {
 
-    fun getById(expenseId: Long, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+    override fun getById(expenseId: Long, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
         encryptData(ExpenseIdRequest(expenseId))?.let { cipheredData ->
             ApiCall.expense.getById("Bearer $token", cipheredText, cipheredData).enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    fun getByCatId(catId: Long, onSuccess: (List<Expense>) -> Unit, onFailure: (String) -> Unit) {
+    override fun getByCatId(catId: Long, onSuccess: (List<Expense>) -> Unit, onFailure: (String) -> Unit) {
         encryptData(CatIdRequest(catId))?.let { cipheredData ->
             ApiCall.expense.getByCatId("Bearer $token", cipheredText, cipheredData).enqueue(handleListResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    fun createExpense(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+    override fun createExpense(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
         encryptData(ExpenseRequest(expense, userId))?.let { cipheredData ->
             ApiCall.expense.createExpense("Bearer $token", cipheredText, cipheredData).enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    fun edit(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+    override fun edit(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
         encryptData(ExpenseRequest(expense, userId))?.let { cipheredData ->
             ApiCall.expense.edit("Bearer $token", cipheredText, cipheredData).enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    fun deleteById(expenseId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
+    override fun deleteById(expenseId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
         encryptData(ExpenseIdRequest(expenseId))?.let { cipheredData ->
             ApiCall.expense.deleteById("Bearer $token", cipheredText, cipheredData).enqueue(handleSuccessResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    fun deleteAll(onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
+    override fun deleteAll(onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
         ApiCall.expense.deleteAll("Bearer $token", cipheredText).enqueue(handleSuccessResponse(onSuccess, onFailure))
     }
 
