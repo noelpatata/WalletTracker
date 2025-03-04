@@ -84,7 +84,7 @@ class CategoriesExpensesFragment() : Fragment() {
                     binding.form.visibility = View.VISIBLE
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
                     binding.loadingPanel.visibility = View.GONE
                     binding.form.visibility = View.VISIBLE
                 },
@@ -151,11 +151,12 @@ class CategoriesExpensesFragment() : Fragment() {
             val category = GetCategory()
             val categoryDAO = ExpenseCategoryDAO(this.requireContext())
             categoryDAO.editName(
+                category,
                 onSuccess = { },
                 onFailure = { error ->
                     Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                 },
-                category
+
             )
         }catch (e: Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()

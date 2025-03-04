@@ -101,7 +101,7 @@ class CreateExpenseFragment : Fragment() {
                     LoadExpense(expense)
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
                 },
                 expenseId = expenseId
             )
@@ -237,7 +237,7 @@ class CreateExpenseFragment : Fragment() {
                         Toast.makeText(requireContext(), response.message, Toast.LENGTH_LONG).show()
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
                 },
                 expenseId = expenseId
             )
@@ -260,7 +260,7 @@ class CreateExpenseFragment : Fragment() {
 
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
                 },
                 expense = expense
             )
@@ -282,7 +282,7 @@ class CreateExpenseFragment : Fragment() {
 
                 },
                 onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
                 },
                 expense = expense
             )

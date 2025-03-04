@@ -1,6 +1,7 @@
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.wallettracker.data.SymmetricResponse
 import java.security.*
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -172,7 +173,46 @@ class Cryptography {
             ""
         }
     }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun hybridEncrypt(publicKeyBase64: String, plaintext: String): SymmetricResponse? {
+        return try {
+            val publicKey = loadPublicKey(publicKeyBase64)
 
+            // Step 1: Generate a random AES key (256-bit)
+            val aesKey = ByteArray(32)
+            SecureRandom().nextBytes(aesKey)
+
+            // Step 2: Encrypt plaintext using AES-GCM
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            val iv = ByteArray(12) // IV should be 12 bytes for AES-GCM
+            SecureRandom().nextBytes(iv)
+
+            val secretKey = SecretKeySpec(aesKey, "AES")
+            val gcmSpec = GCMParameterSpec(128, iv)
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec)
+
+            val cipherTextWithTag = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
+
+            // Separate ciphertext and authentication tag (last 16 bytes)
+            val cipherText = cipherTextWithTag.copyOfRange(0, cipherTextWithTag.size - 16)
+            val tag = cipherTextWithTag.copyOfRange(cipherTextWithTag.size - 16, cipherTextWithTag.size)
+
+            // Step 3: Encrypt AES key using RSA
+            val rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
+            rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey)
+            val encryptedAesKey = rsaCipher.doFinal(aesKey)
+            val encryptedObject = SymmetricResponse(
+                Base64.getEncoder().encodeToString(encryptedAesKey),
+                Base64.getEncoder().encodeToString(iv),
+                Base64.getEncoder().encodeToString(cipherText),
+                Base64.getEncoder().encodeToString(tag)
+            )
+            return encryptedObject
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     /**
      * Load Private Key from Base64 encoded string (PKCS#8 format)
