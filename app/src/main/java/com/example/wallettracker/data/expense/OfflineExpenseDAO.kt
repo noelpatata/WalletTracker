@@ -6,6 +6,8 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.SuccessResponse
@@ -17,194 +19,154 @@ import java.sql.SQLException
 import java.text.SimpleDateFormat
 import kotlin.Long
 import kotlin.Throws
-import kotlin.arrayOf
 
-class OfflineExpenseDAO : Closeable, ExpenseRepository {
+class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
     private var database: SQLiteDatabase? = null
-    private var dbHelper: DatabaseHelper? = null
+    private var dbHelper: DatabaseHelper? = DatabaseHelper(context)
 
-    constructor(context: Context?) {
-        dbHelper = DatabaseHelper(context)
-        database = dbHelper?.getWritableDatabase()
+    init {
+        database = dbHelper?.writableDatabase
     }
 
-    // Open the database for read/write operations
     @Throws(SQLException::class)
     fun open() {
-        database = dbHelper?.getWritableDatabase()
+        database = dbHelper?.writableDatabase
     }
 
-    // Close the database
     override fun close() {
         dbHelper?.close()
     }
 
-    // Insert a new Expense into the database asynchronously
-    override fun createExpense(
-        expense: Expense,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
+    private fun <T> executeAsyncTask(
+        task: () -> T,
+        onSuccess: (T) -> Unit,
+        onFailure: () -> Unit
     ) {
         Thread {
-            val values = ContentValues().apply {
-                put("price", expense.getPrice())
-                val format = SimpleDateFormat("yyyy-MM-dd")
-                put("expenseDate", format.format(expense.getDate()))
-                put("category", expense.getCategoryId())
+            try {
+                val result = task()
+                Handler(Looper.getMainLooper()).post { onSuccess(result) }
+            } catch (e: Exception) {
+                Handler(Looper.getMainLooper()).post { onFailure() }
             }
-
-            val rowId = database!!.insert("Expense", null, values)
-            if (rowId != -1L) {
-                onSuccess(expense)
-            } else {
-                onFailure("Failed to create expense")
+        }.start()
+    }
+    private fun <T> executeAsyncListTask(
+        task: () -> List<T>,
+        onSuccess: (List<T>) -> Unit,
+        onFailure: () -> Unit
+    ) {
+        Thread {
+            try {
+                val result = task()
+                Handler(Looper.getMainLooper()).post { onSuccess(result) }
+            } catch (e: Exception) {
+                Handler(Looper.getMainLooper()).post { onFailure() }
             }
         }.start()
     }
 
-    // Update an existing Expense in the database asynchronously
-    override fun edit(
-        expense: Expense,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Thread {
-            val values = ContentValues().apply {
-                put("price", expense.getPrice())
-                val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                put("expenseDate", format.format(expense.getDate()))
-            }
-
-            val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
-            if (rowsAffected > 0) {
-                onSuccess(expense)
-            } else {
-                onFailure("Failed to update expense")
-            }
-        }.start()
+    override fun createExpense(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+        executeAsyncTask(
+            task = {
+                val values = ContentValues().apply {
+                    put("price", expense.getPrice())
+                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
+                    put("category", expense.getCategoryId())
+                }
+                val rowId = database!!.insert("Expense", null, values)
+                if (rowId == -1L) throw Exception("Failed to create expense")
+            },
+            onSuccess = { onSuccess(expense) },
+            onFailure = { onFailure("Failed to create expense") }
+        )
     }
 
-    // Delete an Expense by id asynchronously
-    override fun deleteById(
-        expenseId: Long,
-        onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Thread {
-            val rowsDeleted = database!!.delete("Expense", "id = ?", arrayOf(expenseId.toString()))
-            if (rowsDeleted > 0) {
-                onSuccess(SuccessResponse(true, "Expense deleted successfully"))
-            } else {
-                onFailure("Failed to delete expense")
-            }
-        }.start()
+    override fun edit(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+        executeAsyncTask(
+            task = {
+                val values = ContentValues().apply {
+                    put("price", expense.getPrice())
+                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(expense.getDate()))
+                }
+                val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
+                if (rowsAffected == 0) throw Exception("Failed to update expense")
+            },
+            onSuccess = { onSuccess(expense) },
+            onFailure = { onFailure("Failed to update expense") }
+        )
     }
 
-    // Delete all Expenses asynchronously
-    override fun deleteAll(
-        onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Thread {
-            val rowsDeleted = database!!.delete("Expense", null, null)
-            if (rowsDeleted > 0) {
-                onSuccess(SuccessResponse(true, "All expenses deleted successfully"))
-            } else {
-                onFailure("Failed to delete all expenses")
-            }
-        }.start()
+    override fun deleteById(expenseId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
+        executeAsyncTask(
+            task = {
+                val rowsDeleted = database!!.delete("Expense", "id = ?", arrayOf(expenseId.toString()))
+                if (rowsDeleted == 0) throw Exception("Failed to delete expense")
+            },
+            onSuccess = { onSuccess(SuccessResponse(true, "Expense deleted successfully")) },
+            onFailure = { onFailure("Failed to delete expense") }
+        )
     }
 
-    // Retrieve all Expenses asynchronously
+    override fun deleteAll(onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
+        executeAsyncTask(
+            task = {
+                val rowsDeleted = database!!.delete("Expense", null, null)
+                if (rowsDeleted == 0) throw Exception("Failed to delete all expenses")
+            },
+            onSuccess = { onSuccess(SuccessResponse(true, "All expenses deleted successfully")) },
+            onFailure = { onFailure("Failed to delete all expenses") }
+        )
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun getByCatId(
-        catId: Long,
-        onSuccess: (List<Expense>) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Thread {
-            val expenseList: MutableList<Expense> = ArrayList()
-            val cursor = database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, null)
-            if (cursor != null) {
-                cursor.moveToFirst()
-                while (!cursor.isAfterLast) {
-                    val expense = cursorToExpense(cursor)
-                    expenseList.add(expense)
-                    cursor.moveToNext()
+    override fun getByCatId(catId: Long, onSuccess: (List<Expense>) -> Unit, onFailure: (String) -> Unit) {
+        executeAsyncListTask(
+            task = {
+                val expenseList = mutableListOf<Expense>()
+                database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, null)?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        expenseList.add(cursor(cursor))
+                    }
                 }
-                cursor.close()
+                expenseList
 
-                if (expenseList.isNotEmpty()) {
-                    onSuccess(expenseList)
-                } else {
-                    onFailure("No expenses found for the given category")
-                }
-            } else {
-                onFailure("Failed to fetch expenses")
-            }
-        }.start()
+            },
+            onSuccess = { result -> onSuccess(result) },
+            onFailure = { onFailure("No expenses found for the given category") }
+        )
     }
 
-    // Retrieve an Expense by id asynchronously
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getById(
         expenseId: Long,
         onSuccess: (Expense) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        Thread {
-            val cursor = database!!.query("Expense", null, "id = ?", arrayOf(expenseId.toString()), null, null, null)
-            if (cursor != null && cursor.moveToFirst()) {
-                val expense = cursorToExpense(cursor)
-                cursor.close()
-                onSuccess(expense)
-            } else {
-                onFailure("Expense not found")
-            }
-        }.start()
+        executeAsyncTask(
+            task = {
+                var expense: Expense? = null
+                val cursor = database!!.query("Expense", null, "id = ?", arrayOf(expenseId.toString()), null, null, null)
+                cursor.use {
+                    if (it.moveToFirst()) {
+                        expense = cursor(it)
+                    }
+                }
+                if (expense == null) throw Exception("Expense not found")
+                expense // Store the result
+            },
+            onSuccess = { result -> onSuccess(result as Expense) },
+            onFailure = { onFailure("Expense not found") }
+        )
     }
 
-    // Helper function to convert cursor data into Expense
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
-    private fun cursorToExpense(cursor: Cursor): Expense {
-        val expense = Expense()
-        expense.setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
-
-        val dateString = cursor.getString(cursor.getColumnIndex("expenseDate"))
-        expense.setDate(Date.valueOf(dateString))
-
-        return expense
-    }
-
-    // Retrieve all Expenses from the database synchronously (for utility purposes)
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getAllExpenses(): List<Expense>? {
-        val expenseList: MutableList<Expense> = ArrayList()
-        val cursor = database!!.query("Expense", null, null, null, null, null, null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            while (!cursor.isAfterLast) {
-                val expense = cursorToExpense(cursor)
-                expenseList.add(expense)
-                cursor.moveToNext()
-            }
-            cursor.close()
+    private fun cursor(cursor: Cursor): Expense {
+        return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
+            setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
+            setDate(Date.valueOf(cursor.getString(cursor.getColumnIndex("expenseDate"))))
+            setCategoryId(cursor.getLong(cursor.getColumnIndex("category")))
         }
-        return expenseList
-    }
-
-    // Retrieve the total price for a category
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("Range")
-    fun getByCategory(categoryId: Long): Double {
-        val cursor = database!!.rawQuery("SELECT SUM(price) as total FROM Expense WHERE category = ?", arrayOf(categoryId.toString()))
-        var total: Double = 0.0
-        if (cursor.count > 0) {
-            cursor.moveToFirst()
-            total = cursor.getDouble(cursor.getColumnIndex("total"))
-        }
-        cursor.close()
-        return total
     }
 }

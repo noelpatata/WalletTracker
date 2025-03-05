@@ -103,7 +103,8 @@ class CreateExpenseFragment : Fragment() {
         loadDefaultDateTime()
         loadComboCategorias(catId)
         if(expenseId > 0 ){
-            val expenseDAO = OnlineExpenseDAO(this.requireContext())
+            val expenseDAO: ExpenseRepository =
+                provideExpenseRepository(requireContext())
             expenseDAO.getById(
                 onSuccess = { expense ->
                     loadExpense(expense)

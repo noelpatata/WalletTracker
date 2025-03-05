@@ -30,24 +30,24 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         database = dbHelper?.getWritableDatabase()
     }
 
-    // Close the database
     override fun close() {
         dbHelper?.close()
     }
 
-    // Generic helper function to execute background tasks and update UI on the main thread
-    private fun executeAsyncTask(task: () -> Unit, onSuccess: () -> Unit, onFailure: () -> Unit) {
+    private fun <T> executeAsyncTask(
+        task: () -> T,
+        onSuccess: (T) -> Unit,
+        onFailure: () -> Unit
+    ) {
         Thread {
             try {
-                task()
-                Handler(Looper.getMainLooper()).post { onSuccess() }
+                val result = task()
+                Handler(Looper.getMainLooper()).post { onSuccess(result) }
             } catch (e: Exception) {
                 Handler(Looper.getMainLooper()).post { onFailure() }
             }
         }.start()
     }
-
-    // Insert a new ExpenseCategory into the database asynchronously
     override fun createExpenseCategories(
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,
@@ -109,21 +109,15 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
             task = {
                 val expenseCategories = mutableListOf<ExpenseCategory>()
                 val cursor = database!!.query("ExpenseCategory", null, null, null, null, null, null)
-                if (cursor != null) {
-                    cursor.moveToFirst()
-                    while (!cursor.isAfterLast) {
-                        val expenseCategory = cursor(cursor)
+                cursor.use {
+                    while (it.moveToNext()) {
+                        val expenseCategory = cursor(it)
                         expenseCategories.add(expenseCategory)
-                        cursor.moveToNext()
                     }
-                    cursor.close()
-                    if (expenseCategories.isEmpty()) throw Exception("No categories found")
-                    onSuccess(expenseCategories)
-                } else {
-                    throw Exception("Failed to fetch categories")
                 }
+                expenseCategories
             },
-            onSuccess = { /* Handled inside task */ },
+            onSuccess = { categories -> onSuccess(categories) }, // Now runs on the main thread
             onFailure = { onFailure(SuccessResponse(false, "Failed to fetch categories")) }
         )
     }
@@ -138,25 +132,28 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         executeAsyncTask(
             task = {
                 val cursor = database!!.query("ExpenseCategory", null, "id = ?", arrayOf(catId.toString()), null, null, null)
-                if (cursor != null && cursor.moveToFirst()) {
-                    val expenseCategory = cursor(cursor)
-                    cursor.close()
-                    onSuccess(expenseCategory)
-                } else {
-                    throw Exception("Category not found")
+                cursor.use {
+                    if (it.moveToFirst()) {
+                        return@executeAsyncTask cursor(it)
+                    }
                 }
+                throw Exception("Category not found")
             },
-            onSuccess = { /* Handled inside task */ },
+            onSuccess = { expenseCategory -> onSuccess(expenseCategory) },
             onFailure = { onFailure(SuccessResponse(false, "Category not found")) }
         )
     }
+
 
     // Helper function to convert cursor data into ExpenseCategory
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun cursor(cursor: Cursor): ExpenseCategory {
-        val expenseCategory = ExpenseCategory()
-        expenseCategory.setName(cursor.getString(cursor.getColumnIndex("name")))
+        val expenseCategory = ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply{
+            setName(cursor.getString(cursor.getColumnIndex("name")))
+
+        }
+
         return expenseCategory
     }
 
