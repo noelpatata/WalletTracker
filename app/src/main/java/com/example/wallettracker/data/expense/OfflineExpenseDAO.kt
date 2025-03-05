@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.expense.Expense
-import com.example.wallettracker.data.interfaces.ExpenseRepository
+import com.example.wallettracker.data.expense.ExpenseRepository
 import java.io.Closeable
 import java.sql.Date
 import java.sql.SQLException
@@ -66,7 +66,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
         }.start()
     }
 
-    override fun createExpense(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+    override fun create(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
         executeAsyncTask(
             task = {
                 val values = ContentValues().apply {
@@ -124,7 +124,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
         executeAsyncListTask(
             task = {
                 val expenseList = mutableListOf<Expense>()
-                database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, null)?.use { cursor ->
+                database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, "expenseDate DESC, id DESC")?.use { cursor ->
                     while (cursor.moveToNext()) {
                         expenseList.add(cursor(cursor))
                     }

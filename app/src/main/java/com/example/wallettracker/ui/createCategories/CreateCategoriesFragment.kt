@@ -7,20 +7,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
+
 
 class CreateCategoriesFragment : Fragment() {
 
@@ -43,6 +44,11 @@ class CreateCategoriesFragment : Fragment() {
 
         InitListeners()
 
+        binding.inputName.requestFocus() // Focus on the EditText
+        binding.root.post {
+            val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
+            imm?.showSoftInput(binding.inputName, InputMethodManager.SHOW_IMPLICIT)
+        }
 
 
 
@@ -98,10 +104,10 @@ class CreateCategoriesFragment : Fragment() {
             val cat = GetCategory()
             val expenseCategoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
-            expenseCategoryDAO.createExpenseCategories(
+            expenseCategoryDAO.create(
                 cat,
                 onSuccess = {
-                    findNavController().navigate(R.id.nav_categories)
+                    findNavController().navigate(com.example.wallettracker.R.id.nav_categories)
                 },
                 onFailure = { error ->
                     showError("Error creating category: $error")

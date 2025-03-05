@@ -8,17 +8,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.Expense
-import com.example.wallettracker.data.expense.OnlineExpenseDAO
-import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
-import com.example.wallettracker.data.interfaces.ExpenseRepository
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
+import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import kotlinx.coroutines.CoroutineScope
@@ -69,6 +69,11 @@ class CreateExpenseFragment : Fragment() {
             initListeners()
             CoroutineScope(Dispatchers.Main).launch {
                 loadData(categoryId, expenseId)
+            }
+            binding.inputPrice.requestFocus() // Focus on the EditText
+            binding.root.post {
+                val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
+                imm?.showSoftInput(binding.inputPrice, InputMethodManager.SHOW_IMPLICIT)
             }
 
 
@@ -144,7 +149,7 @@ class CreateExpenseFragment : Fragment() {
             var categories = listOf<ExpenseCategory>()
             val categoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
-            categoryDAO.getExpenseCategories(
+            categoryDAO.getAll(
                 onSuccess = {
                     loadSpinner(it)
                     selectCategory(catId)
@@ -294,7 +299,7 @@ class CreateExpenseFragment : Fragment() {
 
             val onlineExpenseDAO: ExpenseRepository =
                 provideExpenseRepository(requireContext())
-            onlineExpenseDAO.createExpense(
+            onlineExpenseDAO.create(
                 onSuccess = { state ->
                     val createdExpense = state
                     findNavController().popBackStack()

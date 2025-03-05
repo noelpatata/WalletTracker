@@ -10,6 +10,7 @@ class ExpenseCategory {
     private var id: Long = 0
     private var name: String = ""
     private var total: Double = 0.0
+    private var sortOrder: Int? = null
     constructor()
     constructor(name: String) {
         this.name = name
@@ -28,6 +29,12 @@ class ExpenseCategory {
     }
     fun setName(value: String){
         this.name = value
+    }
+    fun getOrder(): Int?{
+        return this.sortOrder
+    }
+    fun setOrder(value: Int?){
+        this.sortOrder = value
     }
     fun getTotal(): Double{
         return this.total

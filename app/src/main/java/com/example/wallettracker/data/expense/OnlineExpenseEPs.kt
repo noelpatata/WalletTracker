@@ -33,7 +33,7 @@ interface OnlineExpenseEPs {
     ): Call<DataResponse>
 
     @POST("Expense/create/")
-    fun createExpense(
+    fun create(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
         @Body expense: SymmetricResponse

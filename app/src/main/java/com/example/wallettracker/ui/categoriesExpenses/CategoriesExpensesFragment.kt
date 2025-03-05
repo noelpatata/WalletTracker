@@ -16,10 +16,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
-import com.example.wallettracker.data.expense.OnlineExpenseDAO
-import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
-import com.example.wallettracker.data.interfaces.ExpenseRepository
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
+import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
 import kotlinx.coroutines.CoroutineScope
@@ -70,7 +68,7 @@ class CategoriesExpensesFragment() : Fragment() {
 
         val expenseCategoryDAO: ExpenseCategoryRepository =
             provideExpenseCategoryRepository(requireContext())
-        expenseCategoryDAO.getExpenseCategoryById(
+        expenseCategoryDAO.getById(
             onSuccess = { category ->
                 binding.inputName.setText(category.getName())
                 CoroutineScope(Dispatchers.Main).launch {
@@ -172,7 +170,7 @@ class CategoriesExpensesFragment() : Fragment() {
             val category = GetCategory()
             val categoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
-            categoryDAO.editName(
+            categoryDAO.edit(
                 category,
                 onSuccess = { },
                 onFailure = { error ->

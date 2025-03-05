@@ -9,7 +9,6 @@ import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.ExpenseIdRequest
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.interfaces.ExpenseRepository
 import com.example.wallettracker.util.Constantes.authenticationErrorMessage
 import com.example.wallettracker.util.Constantes.noDataMessage
 import com.google.gson.GsonBuilder
@@ -32,9 +31,9 @@ class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRep
         } ?: onFailure(authenticationErrorMessage)
     }
 
-    override fun createExpense(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
+    override fun create(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
         encryptData(ExpenseRequest(expense, userId))?.let { cipheredData ->
-            ApiCall.expense.createExpense("Bearer $token", cipheredText, cipheredData).enqueue(handleResponse(onSuccess, onFailure))
+            ApiCall.expense.create("Bearer $token", cipheredText, cipheredData).enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
 

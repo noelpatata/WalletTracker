@@ -5,8 +5,8 @@ import com.example.wallettracker.data.OfflineExpenseDAO.OfflineExpenseDAO
 import com.example.wallettracker.data.expense.OnlineExpenseDAO
 import com.example.wallettracker.data.expenseCategory.OfflineExpenseCategoryDAO
 import com.example.wallettracker.data.expenseCategory.OnlineExpenseCategoryDAO
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
-import com.example.wallettracker.data.interfaces.ExpenseRepository
+import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
+import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.data.session.SessionDAO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

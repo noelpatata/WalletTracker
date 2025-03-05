@@ -37,6 +37,7 @@ class DatabaseHelper(context: Context?) :
         private const val CREATE_TABLE_EXPENSE_CATEGORY =
             "CREATE TABLE " + TABLE_EXPENSE_CATEGORY + " (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "sortOrder Integer NULL, " +
                     "name TEXT NOT NULL);"
         private const val CREATE_TABLE_EXPENSE = "CREATE TABLE " + TABLE_EXPENSE + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +

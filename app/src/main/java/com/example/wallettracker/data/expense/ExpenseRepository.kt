@@ -1,7 +1,6 @@
-package com.example.wallettracker.data.interfaces
+package com.example.wallettracker.data.expense
 
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.expense.Expense
 
 interface ExpenseRepository {
     fun getById(
@@ -16,7 +15,7 @@ interface ExpenseRepository {
         onFailure: (String) -> Unit
     )
 
-    fun createExpense(
+    fun create(
         expense: Expense,
         onSuccess: (Expense) -> Unit,
         onFailure: (String) -> Unit

@@ -9,7 +9,6 @@ import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.CatIdRequest
 import com.example.wallettracker.data.DataResponse
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -19,19 +18,19 @@ import retrofit2.Response
 class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(context),
     ExpenseCategoryRepository {
 
-    override fun getExpenseCategories(onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun getAll(onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText)
             .enqueue(handleListResponse(onSuccess, onFailure))
     }
 
-    override fun getExpenseCategoryById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun getById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(CatIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    override fun createExpenseCategories(category: ExpenseCategory, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun create(category: ExpenseCategory, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
@@ -45,7 +44,7 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    override fun editName(category: ExpenseCategory, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun edit(category: ExpenseCategory, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleSuccessResponse(onSuccess, onFailure))

@@ -9,9 +9,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import androidx.core.database.getIntOrNull
 import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.interfaces.ExpenseCategoryRepository
 import java.io.Closeable
 import java.sql.SQLException
 
@@ -48,7 +48,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
             }
         }.start()
     }
-    override fun createExpenseCategories(
+    override fun create(
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit
@@ -67,14 +67,17 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     }
 
     // Update an existing ExpenseCategory in the database asynchronously
-    override fun editName(
+    override fun edit(
         category: ExpenseCategory,
         onSuccess: (SuccessResponse) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
         executeAsyncTask(
             task = {
-                val values = ContentValues().apply { put("name", category.getName()) }
+                val values = ContentValues().apply {
+                    put("name", category.getName())
+                    put("sortOrder", category.getOrder())
+                }
                 val rowsAffected = database!!.update("ExpenseCategory", values, "id = ?", arrayOf(category.getId().toString()))
                 if (rowsAffected <= 0) throw Exception("Failed to update category")
             },
@@ -101,7 +104,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
 
     // Retrieve all ExpenseCategories from the database asynchronously
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun getExpenseCategories(
+    override fun getAll(
         onSuccess: (List<ExpenseCategory>) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
@@ -109,10 +112,14 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
             task = {
                 val expenseCategoriesWithTotal = mutableListOf<ExpenseCategory>()
                 val query = """
-                SELECT ec.id, ec.name, SUM(e.price) AS total
-                FROM ExpenseCategory ec
-                LEFT JOIN Expense e ON ec.id = e.category
+                SELECT ec.sortOrder, ec.id, ec.name, SUM(e.price) AS total
+                    FROM ExpenseCategory ec
+                    LEFT JOIN Expense e ON ec.id = e.category
                 GROUP BY ec.id
+                ORDER BY 
+                CASE WHEN ec.sortOrder IS NULL THEN 1 ELSE 0 END,
+                ec.sortOrder ASC, 
+                ec.id ASC
             """
                 val cursor = database!!.rawQuery(query, null)
                 cursor.use {
@@ -130,7 +137,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
 
     // Retrieve a single ExpenseCategory by id asynchronously
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun getExpenseCategoryById(
+    override fun getById(
         catId: Long,
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit
@@ -157,6 +164,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     private fun cursor(cursor: Cursor): ExpenseCategory {
         val expenseCategory = ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply{
             setName(cursor.getString(cursor.getColumnIndex("name")))
+            setOrder(cursor.getIntOrNull(cursor.getColumnIndex("sortOrder")))
             if(cursor.getColumnIndex("total")>=0){
                 setTotal(cursor.getDouble(cursor.getColumnIndex("total")))
             }

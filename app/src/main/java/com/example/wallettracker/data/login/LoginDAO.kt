@@ -31,7 +31,7 @@ class LoginDAO(private val credentials: LoginRequest) {
             }
 
             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                onFailure("${t.message}")
+                onFailure(loginFailedMessage)
             }
         })
     }
@@ -55,7 +55,7 @@ class LoginDAO(private val credentials: LoginRequest) {
                 }
 
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    onFailure(SuccessResponse(success = false, message = t.message.toString()))
+                    onFailure(SuccessResponse(success = false, message = loginFailedMessage))
                 }
             })
 

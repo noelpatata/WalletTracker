@@ -1,21 +1,20 @@
-package com.example.wallettracker.data.interfaces
+package com.example.wallettracker.data.expenseCategory
 
 import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 
 interface ExpenseCategoryRepository {
-    fun getExpenseCategories(
+    fun getAll(
         onSuccess: (List<ExpenseCategory>) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 
-    fun getExpenseCategoryById(
+    fun getById(
         catId: Long,
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 
-    fun createExpenseCategories(
+    fun create(
         category: ExpenseCategory,
         onSuccess: (ExpenseCategory) -> Unit,
         onFailure: (SuccessResponse) -> Unit
@@ -27,7 +26,7 @@ interface ExpenseCategoryRepository {
         onFailure: (SuccessResponse) -> Unit
     )
 
-    fun editName(
+    fun edit(
         category: ExpenseCategory,
         onSuccess: (SuccessResponse) -> Unit,
         onFailure: (SuccessResponse) -> Unit
