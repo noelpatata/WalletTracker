@@ -107,15 +107,21 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     ) {
         executeAsyncTask(
             task = {
-                val expenseCategories = mutableListOf<ExpenseCategory>()
-                val cursor = database!!.query("ExpenseCategory", null, null, null, null, null, null)
+                val expenseCategoriesWithTotal = mutableListOf<ExpenseCategory>()
+                val query = """
+                SELECT ec.id, ec.name, SUM(e.price) AS total
+                FROM ExpenseCategory ec
+                LEFT JOIN Expense e ON ec.id = e.category
+                GROUP BY ec.id
+            """
+                val cursor = database!!.rawQuery(query, null)
                 cursor.use {
                     while (it.moveToNext()) {
                         val expenseCategory = cursor(it)
-                        expenseCategories.add(expenseCategory)
+                        expenseCategoriesWithTotal.add(expenseCategory)
                     }
                 }
-                expenseCategories
+                expenseCategoriesWithTotal
             },
             onSuccess = { categories -> onSuccess(categories) }, // Now runs on the main thread
             onFailure = { onFailure(SuccessResponse(false, "Failed to fetch categories")) }
@@ -151,6 +157,10 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     private fun cursor(cursor: Cursor): ExpenseCategory {
         val expenseCategory = ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply{
             setName(cursor.getString(cursor.getColumnIndex("name")))
+            if(cursor.getColumnIndex("total")>=0){
+                setTotal(cursor.getDouble(cursor.getColumnIndex("total")))
+            }
+
 
         }
 

@@ -10,14 +10,14 @@ import retrofit2.http.Query
 
 interface LoginEPs {
 
-    @GET("register/")
+    @POST("register/")
     fun register(
-        @Header("Authorization") authHeader: String
+        @Body login: LoginRequest
     ): Call<ServerPubKeyResponse>
 
-    @GET("login/")
+    @POST("login/")
     fun login(
-        @Header("Authorization") authHeader: String
+        @Body login: LoginRequest
     ): Call<LoginResponse>
 
     @POST("autologin/")

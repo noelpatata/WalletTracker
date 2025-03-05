@@ -16,10 +16,8 @@ import retrofit2.Response
 class LoginDAO(private val credentials: LoginRequest) {
 
     fun login(onSuccess: (LoginResponse) -> Unit, onFailure: (String) -> Unit) {
-        val credentials = "${credentials.username}:${credentials.password}"
-        val basicAuth = "Basic " + Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
 
-        ApiCall.login.login(basicAuth).enqueue(object : Callback<LoginResponse> {
+        ApiCall.login.login(credentials).enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
                     val loginReponse = response.body()
