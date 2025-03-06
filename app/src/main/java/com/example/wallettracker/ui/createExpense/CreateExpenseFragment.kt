@@ -191,8 +191,8 @@ class CreateExpenseFragment : Fragment() {
             showDatePickerDialog()
         }
         binding.inputPrice.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
-            if (actionId == EditorInfo.IME_ACTION_DONE ||
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+            if (actionId == EditorInfo.IME_ACTION_NEXT ||
+                (actionId == EditorInfo.IME_ACTION_DONE)) {
                 CoroutineScope(Dispatchers.Main).launch {
                     createOrSaveChanges()
                 }

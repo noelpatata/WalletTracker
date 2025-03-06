@@ -13,28 +13,34 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
+import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
 import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
+import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
 import provideExpenseRepository
+import java.util.Collections
 
 class CategoriesExpensesFragment() : Fragment() {
     var categoryId: Long = 0
 
 
     private var _binding: FragmentCategoriesexpensesBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+    private val mainScope = CoroutineScope(Dispatchers.Main + Job())
+    private var snackbar: Snackbar? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -60,6 +66,7 @@ class CategoriesExpensesFragment() : Fragment() {
         val root: View = binding.root
         return root
     }
+
 
     @SuppressLint("NewApi")
     private suspend fun loadData() {
@@ -92,8 +99,7 @@ class CategoriesExpensesFragment() : Fragment() {
                 provideExpenseRepository(requireContext())
             expenseDAO.getByCatId(
                 onSuccess = { lista ->
-                    binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
-                    binding.rviewExpenses.adapter = RViewExpensesAdapter(lista)
+                    displayExpenses(lista)
                     binding.loadingPanel.visibility = View.GONE
                     binding.form.visibility = View.VISIBLE
                 },
@@ -110,6 +116,94 @@ class CategoriesExpensesFragment() : Fragment() {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
             binding.loadingPanel.visibility = View.GONE
             binding.form.visibility = View.VISIBLE
+        }
+    }
+
+    private fun displayExpenses(lista: List<Expense>) {
+        val mutableExpenses = lista.toMutableList()
+        if(binding.rviewExpenses.layoutManager == null || binding.rviewExpenses.adapter == null){
+            binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
+            binding.rviewExpenses.adapter = RViewExpensesAdapter(mutableExpenses)
+        }else{
+            (binding.rviewExpenses.adapter as RViewExpensesAdapter).updateData(mutableExpenses)
+        }
+
+
+        val simpleCallback = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.START or ItemTouchHelper.END) {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+
+                return false
+            }
+
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val delExpense = mutableExpenses[viewHolder.adapterPosition]
+                val backupExpense = delExpense // Save the item being deleted, not the position
+                val backupPosition = viewHolder.adapterPosition // Store position for restoring
+
+                // Remove item from the list
+                (binding.rviewExpenses.adapter as RViewExpensesAdapter).removeItem(backupPosition)
+
+                if (isAdded) {
+                    snackbar = Snackbar.make(
+                        binding.form,
+                        "Expense deleted",
+                        Snackbar.LENGTH_LONG
+                    )
+
+                    snackbar!!.setAction("Undo") {
+                        // Undo action: restore the deleted expense at the correct position
+                        (binding.rviewExpenses.adapter as RViewExpensesAdapter).addItem(backupPosition, backupExpense)
+                    }
+
+                    snackbar!!.addCallback(object : Snackbar.Callback() {
+                        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                            // Only delete if fragment is still attached
+                            if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
+                                mainScope.launch {
+                                    delete(delExpense.getId())
+                                }
+                            }
+                        }
+                    })
+
+                    snackbar!!.show()
+                }
+            }
+
+        }
+
+
+        val itemTouchHelper = ItemTouchHelper(simpleCallback)
+        itemTouchHelper.attachToRecyclerView(binding.rviewExpenses)
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun delete(expenseId: Long) {
+        try {
+            val expenseDAO: ExpenseRepository =
+                provideExpenseRepository(requireContext())
+            expenseDAO.deleteById(
+                onSuccess = { response ->
+                    if (!response.success)
+                        Toast.makeText(requireContext(), response.message, Toast.LENGTH_LONG).show()
+
+                },
+                onFailure = { error ->
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
+                },
+                expenseId = expenseId
+            )
+
+        }
+        catch (e: Exception){
+            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -209,7 +303,10 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        snackbar?.dismiss()
+
         _binding = null
+        super.onDestroyView()
+
     }
 }

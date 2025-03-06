@@ -8,9 +8,10 @@ import android.widget.TextView
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
+import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 
-class RViewCategoriesAdapter(private var list: MutableList<ExpenseCategory>) :
+class RViewCategoriesAdapter(var list: MutableList<ExpenseCategory>) :
     RecyclerView.Adapter<RViewCategoriesAdapter.ExpenseCategoryViewHolder>() {
 
     class ExpenseCategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -28,7 +29,12 @@ class RViewCategoriesAdapter(private var list: MutableList<ExpenseCategory>) :
         return list.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return list[position].getId()
+    }
+
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
+
         val category = list[position]
         holder.categoryName.text = category.getName()
         holder.categoryTotal.text = String.format("%.2f", category.getTotal()) + "€"
@@ -48,9 +54,14 @@ class RViewCategoriesAdapter(private var list: MutableList<ExpenseCategory>) :
         }
     }
 
+    fun addItem(position: Int, category:ExpenseCategory){
+        list.add(category)
+        notifyItemInserted(position)
+    }
+
     fun updateData(newCategories: List<ExpenseCategory>) {
-        list.clear()
+        list = mutableListOf<ExpenseCategory>()
         list.addAll(newCategories)
-        notifyDataSetChanged()
+        notifyItemChanged(0, null)
     }
 }

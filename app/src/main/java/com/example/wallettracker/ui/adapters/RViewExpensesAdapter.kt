@@ -11,11 +11,12 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expense.Expense
+import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpensesAdapter.ExpenseViewHolder>() {
-    val list = list
+class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapter<RViewExpensesAdapter.ExpenseViewHolder>() {
+
     class ExpenseViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val expensePrice: TextView = itemView.findViewById(R.id.label_price)
         val expenseDate: TextView = itemView.findViewById(R.id.label_date)
@@ -47,5 +48,22 @@ class RViewExpensesAdapter(list: List<Expense>) : RecyclerView.Adapter<RViewExpe
             holder.itemView.findNavController().navigate(R.id.nav_createexpense, bundle)
         }
 
+    }
+    fun removeItem(position: Int) {
+        if (position in list.indices) {
+            list.removeAt(position)
+            notifyItemRemoved(position)
+            notifyItemRangeChanged(position, list.size) // Update UI properly
+        }
+    }
+    fun addItem(position: Int, expense:Expense){
+        list.add(expense)
+        notifyItemInserted(position)
+    }
+
+    fun updateData(expenses: MutableList<Expense>) {
+        list.clear()
+        list.addAll(expenses)
+        notifyDataSetChanged()
     }
 }
