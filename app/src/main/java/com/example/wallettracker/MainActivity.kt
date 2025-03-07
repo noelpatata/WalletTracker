@@ -1,5 +1,7 @@
 package com.example.wallettracker
 
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -15,7 +17,9 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.wallettracker.data.expense.OnlineExpenseDAO
+import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
+import com.example.wallettracker.ui.login.LoginActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,6 +34,8 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.appBarMain.toolbar)
 
+
+
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -39,8 +45,7 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.nav_categories,
                 R.id.nav_importsheet,
-                R.id.nav_settings,
-                R.id.nav_logout
+                R.id.nav_settings
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -51,6 +56,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun isOnline(context: Context): Boolean {
+        val session = SessionDAO(context).getFirstSession()
+        return session?.online ?: true
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -69,8 +79,20 @@ class MainActivity : AppCompatActivity() {
                 ResetExpenses()
                 return true
             }
+            R.id.logOff -> {
+                doLogOut()
+                finish()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun doLogOut() {
+        SessionDAO(this).use { sSess ->
+            sSess.deleteAll()//clears all sessions
+        }
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -87,5 +109,9 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error: $error", Toast.LENGTH_SHORT).show()
             }
         )
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        doLogOut()
     }
 }

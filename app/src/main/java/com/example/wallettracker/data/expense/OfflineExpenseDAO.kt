@@ -87,7 +87,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
             task = {
                 val values = ContentValues().apply {
                     put("price", expense.getPrice())
-                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(expense.getDate()))
+                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
                 }
                 val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
                 if (rowsAffected == 0) throw Exception("Failed to update expense")
