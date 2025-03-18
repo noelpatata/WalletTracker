@@ -1,3 +1,4 @@
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -11,7 +12,9 @@ import java.security.spec.PSSParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import java.util.*
+import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 class Cryptography {
@@ -246,5 +249,14 @@ class Cryptography {
         val decodedBytes = Base64.getDecoder().decode(base64String)
         val keySpec = X509EncodedKeySpec(decodedBytes)
         return KeyFactory.getInstance("RSA").generatePublic(keySpec) as RSAPublicKey
+    }
+
+    @SuppressLint("NewApi")
+    fun hashPasswordWithSalt(password: String, saltBase64: String): String {
+        val salt = Base64.getDecoder().decode(saltBase64)
+        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = PBEKeySpec(password.toCharArray(), salt, 100000, 256)
+        val hash = factory.generateSecret(spec).encoded
+        return Base64.getEncoder().encodeToString(hash)
     }
 }
