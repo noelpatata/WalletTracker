@@ -3,6 +3,7 @@ package com.example.wallettracker.ui.categoriesExpenses
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -41,6 +42,8 @@ class CategoriesExpensesFragment() : Fragment() {
     private val binding get() = _binding!!
     private val mainScope = CoroutineScope(Dispatchers.Main + Job())
     private var snackbar: Snackbar? = null
+    private lateinit var viewModel: CategoriesExpensesViewModel
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -48,8 +51,8 @@ class CategoriesExpensesFragment() : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(CategoriesExpensesViewModel::class.java)
+        viewModel = ViewModelProvider(this)[CategoriesExpensesViewModel::class.java]
+
 
         _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
 
@@ -165,10 +168,14 @@ class CategoriesExpensesFragment() : Fragment() {
 
                     snackbar!!.addCallback(object : Snackbar.Callback() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                            Log.e("noel", "dismissed")
+                            Log.e("noel", event.toString())
                             // Only delete if fragment is still attached
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
                                 mainScope.launch {
-                                    delete(delExpense.getId())
+                                    Log.e("noel", "tried deleting")
+                                    viewModel.deleteExpense(requireContext(), delExpense.getId())
+                                    Log.e("noel", "tried deleted")
                                 }
                             }
                         }
@@ -183,28 +190,6 @@ class CategoriesExpensesFragment() : Fragment() {
 
         val itemTouchHelper = ItemTouchHelper(simpleCallback)
         itemTouchHelper.attachToRecyclerView(binding.rviewExpenses)
-    }
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun delete(expenseId: Long) {
-        try {
-            val expenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            expenseDAO.deleteById(
-                onSuccess = { response ->
-                    if (!response.success)
-                        Toast.makeText(requireContext(), response.message, Toast.LENGTH_LONG).show()
-
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                },
-                expenseId = expenseId
-            )
-
-        }
-        catch (e: Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -239,7 +224,7 @@ class CategoriesExpensesFragment() : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveIfValid() {
         val category = GetCategory()
-        val isValid = CheckValidation(category)
+        val isValid = checkValidation(category)
         if (isValid){
             CoroutineScope(Dispatchers.Main).launch {
                 saveChanges()
@@ -251,11 +236,8 @@ class CategoriesExpensesFragment() : Fragment() {
         }
     }
 
-    private fun CheckValidation(category: ExpenseCategory): Boolean {
-        if(category.getName().isNullOrEmpty()){
-            return false
-        }
-        return true
+    private fun checkValidation(category: ExpenseCategory): Boolean {
+        return category.getName().isNotEmpty()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -302,9 +284,12 @@ class CategoriesExpensesFragment() : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
+    override fun onPause() {
+        super.onPause()
         snackbar?.dismiss()
+    }
 
+    override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
 

@@ -8,7 +8,9 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.database.getLongOrNull
 import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.SuccessResponse
 import com.example.wallettracker.data.expense.Expense
@@ -87,7 +89,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
             task = {
                 val values = ContentValues().apply {
                     put("price", expense.getPrice())
-                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(expense.getDate()))
+                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
                 }
                 val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
                 if (rowsAffected == 0) throw Exception("Failed to update expense")
@@ -126,7 +128,9 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
                 val expenseList = mutableListOf<Expense>()
                 database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, "expenseDate DESC, id DESC")?.use { cursor ->
                     while (cursor.moveToNext()) {
-                        expenseList.add(cursor(cursor))
+                        val expense = cursor(cursor)
+                        expenseList.add(expense)
+
                     }
                 }
                 expenseList

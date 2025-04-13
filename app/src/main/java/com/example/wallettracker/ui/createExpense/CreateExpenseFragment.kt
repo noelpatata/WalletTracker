@@ -3,6 +3,7 @@ package com.example.wallettracker.ui.createExpense
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -70,12 +71,14 @@ class CreateExpenseFragment : Fragment() {
             CoroutineScope(Dispatchers.Main).launch {
                 loadData(categoryId, expenseId)
             }
-            binding.inputPrice.requestFocus() // Focus on the EditText
+
             binding.root.post {
                 val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
                 imm?.showSoftInput(binding.inputPrice, InputMethodManager.SHOW_IMPLICIT)
             }
 
+            if (expenseId <= 0)
+                binding.inputPrice.requestFocus() // Focus on the EditText only if its a new expense
 
         }
         catch(e:Exception){
