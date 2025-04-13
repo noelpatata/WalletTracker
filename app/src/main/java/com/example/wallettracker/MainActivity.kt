@@ -14,7 +14,9 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.data.expense.OnlineExpenseDAO
+import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -69,9 +71,15 @@ class MainActivity : AppCompatActivity() {
                 ResetExpenses()
                 return true
             }
+            R.id.logOff -> {
+                doLogOut()
+                finish()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun ResetExpenses() {
@@ -87,5 +95,12 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error: $error", Toast.LENGTH_SHORT).show()
             }
         )
+    }
+
+    private fun doLogOut() {
+        SessionDAO(this).use { sSess ->
+            sSess.deleteAll()//clears all sessions
+        }
+
     }
 }
