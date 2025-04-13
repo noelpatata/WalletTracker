@@ -14,14 +14,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
-import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.data.expense.OnlineExpenseDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import provideExpenseRepository
 
 class MainActivity : AppCompatActivity() {
 
@@ -72,10 +66,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resetExpenses -> {
-                CoroutineScope(Dispatchers.Main).launch {
-                    ResetExpenses()
-                }
-
+                ResetExpenses()
                 return true
             }
         }
@@ -83,10 +74,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun ResetExpenses() {
-        val expenseDAO: ExpenseRepository =
-            provideExpenseRepository(this)
-        expenseDAO.deleteAll(
+    private fun ResetExpenses() {
+        OnlineExpenseDAO(this).deleteAll(
             onSuccess = { response ->
                 if (response.success) {
                     Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
