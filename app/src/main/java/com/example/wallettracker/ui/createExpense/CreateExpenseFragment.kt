@@ -16,12 +16,14 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
 import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -214,9 +216,17 @@ class CreateExpenseFragment : Fragment() {
         }
         if (expenseId > 0){
             binding.delete.setOnClickListener {
-                CoroutineScope(Dispatchers.Main).launch {
-                    delete(expenseId)
-                }
+                MaterialAlertDialogBuilder(requireContext(), R.style.ButtonsCustomColor)
+                    .setTitle("Delete Expense")
+                    .setMessage("Are you sure you want to delete this expense?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        CoroutineScope(Dispatchers.Main).launch {
+                            delete(expenseId)
+                        }
+                    }
+                    .setNegativeButton("Cancel", null) // If cancelled, do nothing
+                    .show()
+
             }
         }
         else{

@@ -1,6 +1,7 @@
 package com.example.wallettracker.ui.categoriesExpenses
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -25,6 +26,7 @@ import com.example.wallettracker.data.expense.ExpenseRepository
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -214,9 +216,17 @@ class CategoriesExpensesFragment() : Fragment() {
             findNavController().navigate(R.id.nav_createexpense, bundle)
         }
         binding.delete.setOnClickListener {
-            CoroutineScope(Dispatchers.Main).launch {
-                deleteCategory()
-            }
+            MaterialAlertDialogBuilder(requireContext(), R.style.ButtonsCustomColor)
+                .setTitle("Delete Category")
+                .setMessage("Are you sure you want to delete this category?")
+                .setPositiveButton("Delete") { _, _ ->
+                    CoroutineScope(Dispatchers.Main).launch {
+                        deleteCategory()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+
         }
 
     }
