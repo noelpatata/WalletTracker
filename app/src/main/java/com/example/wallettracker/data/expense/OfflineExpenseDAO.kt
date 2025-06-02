@@ -75,6 +75,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
                     put("price", expense.getPrice())
                     put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
                     put("category", expense.getCategoryId())
+                    put("description", expense.getDescription())
                 }
                 val rowId = database!!.insert("Expense", null, values)
                 if (rowId == -1L) throw Exception("Failed to create expense")
@@ -89,6 +90,8 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
             task = {
                 val values = ContentValues().apply {
                     put("price", expense.getPrice())
+                    put("category", expense.getCategoryId())
+                    put("description", expense.getDescription())
                     put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
                 }
                 val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
@@ -168,6 +171,7 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
     @SuppressLint("Range")
     private fun cursor(cursor: Cursor): Expense {
         return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
+            setDescription(cursor.getString(cursor.getColumnIndex("description")))
             setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
             setDate(Date.valueOf(cursor.getString(cursor.getColumnIndex("expenseDate"))))
             setCategoryId(cursor.getLong(cursor.getColumnIndex("category")))

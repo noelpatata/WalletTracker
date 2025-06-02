@@ -7,26 +7,36 @@ import java.util.Locale
 class Expense {
     private var id: Long = 0
     private var price: Double? = null
+    private var description: String = ""
     private var expenseDate: Date? = null
     private var category: Long? = null
     private var userId: Long? = null
     constructor()
-    constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?) {
+    constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?, description: String) {
         this.id = id
         this.price = price
         this.expenseDate = expenseDate
         this.category = category
+        this.description = description
     }
-    constructor(price: Double?, expenseDate: Date?, category: Long?) {
+    constructor(price: Double?, expenseDate: Date?, category: Long?, description: String) {
         this.price = price
         this.expenseDate = expenseDate
         this.category = category
+        this.description = description
+
     }
     constructor(id: Long) {
         this.id = id
     }
     fun getId(): Long{
         return this.id
+    }
+    fun getDescription(): String{
+        return this.description
+    }
+    fun setDescription(value: String){
+        this.description = value
     }
 
     fun getPrice(): Double{

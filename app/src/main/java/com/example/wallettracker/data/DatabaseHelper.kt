@@ -42,6 +42,7 @@ class DatabaseHelper(context: Context?) :
         private const val CREATE_TABLE_EXPENSE = "CREATE TABLE " + TABLE_EXPENSE + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "price DOUBLE, " +
+                "description TEXT, " +
                 "expenseDate DATE, " +
                 "category INTEGER, " +
                 "FOREIGN KEY(category) REFERENCES " + TABLE_EXPENSE_CATEGORY + "(id) ON DELETE CASCADE);"

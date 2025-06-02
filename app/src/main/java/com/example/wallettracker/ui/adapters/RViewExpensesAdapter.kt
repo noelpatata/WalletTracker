@@ -20,6 +20,7 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
     class ExpenseViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         val expensePrice: TextView = itemView.findViewById(R.id.label_price)
         val expenseDate: TextView = itemView.findViewById(R.id.label_date)
+        val expenseDescription: TextView = itemView.findViewById(R.id.label_description)
     }
 
     /* Creates and inflates view and return FlowerViewHolder. */
@@ -37,6 +38,15 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         holder.expensePrice.text = String.format("%.2f", list[position].getPrice())+"€"
         val format = SimpleDateFormat("EEEE dd 'de' MMMM 'del' yyyy", Locale("es", "ES"))
         holder.expenseDate.text = format.format(list[position].getDate())
+        val desc = list[position].getDescription()
+        if (desc.isNullOrEmpty()) {
+            holder.expenseDescription.visibility = View.GONE
+        } else if (desc.length > 20) {
+            holder.expenseDescription.text = desc.substring(0, 25) + "..."
+        }else {
+            holder.expenseDescription.text = desc
+        }
+
 
         //listeners
         holder.itemView.setOnClickListener {

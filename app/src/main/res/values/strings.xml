@@ -16,6 +16,7 @@
     <string name="menu_createexpense">Expense</string>
     <string name="button_createexpense">Creates an expense</string>
     <string name="label_precio">Precio</string>
+    <string name="label_desc">Descripcion</string>
     <string name="label_fecha">Fecha</string>
     <string name="label_hora">Hora</string>
     <string name="label_categoria">Categoria</string>

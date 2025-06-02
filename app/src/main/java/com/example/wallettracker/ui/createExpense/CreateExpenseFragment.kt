@@ -134,6 +134,7 @@ class CreateExpenseFragment : Fragment() {
                 //price
                 binding.inputPrice.setText(expense.getPrice().toString())
 
+                binding.inputDesc.setText(expense.getDescription())
                 //date
                 val format = SimpleDateFormat("yyyy-MM-dd")
                 val stringDate = format.format(expense.getDate())
@@ -309,7 +310,7 @@ class CreateExpenseFragment : Fragment() {
     private suspend fun save() {
         try {
             val expense = getExpense()
-
+            Log.d("Expense", expense.getDescription())
             val onlineExpenseDAO: ExpenseRepository =
                 provideExpenseRepository(requireContext())
             onlineExpenseDAO.create(
@@ -340,6 +341,8 @@ class CreateExpenseFragment : Fragment() {
                 price = pricestring.toDouble()
             }
 
+            val descString = binding.inputDesc.text.toString()
+
             val dateString = binding.inputDate.text.toString()
 
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -354,11 +357,11 @@ class CreateExpenseFragment : Fragment() {
             val category = adapter.getItem(binding.comboCategorias.selectedItemPosition) as ExpenseCategory
             val catId: Long = category.getId()
             if (expenseId > 0){
-                val expense = Expense(expenseId, price, date, catId)
+                val expense = Expense(expenseId, price, date, catId, descString)
                 return expense
             }
             else{
-                val expense = Expense(price, date, catId)
+                val expense = Expense(price, date, catId, descString)
                 return expense
             }
 

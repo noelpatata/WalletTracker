@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ui.createExpense.CreateExpenseFragment">
 
 
@@ -34,6 +35,23 @@
             android:layout_width="match_parent"
             android:inputType="numberDecimal"
              />
+        <TextView
+            android:id="@+id/lblDesc"
+            android:layout_marginTop="36dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:text="@string/label_desc" />
+        <EditText
+            android:id="@+id/input_desc"
+            android:layout_marginTop="26dp"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:inputType="textMultiLine"
+            />
         <TextView
             android:id="@+id/lblFecha"
             android:layout_marginTop="36dp"
