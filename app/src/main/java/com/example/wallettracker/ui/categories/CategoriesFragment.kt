@@ -1,5 +1,6 @@
 package com.example.wallettracker.ui.categories
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -170,6 +171,7 @@ class CategoriesFragment : Fragment() {
         loadTotal()
     }
 
+    @SuppressLint("DefaultLocale", "SetTextI18n")
     private fun loadTotal() {
         try {
             val adapter = binding.rviewCategories.adapter as RViewCategoriesAdapter

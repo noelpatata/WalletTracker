@@ -82,7 +82,7 @@ class CategoriesExpensesFragment() : Fragment() {
             provideExpenseCategoryRepository(requireContext())
         expenseCategoryDAO.getById(
             onSuccess = { category ->
-                binding.inputName.setText(category.getName())
+                binding.inputName.setText(category!!.getName())
                 CoroutineScope(Dispatchers.Main).launch {
                     loadExpenses()
                 }
@@ -281,8 +281,7 @@ class CategoriesExpensesFragment() : Fragment() {
             val categoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
             categoryDAO.deleteById(
-                onSuccess = { lista ->
-                },
+                onSuccess = { },
                 onFailure = { error ->
                     Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                 },

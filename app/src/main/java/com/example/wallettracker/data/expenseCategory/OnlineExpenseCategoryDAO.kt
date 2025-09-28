@@ -25,36 +25,36 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
             .enqueue(handleListResponse(onSuccess, onFailure))
     }
 
-    override fun getById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun getById(catId: Long, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    override fun create(category: ExpenseCategory, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun create(category: ExpenseCategory, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    override fun deleteById(catId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun deleteById(catId: Long, onSuccess: () -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleSuccessResponse(onSuccess, onFailure))
+                .enqueue(handleEmptyResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    override fun edit(category: ExpenseCategory, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
+    override fun edit(category: ExpenseCategory, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
         encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
             ApiCall.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleSuccessResponse(onSuccess, onFailure))
+                .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
     private inline fun <reified T> handleResponse(
-        crossinline onSuccess: (T) -> Unit,
+        crossinline onSuccess: (T?) -> Unit,
         noinline onFailure: (SuccessResponse) -> Unit
     ): Callback<BaseResponse<CipheredResponse>> {
         return object : Callback<BaseResponse<CipheredResponse>> {
@@ -69,12 +69,42 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
                     deserialize<BaseResponse<T>>(jsonData)?.let { deserializedResponse ->
 
                         if (deserializedResponse.success) {
-                            deserializedResponse.data?.let(onSuccess)
+                            onSuccess(deserializedResponse.data)
                         } else {
                             onFailure(SuccessResponse(false, deserializedResponse.message))
                         }
 
                     } ?: onFailure(SuccessResponse(false, invalidData))
+                } ?: onFailure(SuccessResponse(false, noDataMessage))
+            }
+
+            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
+                onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    private fun handleEmptyResponse(
+        onSuccess: () -> Unit,
+        onFailure: (SuccessResponse) -> Unit
+    ): Callback<BaseResponse<CipheredResponse>> {
+        return object : Callback<BaseResponse<CipheredResponse>> {
+            override fun onResponse(
+                call: Call<BaseResponse<CipheredResponse>>,
+                response: Response<BaseResponse<CipheredResponse>>
+            ) {
+                response.body()?.let { body ->
+
+                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
+
+                    deserialize<BaseResponse<Nothing>>(jsonData)?.let { deserializedResponse ->
+                        if (deserializedResponse.success) {
+                            onSuccess()
+                        } else {
+                            onFailure(SuccessResponse(false, deserializedResponse.message))
+                        }
+                    } ?: onFailure(SuccessResponse(false, invalidData))
+
                 } ?: onFailure(SuccessResponse(false, noDataMessage))
             }
 
@@ -115,23 +145,6 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
         }
     }
 
-
-
-    private fun handleSuccessResponse(onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit): Callback<SuccessResponse> {
-        return object : Callback<SuccessResponse> {
-            override fun onResponse(call: Call<SuccessResponse>, response: Response<SuccessResponse>) {
-                if (response.isSuccessful) {
-                    response.body()?.let(onSuccess) ?: onFailure(SuccessResponse(false, response.message()))
-                } else {
-                    onFailure(SuccessResponse(false, authenticationErrorMessage))
-                }
-            }
-
-            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
-                onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
-            }
-        }
-    }
 
     private inline fun <reified T> deserialize(jsonData: String): T? {
         val type = object : com.google.gson.reflect.TypeToken<BaseResponse<T?>>() {}.type

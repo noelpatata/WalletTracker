@@ -5,8 +5,8 @@ import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import BaseDAO
 import android.content.Context
-import com.example.wallettracker.data.communication.CatIdRequest
-import com.example.wallettracker.data.communication.DataResponse
+import com.example.wallettracker.data.communication.CipheredResponse
+import com.example.wallettracker.data.communication.ExpenseCategoryIdRequest
 import com.example.wallettracker.data.communication.ExpenseIdRequest
 import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.util.Constantes.authenticationErrorMessage
@@ -26,7 +26,7 @@ class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRep
     }
 
     override fun getByCatId(catId: Long, onSuccess: (List<Expense>) -> Unit, onFailure: (String) -> Unit) {
-        encryptData(CatIdRequest(catId))?.let { cipheredData ->
+        encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
             ApiCall.expense.getByCatId("Bearer $token", cipheredText, cipheredData).enqueue(handleListResponse(onSuccess, onFailure))
         } ?: onFailure(authenticationErrorMessage)
     }
@@ -53,9 +53,9 @@ class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRep
         ApiCall.expense.deleteAll("Bearer $token", cipheredText).enqueue(handleSuccessResponse(onSuccess, onFailure))
     }
 
-    private inline fun <reified T> handleResponse(crossinline onSuccess: (T) -> Unit, crossinline onFailure: (String) -> Unit): Callback<DataResponse> {
-        return object : Callback<DataResponse> {
-            override fun onResponse(call: Call<DataResponse>, response: Response<DataResponse>) {
+    private inline fun <reified T> handleResponse(crossinline onSuccess: (T) -> Unit, crossinline onFailure: (String) -> Unit): Callback<CipheredResponse> {
+        return object : Callback<CipheredResponse> {
+            override fun onResponse(call: Call<CipheredResponse>, response: Response<CipheredResponse>) {
                 if (response.isSuccessful) {
                     response.body()?.let {
                         val jsonData = verifyData(it)
@@ -67,15 +67,15 @@ class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRep
                 }
             }
 
-            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
+            override fun onFailure(call: Call<CipheredResponse>, t: Throwable) {
                 onFailure(t.message ?: "Unknown error")
             }
         }
     }
 
-    private inline fun <reified T> handleListResponse(crossinline onSuccess: (List<T>) -> Unit, crossinline onFailure: (String) -> Unit): Callback<DataResponse> {
-        return object : Callback<DataResponse> {
-            override fun onResponse(call: Call<DataResponse>, response: Response<DataResponse>) {
+    private inline fun <reified T> handleListResponse(crossinline onSuccess: (List<T>) -> Unit, crossinline onFailure: (String) -> Unit): Callback<CipheredResponse> {
+        return object : Callback<CipheredResponse> {
+            override fun onResponse(call: Call<CipheredResponse>, response: Response<CipheredResponse>) {
                 if (response.isSuccessful) {
                     response.body()?.let {
                         val jsonData = verifyData(it)
@@ -86,7 +86,7 @@ class OnlineExpenseDAO(context: Context) : BaseDAO<Expense>(context), ExpenseRep
                 }
             }
 
-            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
+            override fun onFailure(call: Call<CipheredResponse>, t: Throwable) {
                 onFailure(t.message ?: "Unknown error")
             }
         }

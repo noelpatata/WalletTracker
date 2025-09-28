@@ -10,25 +10,25 @@ interface ExpenseCategoryRepository {
 
     fun getById(
         catId: Long,
-        onSuccess: (ExpenseCategory) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 
     fun create(
         category: ExpenseCategory,
-        onSuccess: (ExpenseCategory) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 
     fun deleteById(
         catId: Long,
-        onSuccess: (SuccessResponse) -> Unit,
+        onSuccess: () -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 
     fun edit(
         category: ExpenseCategory,
-        onSuccess: (SuccessResponse) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     )
 }

@@ -49,7 +49,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     }
     override fun create(
         category: ExpenseCategory,
-        onSuccess: (ExpenseCategory) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
         executeAsyncTask(
@@ -67,7 +67,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
 
     override fun edit(
         category: ExpenseCategory,
-        onSuccess: (SuccessResponse) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
         executeAsyncTask(
@@ -79,14 +79,14 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
                 val rowsAffected = database!!.update("ExpenseCategory", values, "id = ?", arrayOf(category.getId().toString()))
                 if (rowsAffected <= 0) throw Exception("Failed to update category")
             },
-            onSuccess = { onSuccess(SuccessResponse(true, "Category updated successfully")) },
+            onSuccess = { onSuccess(category) },
             onFailure = { onFailure(SuccessResponse(false, "Failed to update category")) }
         )
     }
 
     override fun deleteById(
         catId: Long,
-        onSuccess: (SuccessResponse) -> Unit,
+        onSuccess: () -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
         executeAsyncTask(
@@ -94,7 +94,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
                 val rowsDeleted = database!!.delete("ExpenseCategory", "id = ?", arrayOf(catId.toString()))
                 if (rowsDeleted <= 0) throw Exception("Failed to delete category")
             },
-            onSuccess = { onSuccess(SuccessResponse(true, "Category deleted successfully")) },
+            onSuccess = { onSuccess() },
             onFailure = { onFailure(SuccessResponse(false, "Failed to delete category")) }
         )
     }
@@ -134,7 +134,7 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getById(
         catId: Long,
-        onSuccess: (ExpenseCategory) -> Unit,
+        onSuccess: (ExpenseCategory?) -> Unit,
         onFailure: (SuccessResponse) -> Unit
     ) {
         executeAsyncTask(

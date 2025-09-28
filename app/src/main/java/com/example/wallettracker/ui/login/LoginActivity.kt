@@ -99,16 +99,13 @@ class LoginActivity : AppCompatActivity() {
             onSuccess = { login ->
                 tokenn = login.token
 
-                //generate client keys
                 val keys = Cryptography().generateKeys()
                 val privateKeyy = keys[0]
                 val publicKey = keys[1]
 
-                //send to server
                 val request = ServerPubKeyRequest(credentials.username, credentials.password, publicKey)
                 LoginDAO.setUserClientPubKey(request,
                     onSuccess = {
-                        //get server's public key
                         LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
                             onSuccess={
                                 val serverPublicKeyy = it.publicKey
@@ -137,12 +134,12 @@ class LoginActivity : AppCompatActivity() {
 
                             },
                             onFailure = {
-                                showError("Error getting server public key:\n ${it.message}")
+                                showError(it)
                             }
                         )
                     },
-                    onFailure = { it
-                        showError("Error sending public key:\n ${it.message}")
+                    onFailure = {
+                        showError(it)
                     }
                 )
 

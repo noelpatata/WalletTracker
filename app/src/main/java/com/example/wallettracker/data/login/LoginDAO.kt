@@ -4,8 +4,11 @@ import Cryptography
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
+import com.example.wallettracker.data.communication.BaseResponse
 import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.session.Session
+import com.example.wallettracker.util.Constantes.errorFetchingPublicKey
+import com.example.wallettracker.util.Constantes.errorSendingPublicKey
 import com.example.wallettracker.util.Constantes.loginFailedMessage
 import retrofit2.Call
 import retrofit2.Callback
@@ -15,20 +18,20 @@ class LoginDAO(private val credentials: LoginRequest) {
 
     fun login(onSuccess: (LoginResponse) -> Unit, onFailure: (String) -> Unit) {
 
-        ApiCall.login.login(credentials).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                if (response.isSuccessful) {
-                    val loginReponse = response.body()
-                    loginReponse?.let{
-                        onSuccess(it)
-                    }
-
+        ApiCall.login.login(credentials).enqueue(object : Callback<BaseResponse<LoginResponse>> {
+            override fun onResponse(
+                call: Call<BaseResponse<LoginResponse>>,
+                response: Response<BaseResponse<LoginResponse>>
+            ) {
+                val baseResponse = response.body()
+                if (baseResponse != null && baseResponse.success && baseResponse.data != null) {
+                    onSuccess(baseResponse.data)
                 } else {
-                    onFailure(loginFailedMessage)
+                    onFailure(baseResponse?.message ?: loginFailedMessage)
                 }
             }
 
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+            override fun onFailure(call: Call<BaseResponse<LoginResponse>>, t: Throwable) {
                 onFailure(loginFailedMessage)
             }
         })
@@ -61,28 +64,22 @@ class LoginDAO(private val credentials: LoginRequest) {
     }
     @RequiresApi(Build.VERSION_CODES.O)
     fun setUserClientPubKey(request: ServerPubKeyRequest,
-                            onSuccess: (SuccessResponse) -> Unit,
-                            onFailure: (SuccessResponse) -> Unit) {
-        ApiCall.login.setUserClientPubKey(request).enqueue(object : Callback<SuccessResponse> {
+                            onSuccess: () -> Unit,
+                            onFailure: (String) -> Unit) {
+        ApiCall.login.setUserClientPubKey(request).enqueue(object : Callback<BaseResponse<Nothing>> {
             override fun onResponse(
-                call: Call<SuccessResponse>,
-                response: Response<SuccessResponse>) {
-                if (response.isSuccessful) {
-                    val loginResponse = response.body()
-                    if(loginResponse?.success == true){
-                        onSuccess(loginResponse)
-                    }
-                    else{
-                        loginResponse?.let { onFailure(it) }
-                    }
-
+                call: Call<BaseResponse<Nothing>>,
+                response: Response<BaseResponse<Nothing>>) {
+                val baseResponse = response.body()
+                if (baseResponse != null && baseResponse.success) {
+                    onSuccess()
                 } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    onFailure(baseResponse?.message ?: errorSendingPublicKey)
                 }
             }
 
-            override fun onFailure(call: Call<SuccessResponse>, t: Throwable) {
-                onFailure(SuccessResponse(success = false, message = t.message.toString()))
+            override fun onFailure(call: Call<BaseResponse<Nothing>>, t: Throwable) {
+                onFailure(errorSendingPublicKey)
             }
         })
     }
@@ -90,25 +87,22 @@ class LoginDAO(private val credentials: LoginRequest) {
     @RequiresApi(Build.VERSION_CODES.O)
     fun getUserServerPubKey(request: LoginRequest,
                             onSuccess: (ServerPubKeyResponse) -> Unit,
-                            onFailure: (SuccessResponse) -> Unit) {
-        ApiCall.login.getUserServerPubKey(request).enqueue(object : Callback<ServerPubKeyResponse> {
+                            onFailure: (String) -> Unit) {
+        ApiCall.login.getUserServerPubKey(request).enqueue(object : Callback<BaseResponse<ServerPubKeyResponse>> {
             override fun onResponse(
-                call: Call<ServerPubKeyResponse>,
-                response: Response<ServerPubKeyResponse>
+                call: Call<BaseResponse<ServerPubKeyResponse>>,
+                response: Response<BaseResponse<ServerPubKeyResponse>>
             ) {
-                if (response.isSuccessful) {
-                    val loginReponse = response.body()
-                    loginReponse?.let{
-                        onSuccess(it)
-                    }
-
+                val baseResponse = response.body()
+                if (baseResponse != null && baseResponse.success && baseResponse.data != null) {
+                    onSuccess(baseResponse.data)
                 } else {
-                    onFailure(SuccessResponse(success = false, message = response.message()))
+                    onFailure(baseResponse?.message ?: loginFailedMessage)
                 }
             }
 
-            override fun onFailure(call: Call<ServerPubKeyResponse>, t: Throwable) {
-                onFailure(SuccessResponse(success = false, message = t.message.toString()))
+            override fun onFailure(call: Call<BaseResponse<ServerPubKeyResponse>>, t: Throwable) {
+                onFailure(errorFetchingPublicKey)
             }
         })
     }
