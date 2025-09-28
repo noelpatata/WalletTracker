@@ -1,6 +1,6 @@
 package com.example.wallettracker.data.expenseCategory
 
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.SuccessResponse
 
 interface ExpenseCategoryRepository {
     fun getAll(

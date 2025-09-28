@@ -1,8 +1,8 @@
 package com.example.wallettracker.data.expense
 
-import com.example.wallettracker.data.DataResponse
-import com.example.wallettracker.data.SuccessResponse
-import com.example.wallettracker.data.SymmetricResponse
+import com.example.wallettracker.data.communication.SuccessResponse
+import com.example.wallettracker.data.communication.CipheredRequest
+import com.example.wallettracker.data.communication.CipheredResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -22,34 +22,34 @@ interface OnlineExpenseEPs {
     fun getByCatId(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Body catId: SymmetricResponse
-    ): Call<DataResponse>
+        @Body catId: CipheredRequest
+    ): Call<CipheredResponse>
 
     @POST("Expense/edit/")
     fun edit(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Body expenseCategory: SymmetricResponse
-    ): Call<DataResponse>
+        @Body expenseCategory: CipheredRequest
+    ): Call<CipheredResponse>
 
     @POST("Expense/create/")
     fun create(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Body expense: SymmetricResponse
-    ): Call<DataResponse>
+        @Body expense: CipheredRequest
+    ): Call<CipheredResponse>
 
     @POST("Expense/Id")
     fun getById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Body expenseId: SymmetricResponse
-    ): Call<DataResponse>
+        @Body expenseId: CipheredRequest
+    ): Call<CipheredResponse>
 
     @POST("Expense/delete/")
     fun deleteById(
         @Header("Authorization") token: String,
         @Header("Cipher") cipher: String,
-        @Body expenseId : SymmetricResponse
+        @Body expenseId : CipheredRequest
     ): Call<SuccessResponse>
 }

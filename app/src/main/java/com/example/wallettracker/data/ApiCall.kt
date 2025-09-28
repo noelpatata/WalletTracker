@@ -7,6 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiCall {
+    //TODO take base url from env variables
     private const val BASE_URL = "http://172.20.0.190:8080"
 
 

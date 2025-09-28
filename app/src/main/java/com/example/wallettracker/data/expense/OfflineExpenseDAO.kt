@@ -8,11 +8,9 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.database.getLongOrNull
 import com.example.wallettracker.data.DatabaseHelper
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expense.ExpenseRepository
 import java.io.Closeable

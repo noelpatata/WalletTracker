@@ -1,6 +1,6 @@
 package com.example.wallettracker.data.expense
 
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.SuccessResponse
 
 interface ExpenseRepository {
     fun getById(

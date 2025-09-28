@@ -5,10 +5,10 @@ import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
 import BaseDAO
 import android.content.Context
-import com.example.wallettracker.data.CatIdRequest
-import com.example.wallettracker.data.DataResponse
-import com.example.wallettracker.data.ExpenseIdRequest
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.CatIdRequest
+import com.example.wallettracker.data.communication.DataResponse
+import com.example.wallettracker.data.communication.ExpenseIdRequest
+import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.util.Constantes.authenticationErrorMessage
 import com.example.wallettracker.util.Constantes.noDataMessage
 import com.google.gson.GsonBuilder

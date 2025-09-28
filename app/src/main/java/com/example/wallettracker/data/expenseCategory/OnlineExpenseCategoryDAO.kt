@@ -6,9 +6,11 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
-import com.example.wallettracker.data.CatIdRequest
-import com.example.wallettracker.data.DataResponse
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.BaseResponse
+import com.example.wallettracker.data.communication.CipheredResponse
+import com.example.wallettracker.data.communication.ExpenseCategoryIdRequest
+import com.example.wallettracker.data.communication.SuccessResponse
+import com.example.wallettracker.util.Constantes.invalidData
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
@@ -24,7 +26,7 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
     }
 
     override fun getById(catId: Long, onSuccess: (ExpenseCategory) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(CatIdRequest(catId))?.let { cipheredData ->
+        encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
@@ -38,7 +40,7 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
     }
 
     override fun deleteById(catId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(CatIdRequest(catId))?.let { cipheredData ->
+        encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
             ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
                 .enqueue(handleSuccessResponse(onSuccess, onFailure))
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
@@ -51,45 +53,69 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
         } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
     }
 
-    private inline fun <reified T> handleResponse(crossinline onSuccess: (T) -> Unit, crossinline onFailure: (SuccessResponse) -> Unit): Callback<DataResponse> {
-        return object : Callback<DataResponse> {
-            override fun onResponse(call: Call<DataResponse>, response: Response<DataResponse>) {
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        val jsonData = verifyData(it)
-                        if (jsonData.isNotEmpty()) singlemap<T>(jsonData)?.let(onSuccess)
-                        else onFailure(SuccessResponse(false, authenticationErrorMessage))
-                    } ?: onFailure(SuccessResponse(false, noDataMessage))
-                } else {
-                    onFailure(SuccessResponse(false, response.message()))
-                }
+    private inline fun <reified T> handleResponse(
+        crossinline onSuccess: (T) -> Unit,
+        noinline onFailure: (SuccessResponse) -> Unit
+    ): Callback<BaseResponse<CipheredResponse>> {
+        return object : Callback<BaseResponse<CipheredResponse>> {
+            override fun onResponse(
+                call: Call<BaseResponse<CipheredResponse>>,
+                response: Response<BaseResponse<CipheredResponse>>
+            ) {
+                response.body()?.let { body ->
+
+                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
+
+                    deserialize<BaseResponse<T>>(jsonData)?.let { deserializedResponse ->
+
+                        if (deserializedResponse.success) {
+                            deserializedResponse.data?.let(onSuccess)
+                        } else {
+                            onFailure(SuccessResponse(false, deserializedResponse.message))
+                        }
+
+                    } ?: onFailure(SuccessResponse(false, invalidData))
+                } ?: onFailure(SuccessResponse(false, noDataMessage))
             }
 
-            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
+            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
                 onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
             }
         }
     }
 
-    private inline fun <reified T> handleListResponse(crossinline onSuccess: (List<T>) -> Unit, crossinline onFailure: (SuccessResponse) -> Unit): Callback<DataResponse> {
-        return object : Callback<DataResponse> {
-            override fun onResponse(call: Call<DataResponse>, response: Response<DataResponse>) {
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        val jsonData = verifyData(it)
-                        if (jsonData.isNotEmpty()) onSuccess(map(jsonData))
-                        else onFailure(SuccessResponse(false, noDataMessage))
-                    } ?: onFailure(SuccessResponse(false, noDataMessage))
-                } else {
-                    onFailure(SuccessResponse(false, response.message()))
-                }
+    private inline fun <reified T> handleListResponse(
+        crossinline onSuccess: (List<T>) -> Unit,
+        noinline onFailure: (SuccessResponse) -> Unit
+    ): Callback<BaseResponse<CipheredResponse>> {
+        return object : Callback<BaseResponse<CipheredResponse>> {
+            override fun onResponse(
+                call: Call<BaseResponse<CipheredResponse>>,
+                response: Response<BaseResponse<CipheredResponse>>
+            ) {
+                response.body()?.let { body ->
+
+                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
+
+                    deserialize<BaseResponse<List<T>>>(jsonData)?.let { deserializedResponse ->
+
+                        if (deserializedResponse.success) {
+                            deserializedResponse.data?.let(onSuccess)
+                        } else {
+                            onFailure(SuccessResponse(false, deserializedResponse.message))
+                        }
+
+                    } ?: onFailure(SuccessResponse(false, invalidData))
+                } ?: onFailure(SuccessResponse(false, noDataMessage))
             }
 
-            override fun onFailure(call: Call<DataResponse>, t: Throwable) {
+            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
                 onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
             }
         }
     }
+
+
 
     private fun handleSuccessResponse(onSuccess: (SuccessResponse) -> Unit, onFailure: (SuccessResponse) -> Unit): Callback<SuccessResponse> {
         return object : Callback<SuccessResponse> {
@@ -107,9 +133,9 @@ class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(cont
         }
     }
 
-    private inline fun <reified T> singlemap(jsonData: String): T? =
-        GsonBuilder().create().fromJson(jsonData, object : com.google.gson.reflect.TypeToken<T>() {}.type)
-
-    private inline fun <reified T> map(jsonData: String): List<T> =
-        GsonBuilder().create().fromJson(jsonData, object : com.google.gson.reflect.TypeToken<List<T>>() {}.type)
+    private inline fun <reified T> deserialize(jsonData: String): T? {
+        val type = object : com.google.gson.reflect.TypeToken<BaseResponse<T?>>() {}.type
+        val baseResponse: BaseResponse<T?> = GsonBuilder().create().fromJson(jsonData, type)
+        return baseResponse.data
+    }
 }

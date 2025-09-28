@@ -1,12 +1,10 @@
 package com.example.wallettracker.data.login
 
 import Cryptography
-import android.content.Context
 import android.os.Build
-import android.util.Base64
 import androidx.annotation.RequiresApi
 import com.example.wallettracker.data.ApiCall
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.session.Session
 import com.example.wallettracker.util.Constantes.loginFailedMessage
 import retrofit2.Call

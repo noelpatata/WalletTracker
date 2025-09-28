@@ -11,7 +11,7 @@ import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.core.database.getIntOrNull
 import com.example.wallettracker.data.DatabaseHelper
-import com.example.wallettracker.data.SuccessResponse
+import com.example.wallettracker.data.communication.SuccessResponse
 import java.io.Closeable
 import java.sql.SQLException
 
@@ -24,7 +24,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         database = dbHelper?.getWritableDatabase()
     }
 
-    // Open the database for read/write operations
     @Throws(SQLException::class)
     fun open() {
         database = dbHelper?.getWritableDatabase()
@@ -66,7 +65,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         )
     }
 
-    // Update an existing ExpenseCategory in the database asynchronously
     override fun edit(
         category: ExpenseCategory,
         onSuccess: (SuccessResponse) -> Unit,
@@ -86,7 +84,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         )
     }
 
-    // Delete an ExpenseCategory by id asynchronously
     override fun deleteById(
         catId: Long,
         onSuccess: (SuccessResponse) -> Unit,
@@ -102,7 +99,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         )
     }
 
-    // Retrieve all ExpenseCategories from the database asynchronously
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getAll(
         onSuccess: (List<ExpenseCategory>) -> Unit,
@@ -135,7 +131,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         )
     }
 
-    // Retrieve a single ExpenseCategory by id asynchronously
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getById(
         catId: Long,
@@ -158,7 +153,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
     }
 
 
-    // Helper function to convert cursor data into ExpenseCategory
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun cursor(cursor: Cursor): ExpenseCategory {
@@ -175,7 +169,6 @@ class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
         return expenseCategory
     }
 
-    // Function to retrieve all ExpenseCategories from the database (synchronous)
     @RequiresApi(Build.VERSION_CODES.O)
     fun getAll(): List<ExpenseCategory>? {
         val expenseList: MutableList<ExpenseCategory> = ArrayList()
