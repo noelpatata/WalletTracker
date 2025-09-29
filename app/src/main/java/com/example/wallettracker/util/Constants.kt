@@ -1,6 +1,9 @@
-package com.example.wallettracker.util
+ package com.example.wallettracker.util
 
-object Constantes {
+object Secrets {
+    const val apiUrl = "https://192.168.0.21"
+}
+object Messages {
     const val cantConnect = "Cannot connect to server"
     const val loginFailedMessage = "Login failed"
     const val authenticationErrorMessage = "Security error during data fetching"

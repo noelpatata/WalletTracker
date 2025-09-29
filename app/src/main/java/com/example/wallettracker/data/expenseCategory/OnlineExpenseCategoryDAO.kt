@@ -1,6 +1,6 @@
 package com.example.wallettracker.data.expenseCategory
-import com.example.wallettracker.util.Constantes.authenticationErrorMessage
-import com.example.wallettracker.util.Constantes.noDataMessage
+import com.example.wallettracker.util.Messages.authenticationErrorMessage
+import com.example.wallettracker.util.Messages.noDataMessage
 import BaseDAO
 import android.content.Context
 import android.os.Build
@@ -10,7 +10,7 @@ import com.example.wallettracker.data.communication.BaseResponse
 import com.example.wallettracker.data.communication.CipheredResponse
 import com.example.wallettracker.data.communication.ExpenseCategoryIdRequest
 import com.example.wallettracker.data.communication.SuccessResponse
-import com.example.wallettracker.util.Constantes.invalidData
+import com.example.wallettracker.util.Messages.invalidData
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback

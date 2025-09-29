@@ -4,6 +4,7 @@ import com.example.wallettracker.data.communication.BaseResponse
 import com.example.wallettracker.data.communication.SuccessResponse
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface LoginEPs {
@@ -30,6 +31,7 @@ interface LoginEPs {
 
     @POST("api/v1/setUserClientPubKey/")
     fun setUserClientPubKey(
+        @Header("Authorization") token: String,
         @Body payload: ServerPubKeyRequest
     ): Call<BaseResponse<Nothing>>
 }

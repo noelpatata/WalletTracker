@@ -7,9 +7,9 @@ import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.communication.BaseResponse
 import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.session.Session
-import com.example.wallettracker.util.Constantes.errorFetchingPublicKey
-import com.example.wallettracker.util.Constantes.errorSendingPublicKey
-import com.example.wallettracker.util.Constantes.loginFailedMessage
+import com.example.wallettracker.util.Messages.errorFetchingPublicKey
+import com.example.wallettracker.util.Messages.errorSendingPublicKey
+import com.example.wallettracker.util.Messages.loginFailedMessage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -63,10 +63,11 @@ class LoginDAO(private val credentials: LoginRequest) {
         }
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setUserClientPubKey(request: ServerPubKeyRequest,
+    fun setUserClientPubKey(token: String,
+                            request: ServerPubKeyRequest,
                             onSuccess: () -> Unit,
                             onFailure: (String) -> Unit) {
-        ApiCall.login.setUserClientPubKey(request).enqueue(object : Callback<BaseResponse<Nothing>> {
+        ApiCall.login.setUserClientPubKey("Bearer $token", request).enqueue(object : Callback<BaseResponse<Nothing>> {
             override fun onResponse(
                 call: Call<BaseResponse<Nothing>>,
                 response: Response<BaseResponse<Nothing>>) {

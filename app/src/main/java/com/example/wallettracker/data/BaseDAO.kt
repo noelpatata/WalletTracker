@@ -6,9 +6,9 @@ import com.example.wallettracker.data.communication.CipheredRequest
 import com.example.wallettracker.data.communication.CipheredResponse
 import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.session.SessionDAO
-import com.example.wallettracker.util.Constantes.invalidData
-import com.example.wallettracker.util.Constantes.invalidSignature
-import com.example.wallettracker.util.Constantes.noDataMessage
+import com.example.wallettracker.util.Messages.invalidData
+import com.example.wallettracker.util.Messages.invalidSignature
+import com.example.wallettracker.util.Messages.noDataMessage
 import com.google.gson.GsonBuilder
 
 @RequiresApi(Build.VERSION_CODES.O)

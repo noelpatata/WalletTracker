@@ -93,18 +93,19 @@ class LoginActivity : AppCompatActivity() {
             password
         )
         val LoginDAO = LoginDAO(credentials)
-        var tokenn = ""
         var user = 0
         LoginDAO.login(
             onSuccess = { login ->
-                tokenn = login.token
+                val jwt: String = login.token
 
                 val keys = Cryptography().generateKeys()
                 val privateKeyy = keys[0]
                 val publicKey = keys[1]
 
-                val request = ServerPubKeyRequest(credentials.username, credentials.password, publicKey)
-                LoginDAO.setUserClientPubKey(request,
+                val request = ServerPubKeyRequest(publicKey)
+                LoginDAO.setUserClientPubKey(
+                    jwt,
+                    request,
                     onSuccess = {
                         LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
                             onSuccess={
@@ -115,7 +116,7 @@ class LoginActivity : AppCompatActivity() {
                                     //creates a new session
                                     val newSess = Session().apply{
                                         userId = it.userId
-                                        token = tokenn
+                                        token = jwt
                                         online = true
                                         serverPublicKey = serverPublicKeyy
                                         privateKey = privateKeyy

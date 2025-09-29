@@ -9,8 +9,8 @@ import com.example.wallettracker.data.communication.CipheredResponse
 import com.example.wallettracker.data.communication.ExpenseCategoryIdRequest
 import com.example.wallettracker.data.communication.ExpenseIdRequest
 import com.example.wallettracker.data.communication.SuccessResponse
-import com.example.wallettracker.util.Constantes.authenticationErrorMessage
-import com.example.wallettracker.util.Constantes.noDataMessage
+import com.example.wallettracker.util.Messages.authenticationErrorMessage
+import com.example.wallettracker.util.Messages.noDataMessage
 import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
