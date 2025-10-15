@@ -4,6 +4,7 @@ import Cryptography
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -33,6 +34,7 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.loginForm.visibility = View.VISIBLE
         checkAutoLogin()
 
         initListeners()
@@ -43,7 +45,6 @@ class LoginActivity : AppCompatActivity() {
     private fun initListeners() {
         binding.login.setOnClickListener {
 
-            //validation
             if (binding.inputUsername.text.toString().trim()
                     .isEmpty() || binding.inputPassword.text.toString().trim().isEmpty()
             ) {
@@ -70,9 +71,8 @@ class LoginActivity : AppCompatActivity() {
 
         binding.offlineMode.setOnClickListener {
             SessionDAO(this).use { sSess ->
-                sSess.deleteAll()//clears all sessions
+                sSess.deleteAll()
 
-                //creates a new session
                 val newSess = Session().apply{
                     online = false
                 }
@@ -93,46 +93,36 @@ class LoginActivity : AppCompatActivity() {
             password
         )
         val LoginDAO = LoginDAO(credentials)
-        var user = 0
         LoginDAO.login(
             onSuccess = { login ->
                 val jwt: String = login.token
-
                 val keys = Cryptography().generateKeys()
                 val privateKeyy = keys[0]
                 val publicKey = keys[1]
-
                 val request = ServerPubKeyRequest(publicKey)
                 LoginDAO.setUserClientPubKey(
                     jwt,
                     request,
                     onSuccess = {
-                        LoginDAO.getUserServerPubKey(LoginRequest(credentials.username, credentials.password),
+                        LoginDAO.getUserServerPubKey(
+
+                            jwt,
                             onSuccess={
                                 val serverPublicKeyy = it.publicKey
                                 SessionDAO(this).use { sSess ->
-                                    sSess.deleteAll()//clears all sessions
-
-                                    //creates a new session
+                                    sSess.deleteAll()
                                     val newSess = Session().apply{
                                         userId = it.userId
                                         token = jwt
                                         online = true
                                         serverPublicKey = serverPublicKeyy
                                         privateKey = privateKeyy
-                                        remember = binding.cboxRememberpassw.isChecked
+                                        remember = false
                                     }
-
                                     sSess.insert(newSess)
                                     sSess.close()
-
                                     startMainActivity()
-
-
                                 }
-
-
-
                             },
                             onFailure = {
                                 showError(it)
@@ -143,8 +133,6 @@ class LoginActivity : AppCompatActivity() {
                         showError(it)
                     }
                 )
-
-
             },
             onFailure = { error ->
                 showError("Login error: $error")
@@ -154,34 +142,34 @@ class LoginActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun checkAutoLogin() {
-        binding.loadingPanel.visibility = View.VISIBLE
-        binding.loginForm.visibility = View.GONE
-
-        val sSess = SessionDAO(this)  // Open SessionDAO manually
-        val session = sSess.getFirstSession()
-
-        if (session != null && session.id >= 0 && session.remember) {
-            LoginDAO.autologin(
-                session,
-                onSuccess = { login ->
-                    if (login.token != null) {
-                        session.token = login.token
-                        sSess.edit(session)  // Database is still open here
-                    }
-                    sSess.close()  // Manually close SessionDAO after use
-                    startMainActivity()
-                },
-                onFailure = {
-                    sSess.close()  // Manually close SessionDAO even on failure
-                    binding.loadingPanel.visibility = View.GONE
-                    binding.loginForm.visibility = View.VISIBLE
-                }
-            )
-        } else {
-            sSess.close()  // Close if no session found
-            binding.loadingPanel.visibility = View.GONE
-            binding.loginForm.visibility = View.VISIBLE
-        }
+//        binding.loadingPanel.visibility = View.VISIBLE
+//        binding.loginForm.visibility = View.GONE
+//
+//        val sSess = SessionDAO(this)  // Open SessionDAO manually
+//        val session = sSess.getFirstSession()
+//
+//        if (session != null && session.id >= 0 && session.remember) {
+//            LoginDAO.autologin(
+//                session,
+//                onSuccess = { login ->
+//                    if (login.token != null) {
+//                        session.token = login.token
+//                        sSess.edit(session)  // Database is still open here
+//                    }
+//                    sSess.close()  // Manually close SessionDAO after use
+//                    startMainActivity()
+//                },
+//                onFailure = {
+//                    sSess.close()  // Manually close SessionDAO even on failure
+//                    binding.loadingPanel.visibility = View.GONE
+//                    binding.loginForm.visibility = View.VISIBLE
+//                }
+//            )
+//        } else {
+//            sSess.close()  // Close if no session found
+//            binding.loadingPanel.visibility = View.GONE
+//            binding.loginForm.visibility = View.VISIBLE
+//        }
     }
 
 

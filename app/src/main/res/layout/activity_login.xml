@@ -66,10 +66,6 @@
             android:layout_width="match_parent"
             android:inputType="textPassword"
             android:textSize="20sp" />
-        <CheckBox android:id="@+id/cbox_rememberpassw"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Remember password"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

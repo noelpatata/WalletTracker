@@ -36,32 +36,7 @@ class LoginDAO(private val credentials: LoginRequest) {
             }
         })
     }
-    companion object {
-        @RequiresApi(Build.VERSION_CODES.O)
-        fun autologin(session: Session, onSuccess: (LoginResponse) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-            val userId = session.userId
-            val signatureb64 = Cryptography().sign(session.privateKey) //encrypts with private key
-            val requestBody = AutoLoginRequest(userId, signatureb64)
-            ApiCall.login.autologin(requestBody).enqueue(object : Callback<LoginResponse> {
-                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                    if (response.isSuccessful) {
-                        val loginReponse = response.body()
-                        loginReponse?.let{
-                            onSuccess(it)
-                        }
 
-                    } else {
-                        onFailure(SuccessResponse(success = false, message = loginFailedMessage))
-                    }
-                }
-
-                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    onFailure(SuccessResponse(success = false, message = loginFailedMessage))
-                }
-            })
-
-        }
-    }
     @RequiresApi(Build.VERSION_CODES.O)
     fun setUserClientPubKey(token: String,
                             request: ServerPubKeyRequest,
@@ -86,10 +61,10 @@ class LoginDAO(private val credentials: LoginRequest) {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getUserServerPubKey(request: LoginRequest,
+    fun getUserServerPubKey(token: String,
                             onSuccess: (ServerPubKeyResponse) -> Unit,
                             onFailure: (String) -> Unit) {
-        ApiCall.login.getUserServerPubKey(request).enqueue(object : Callback<BaseResponse<ServerPubKeyResponse>> {
+        ApiCall.login.getUserServerPubKey("Bearer $token").enqueue(object : Callback<BaseResponse<ServerPubKeyResponse>> {
             override fun onResponse(
                 call: Call<BaseResponse<ServerPubKeyResponse>>,
                 response: Response<BaseResponse<ServerPubKeyResponse>>
