@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
+import com.example.wallettracker.data.login.AppResult
 import com.example.wallettracker.databinding.FragmentCategoriesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar
@@ -48,8 +50,9 @@ class CategoriesFragment : Fragment() {
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
-        mainScope.launch {
-            initListeners()
+        initListeners()
+
+        viewLifecycleOwner.lifecycleScope.launch {
             loadData()
         }
 
@@ -60,21 +63,21 @@ class CategoriesFragment : Fragment() {
     private suspend fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.rviewCategories.visibility = View.GONE
+
         val expenseCategoryRepository: ExpenseCategoryRepository =
             provideExpenseCategoryRepository(requireContext())
 
-        expenseCategoryRepository.getAll(
-            onSuccess = { categoryList ->
-                displayCategories(categoryList)
-                binding.loadingPanel.visibility = View.GONE
-                binding.rviewCategories.visibility = View.VISIBLE
-            },
-            onFailure = { error ->
-                showError("$error")
-                binding.loadingPanel.visibility = View.GONE
-                binding.rviewCategories.visibility = View.VISIBLE
+        when (val result = expenseCategoryRepository.getAll()) {
+            is AppResult.Success -> {
+                displayCategories(result.data)
             }
-        )
+            is AppResult.Error -> {
+                showError(result.message)
+            }
+        }
+
+        binding.loadingPanel.visibility = View.GONE
+        binding.rviewCategories.visibility = View.VISIBLE
     }
 
     private fun displayCategories(categories: List<ExpenseCategory>) {
@@ -194,35 +197,30 @@ class CategoriesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun editCategory(category: ExpenseCategory) {
-        try {
-            val categoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-            categoryDAO.edit(
-                category,
-                onSuccess = { },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-                }
-            )
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
+
+        when (val result = categoryDAO.edit(category)) {
+            is AppResult.Success -> {
+                Toast.makeText(requireContext(), "Category updated successfully", Toast.LENGTH_SHORT).show()
+            }
+            is AppResult.Error -> {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
         }
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun deleteCategory(categoryId: Long) {
-        try {
-            val categoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-            categoryDAO.deleteById(
-                onSuccess = { },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-                },
-                catId = categoryId
-            )
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
+
+        when (val result = categoryDAO.deleteById(categoryId)) {
+            is AppResult.Success -> {
+                Toast.makeText(requireContext(), "Category deleted successfully", Toast.LENGTH_SHORT).show()
+            }
+            is AppResult.Error -> {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
         }
     }
 

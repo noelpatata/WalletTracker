@@ -19,9 +19,8 @@ class ComboCategoriasAdapter(private val context: Context, private val items: Li
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.element_combocategorias, parent, false)
 
-        val item = getItem(position) as ExpenseCategory
+        val item = getItem(position)
 
-        // Bind data to views
         val text = view.findViewById<TextView>(R.id.spinner_text)
         text.text = item.getName()
 

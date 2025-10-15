@@ -1,10 +1,10 @@
 package com.example.wallettracker.ui.createExpense
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,17 +15,17 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
 import com.example.wallettracker.data.expense.ExpenseRepository
+import com.example.wallettracker.data.login.AppResult
 import com.example.wallettracker.databinding.FragmentCreateexpenseBinding
 import com.example.wallettracker.ui.adapters.ComboCategoriasAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
 import provideExpenseRepository
@@ -50,17 +50,16 @@ class CreateExpenseFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        //default
+
         _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
 
-        //app logic
         var categoryId: Long = -1
         val args : Bundle? = arguments
         if(args != null){
             categoryId = args.getLong("catId")
-            isFromCatForm = categoryId != null
+            isFromCatForm = categoryId > 0
 
             expenseId = args.getLong("expenseId")
 
@@ -70,7 +69,7 @@ class CreateExpenseFragment : Fragment() {
 
         try {
             initListeners()
-            CoroutineScope(Dispatchers.Main).launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 loadData(categoryId, expenseId)
             }
 
@@ -80,7 +79,7 @@ class CreateExpenseFragment : Fragment() {
             }
 
             if (expenseId <= 0)
-                binding.inputPrice.requestFocus() // Focus on the EditText only if its a new expense
+                binding.inputPrice.requestFocus()
 
         }
         catch(e:Exception){
@@ -108,34 +107,38 @@ class CreateExpenseFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun loadData(catId:Long, expenseId: Long) {
+    private suspend fun loadData(catId: Long, expenseId: Long) {
         binding.inputDate.isEnabled = false
         loadDefaultDateTime()
         loadComboCategorias(catId)
-        if(expenseId > 0 ){
-            val expenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            expenseDAO.getById(
-                onSuccess = { expense ->
-                    loadExpense(expense)
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                },
-                expenseId = expenseId
-            )
-        }
 
+        if (expenseId > 0) {
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
+
+            when (val result = expenseDAO.getById(expenseId)) {
+                is AppResult.Success -> {
+                    val expense = result.data
+                    if (expense != null) {
+                        loadExpense(expense)
+                    } else {
+                        Toast.makeText(requireContext(), "Expense not found", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
+    @SuppressLint("SimpleDateFormat")
     private fun loadExpense(expense: Expense?) {
         try {
             if (expense != null){
-                //price
                 binding.inputPrice.setText(expense.getPrice().toString())
 
                 binding.inputDesc.setText(expense.getDescription())
-                //date
                 val format = SimpleDateFormat("yyyy-MM-dd")
                 val stringDate = format.format(expense.getDate())
                 binding.inputDate.setText(stringDate)
@@ -150,43 +153,39 @@ class CreateExpenseFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun loadComboCategorias(catId: Long) {
+        if (catId <= 0) return
 
-        if (catId > 0){
-            var categories = listOf<ExpenseCategory>()
-            val categoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-            categoryDAO.getAll(
-                onSuccess = {
-                    loadSpinner(it)
-                    selectCategory(catId)
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-                }
-            )
+        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
+
+        when (val result = categoryDAO.getAll()) {
+            is AppResult.Success -> {
+                val categories = result.data
+                loadSpinner(categories)
+                selectCategory(catId)
+            }
+
+            is AppResult.Error -> {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
         }
-
-
-
     }
+
     private fun loadSpinner(categories: List<ExpenseCategory>) {
         binding.comboCategorias
         val spinner: Spinner = binding.comboCategorias
 
-        if (spinner != null) {
-            val adaptador = ComboCategoriasAdapter(
-                requireContext(),
-                categories
-            )
-            spinner.adapter = adaptador
-        }
+        val adaptador = ComboCategoriasAdapter(
+            requireContext(),
+            categories
+        )
+        spinner.adapter = adaptador
     }
 
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun loadDefaultDateTime() {
 
-        var currentDateTime = LocalDate.now()
+        val currentDateTime = LocalDate.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         binding.inputDate.setText(formatter.format(currentDateTime))
     }
@@ -199,7 +198,7 @@ class CreateExpenseFragment : Fragment() {
         binding.inputPrice.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
             if (actionId == EditorInfo.IME_ACTION_NEXT ||
                 (actionId == EditorInfo.IME_ACTION_DONE)) {
-                CoroutineScope(Dispatchers.Main).launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     createOrSaveChanges()
                 }
 
@@ -209,7 +208,7 @@ class CreateExpenseFragment : Fragment() {
             false
         }
         binding.createExpense.setOnClickListener {
-            CoroutineScope(Dispatchers.Main).launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 createOrSaveChanges()
             }
 
@@ -221,11 +220,11 @@ class CreateExpenseFragment : Fragment() {
                     .setTitle("Delete Expense")
                     .setMessage("Are you sure you want to delete this expense?")
                     .setPositiveButton("Delete") { _, _ ->
-                        CoroutineScope(Dispatchers.Main).launch {
+                        viewLifecycleOwner.lifecycleScope.launch {
                             delete(expenseId)
                         }
                     }
-                    .setNegativeButton("Cancel", null) // If cancelled, do nothing
+                    .setNegativeButton("Cancel", null)
                     .show()
 
             }
@@ -263,23 +262,18 @@ class CreateExpenseFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun delete(expenseId: Long) {
         try {
-            val expenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            expenseDAO.deleteById(
-                onSuccess = { response ->
-                    if (response.success)
-                        findNavController().popBackStack()
-                    else
-                        Toast.makeText(requireContext(), response.message, Toast.LENGTH_LONG).show()
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                },
-                expenseId = expenseId
-            )
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
 
-        }
-        catch (e: Exception){
+            when (val result = expenseDAO.deleteById(expenseId)) {
+                is AppResult.Success -> {
+                    findNavController().popBackStack()
+                }
+
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
     }
@@ -288,57 +282,51 @@ class CreateExpenseFragment : Fragment() {
     private suspend fun edit() {
         try {
             val expense = getExpense()
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
 
-            val expenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            expenseDAO.edit(
-                onSuccess = {
+            when (val result = expenseDAO.edit(expense)) {
+                is AppResult.Success -> {
                     findNavController().popBackStack()
+                }
 
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                },
-                expense = expense
-            )
-        }catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message ?: "Unknown error", Toast.LENGTH_LONG).show()
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun save() {
         try {
             val expense = getExpense()
-            Log.d("Expense", expense.getDescription())
-            val onlineExpenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            onlineExpenseDAO.create(
-                onSuccess = { state ->
-                    val createdExpense = state
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
+
+            when (val result = expenseDAO.create(expense)) {
+                is AppResult.Success -> {
                     findNavController().popBackStack()
+                }
 
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                },
-                expense = expense
-            )
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message ?: "Unexpected error", Toast.LENGTH_LONG).show()
         }
-        catch (e: Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-        }
-
-
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getExpense(): Expense {
         try {
-            val pricestring = binding.inputPrice.text.toString()
+            val priceString = binding.inputPrice.text.toString()
             var price: Double = 0.0
-            if (!pricestring.isNullOrEmpty()){
-                price = pricestring.toDouble()
+            if (priceString.isNotEmpty()){
+                price = priceString.toDouble()
             }
 
             val descString = binding.inputDesc.text.toString()
@@ -349,12 +337,12 @@ class CreateExpenseFragment : Fragment() {
             var date = Date.valueOf(formatter.format(LocalDate.now()))
 
 
-            if (!dateString.isNullOrEmpty()){
+            if (dateString.isNotEmpty()){
                 date = Date.valueOf(dateString)
             }
 
             val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
-            val category = adapter.getItem(binding.comboCategorias.selectedItemPosition) as ExpenseCategory
+            val category = adapter.getItem(binding.comboCategorias.selectedItemPosition)
             val catId: Long = category.getId()
             if (expenseId > 0){
                 val expense = Expense(expenseId, price, date, catId, descString)
@@ -375,19 +363,17 @@ class CreateExpenseFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDatePickerDialog() {
-        //calback -> defining anonymous function
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
 
-            val selectedDate = LocalDate.of(year, month + 1, day) // Adjust month as it is 0-basedç
+            val selectedDate = LocalDate.of(year, month + 1, day)
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             binding.inputDate.setText(formatter.format(selectedDate))
         }
 
-        //actual execution
         val currDate = LocalDate.now()
         val datePicker = DatePickerDialog(
             requireContext(),
-            dateSetListener, //calling anonymous function
+            dateSetListener,
             currDate.year,
             currDate.monthValue,
             currDate.dayOfMonth

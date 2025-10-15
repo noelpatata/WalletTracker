@@ -13,9 +13,12 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.wallettracker.R
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
+import com.example.wallettracker.data.login.AppResult
 import com.example.wallettracker.databinding.FragmentCreatecategoriesBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,9 +29,6 @@ import provideExpenseCategoryRepository
 class CreateCategoriesFragment : Fragment() {
 
     private var _binding: FragmentCreatecategoriesBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -42,9 +42,9 @@ class CreateCategoriesFragment : Fragment() {
 
         _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
 
-        InitListeners()
+        initListeners()
 
-        binding.inputName.requestFocus() // Focus on the EditText
+        binding.inputName.requestFocus()
         binding.root.post {
             val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
             imm?.showSoftInput(binding.inputName, InputMethodManager.SHOW_IMPLICIT)
@@ -57,17 +57,15 @@ class CreateCategoriesFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun InitListeners() {
+    private fun initListeners() {
         binding.createCategory.setOnClickListener {
-            SaveChanges()
-
-
+            saveChanges()
         }
-        binding.inputName.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+        binding.inputName.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
-                SaveChanges()
+                saveChanges()
 
                 return@setOnEditorActionListener true
             }
@@ -76,11 +74,11 @@ class CreateCategoriesFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun SaveChanges() {
+    private fun saveChanges() {
         val category = GetCategory()
         val isValid = CheckValidation(category)
         if(isValid){
-            CoroutineScope(Dispatchers.Main).launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 save()
             }
 
@@ -100,21 +98,21 @@ class CreateCategoriesFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun save() {
-        try{
-            val cat = GetCategory()
+        try {
+            val category = GetCategory()
             val expenseCategoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
-            expenseCategoryDAO.create(
-                cat,
-                onSuccess = {
-                    findNavController().navigate(com.example.wallettracker.R.id.nav_categories)
-                },
-                onFailure = { error ->
-                    showError("Error creating category: $error")
-                })
-        }
-        catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+
+            when (val result = expenseCategoryDAO.create(category)) {
+                is AppResult.Success -> {
+                    findNavController().navigate(R.id.nav_categories)
+                }
+                is AppResult.Error -> {
+                    showError("Error creating category: ${result.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), e.message ?: "Unknown error", Toast.LENGTH_LONG).show()
         }
     }
 

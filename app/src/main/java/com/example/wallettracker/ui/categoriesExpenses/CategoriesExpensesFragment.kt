@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +24,7 @@ import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expenseCategory.ExpenseCategory
 import com.example.wallettracker.data.expenseCategory.ExpenseCategoryRepository
 import com.example.wallettracker.data.expense.ExpenseRepository
+import com.example.wallettracker.data.login.AppResult
 import com.example.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import com.example.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.example.wallettracker.ui.adapters.RViewExpensesAdapter
@@ -61,12 +63,9 @@ class CategoriesExpensesFragment() : Fragment() {
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
         initListeners()
-        CoroutineScope(Dispatchers.Main).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             loadData()
         }
-
-
-
 
         val root: View = binding.root
         return root
@@ -80,49 +79,46 @@ class CategoriesExpensesFragment() : Fragment() {
 
         val expenseCategoryDAO: ExpenseCategoryRepository =
             provideExpenseCategoryRepository(requireContext())
-        expenseCategoryDAO.getById(
-            onSuccess = { category ->
-                binding.inputName.setText(category!!.getName())
-                CoroutineScope(Dispatchers.Main).launch {
+
+        when (val result = expenseCategoryDAO.getById(categoryId)) {
+            is AppResult.Success -> {
+                val category = result.data
+                if (category != null) {
+                    binding.inputName.setText(category.getName())
                     loadExpenses()
                 }
+            }
 
-            },
-            onFailure = { error ->
-                Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-            },
-            catId = categoryId
-        )
+            is AppResult.Error -> {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
+        }
 
-
+        binding.loadingPanel.visibility = View.GONE
+        binding.form.visibility = View.VISIBLE
     }
 
     @SuppressLint("NewApi")
     private suspend fun loadExpenses() {
-        try {
-            val expenseDAO: ExpenseRepository =
-                provideExpenseRepository(requireContext())
-            expenseDAO.getByCatId(
-                onSuccess = { lista ->
-                    displayExpenses(lista)
-                    binding.loadingPanel.visibility = View.GONE
-                    binding.form.visibility = View.VISIBLE
-                },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                    binding.loadingPanel.visibility = View.GONE
-                    binding.form.visibility = View.VISIBLE
-                },
-                catId = categoryId
-            )
+        binding.loadingPanel.visibility = View.VISIBLE
+        binding.form.visibility = View.GONE
 
+        val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
+
+        when (val result = expenseDAO.getByCatId(categoryId)) {
+            is AppResult.Success -> {
+                displayExpenses(result.data)
+            }
+
+            is AppResult.Error -> {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
         }
-        catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-            binding.loadingPanel.visibility = View.GONE
-            binding.form.visibility = View.VISIBLE
-        }
+
+        binding.loadingPanel.visibility = View.GONE
+        binding.form.visibility = View.VISIBLE
     }
+
 
     private fun displayExpenses(lista: List<Expense>) {
         val mutableExpenses = lista.toMutableList()
@@ -150,10 +146,9 @@ class CategoriesExpensesFragment() : Fragment() {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val delExpense = mutableExpenses[viewHolder.adapterPosition]
-                val backupExpense = delExpense // Save the item being deleted, not the position
-                val backupPosition = viewHolder.adapterPosition // Store position for restoring
+                val backupExpense = delExpense
+                val backupPosition = viewHolder.adapterPosition
 
-                // Remove item from the list
                 (binding.rviewExpenses.adapter as RViewExpensesAdapter).removeItem(backupPosition)
 
                 if (isAdded) {
@@ -164,7 +159,6 @@ class CategoriesExpensesFragment() : Fragment() {
                     )
 
                     snackbar!!.setAction("Undo") {
-                        // Undo action: restore the deleted expense at the correct position
                         (binding.rviewExpenses.adapter as RViewExpensesAdapter).addItem(backupPosition, backupExpense)
                     }
 
@@ -172,7 +166,6 @@ class CategoriesExpensesFragment() : Fragment() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             Log.e("noel", "dismissed")
                             Log.e("noel", event.toString())
-                            // Only delete if fragment is still attached
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
                                 mainScope.launch {
                                     Log.e("noel", "tried deleting")
@@ -200,7 +193,7 @@ class CategoriesExpensesFragment() : Fragment() {
             saveIfValid()
 
         }
-        binding.inputName.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+        binding.inputName.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
@@ -252,20 +245,27 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun saveChanges() {
+        binding.loadingPanel.visibility = View.VISIBLE
+
         try {
             val category = GetCategory()
             val categoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
-            categoryDAO.edit(
-                category,
-                onSuccess = { },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-                },
 
-            )
-        }catch (e: Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            when (val result = categoryDAO.edit(category)) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), "Category updated successfully", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.nav_categories)
+                }
+
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Unexpected error: ${e.message}", Toast.LENGTH_LONG).show()
+        } finally {
+            binding.loadingPanel.visibility = View.GONE
         }
     }
 
@@ -277,19 +277,25 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun deleteCategory() {
+        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
+
+        binding.loadingPanel.visibility = View.VISIBLE
+
         try {
-            val categoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-            categoryDAO.deleteById(
-                onSuccess = { },
-                onFailure = { error ->
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
-                },
-                catId = categoryId
-            )
-            findNavController().navigate(R.id.nav_categories)
-        }catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            when (val result = categoryDAO.deleteById(categoryId)) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), "Category deleted successfully", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.nav_categories)
+                }
+
+                is AppResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Unexpected error: ${e.message}", Toast.LENGTH_LONG).show()
+        } finally {
+            binding.loadingPanel.visibility = View.GONE
         }
     }
 

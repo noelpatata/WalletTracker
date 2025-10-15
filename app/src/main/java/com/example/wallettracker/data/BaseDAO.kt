@@ -48,32 +48,23 @@ abstract class BaseDAO<T>(context: Context) {
         return Cryptography().hybridEncrypt(publicKey, GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))
     }
 
-    protected fun validateCipheredResponse(
-        response: BaseResponse<CipheredResponse>?,
-        onFailure: (SuccessResponse) -> Unit
-    ): String? {
-        if (response?.data == null) {
-            onFailure(SuccessResponse(false, noDataMessage))
-            return null
-        }
+    protected fun validateCipheredResponse(response: BaseResponse<CipheredResponse>?): String {
+        val ciphered = response?.data ?: throw Exception(noDataMessage)
 
-        val ciphered = response.data
         if (ciphered.signature.isEmpty()) {
-            onFailure(SuccessResponse(false, invalidData))
-            return null
+            throw Exception(invalidData)
         }
 
         val decrypted = decryptData(ciphered.encrypted_data)
         if (decrypted.isEmpty()) {
-            onFailure(SuccessResponse(false, noDataMessage))
-            return null
+            throw Exception(noDataMessage)
         }
 
         if (!verifySignature(ciphered.signature)) {
-            onFailure(SuccessResponse(false, invalidSignature))
-            return null
+            throw Exception(invalidSignature)
         }
 
         return decrypted
     }
+
 }

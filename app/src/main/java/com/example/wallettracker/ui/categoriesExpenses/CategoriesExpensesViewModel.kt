@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wallettracker.data.expense.ExpenseRepository
+import com.example.wallettracker.data.login.AppResult
 import kotlinx.coroutines.launch
 import provideExpenseRepository
 
@@ -19,24 +20,10 @@ class CategoriesExpensesViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun deleteExpense(context: Context, expenseId: Long) {
         viewModelScope.launch {
-            try {
-                val expenseDAO: ExpenseRepository = provideExpenseRepository(context)
-
-                expenseDAO.deleteById(
-                    onSuccess = { response ->
-                        if (!response.success) {
-                            _deleteResult.postValue(Result.failure(Exception(response.message)))
-                        } else {
-                            _deleteResult.postValue(Result.success("Deleted successfully"))
-                        }
-                    },
-                    onFailure = { error ->
-                        _deleteResult.postValue(Result.failure(Exception(error)))
-                    },
-                    expenseId = expenseId
-                )
-            } catch (e: Exception) {
-                _deleteResult.postValue(Result.failure(e))
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(context)
+            when (val result = expenseDAO.deleteById(expenseId)) {
+                is AppResult.Success -> _deleteResult.postValue(Result.success("Deleted successfully"))
+                is AppResult.Error -> _deleteResult.postValue(Result.failure(Exception(result.message)))
             }
         }
     }

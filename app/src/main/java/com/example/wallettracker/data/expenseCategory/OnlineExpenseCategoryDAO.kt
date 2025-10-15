@@ -9,146 +9,98 @@ import com.example.wallettracker.data.ApiCall
 import com.example.wallettracker.data.communication.BaseResponse
 import com.example.wallettracker.data.communication.CipheredResponse
 import com.example.wallettracker.data.communication.ExpenseCategoryIdRequest
-import com.example.wallettracker.data.communication.SuccessResponse
-import com.example.wallettracker.util.Messages.invalidData
+import com.example.wallettracker.data.login.AppResult
 import com.google.gson.GsonBuilder
-import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
-class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(context),
-    ExpenseCategoryRepository {
+class OnlineExpenseCategoryDAO(context: Context) : BaseDAO<ExpenseCategory>(context), ExpenseCategoryRepository {
 
-    override fun getAll(onSuccess: (List<ExpenseCategory>) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText)
-            .enqueue(handleListResponse(onSuccess, onFailure))
-    }
-
-    override fun getById(catId: Long, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
-            ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleResponse(onSuccess, onFailure))
-        } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
-    }
-
-    override fun create(category: ExpenseCategory, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
-            ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleResponse(onSuccess, onFailure))
-        } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
-    }
-
-    override fun deleteById(catId: Long, onSuccess: () -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(ExpenseCategoryIdRequest(catId))?.let { cipheredData ->
-            ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleEmptyResponse(onSuccess, onFailure))
-        } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
-    }
-
-    override fun edit(category: ExpenseCategory, onSuccess: (ExpenseCategory?) -> Unit, onFailure: (SuccessResponse) -> Unit) {
-        encryptData(ExpenseCategoryRequest(category))?.let { cipheredData ->
-            ApiCall.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
-                .enqueue(handleResponse(onSuccess, onFailure))
-        } ?: onFailure(SuccessResponse(false, authenticationErrorMessage))
-    }
-
-    private inline fun <reified T> handleResponse(
-        crossinline onSuccess: (T?) -> Unit,
-        noinline onFailure: (SuccessResponse) -> Unit
-    ): Callback<BaseResponse<CipheredResponse>> {
-        return object : Callback<BaseResponse<CipheredResponse>> {
-            override fun onResponse(
-                call: Call<BaseResponse<CipheredResponse>>,
-                response: Response<BaseResponse<CipheredResponse>>
-            ) {
-                response.body()?.let { body ->
-
-                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
-
-                    deserialize<BaseResponse<T>>(jsonData)?.let { deserializedResponse ->
-
-                        if (deserializedResponse.success) {
-                            onSuccess(deserializedResponse.data)
-                        } else {
-                            onFailure(SuccessResponse(false, deserializedResponse.message))
-                        }
-
-                    } ?: onFailure(SuccessResponse(false, invalidData))
-                } ?: onFailure(SuccessResponse(false, noDataMessage))
-            }
-
-            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
-                onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
-            }
+    override suspend fun getAll(): AppResult<List<ExpenseCategory>> {
+        return try {
+            val response = ApiCall.expenseCategory.getExpenseCategories("Bearer $token", cipheredText)
+            parseListResponse(response)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error", isControlled = false)
         }
     }
 
-    private fun handleEmptyResponse(
-        onSuccess: () -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ): Callback<BaseResponse<CipheredResponse>> {
-        return object : Callback<BaseResponse<CipheredResponse>> {
-            override fun onResponse(
-                call: Call<BaseResponse<CipheredResponse>>,
-                response: Response<BaseResponse<CipheredResponse>>
-            ) {
-                response.body()?.let { body ->
+    override suspend fun getById(catId: Long): AppResult<ExpenseCategory?> {
+        return try {
+            val cipheredData = encryptData(ExpenseCategoryIdRequest(catId))
+                ?: return AppResult.Error("Authentication error")
 
-                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
-
-                    deserialize<BaseResponse<Nothing>>(jsonData)?.let { deserializedResponse ->
-                        if (deserializedResponse.success) {
-                            onSuccess()
-                        } else {
-                            onFailure(SuccessResponse(false, deserializedResponse.message))
-                        }
-                    } ?: onFailure(SuccessResponse(false, invalidData))
-
-                } ?: onFailure(SuccessResponse(false, noDataMessage))
-            }
-
-            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
-                onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
-            }
+            val response = ApiCall.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
+            parseObjectResponse(response)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error", isControlled = false)
         }
     }
 
-    private inline fun <reified T> handleListResponse(
-        crossinline onSuccess: (List<T>) -> Unit,
-        noinline onFailure: (SuccessResponse) -> Unit
-    ): Callback<BaseResponse<CipheredResponse>> {
-        return object : Callback<BaseResponse<CipheredResponse>> {
-            override fun onResponse(
-                call: Call<BaseResponse<CipheredResponse>>,
-                response: Response<BaseResponse<CipheredResponse>>
-            ) {
-                response.body()?.let { body ->
+    override suspend fun create(category: ExpenseCategory): AppResult<ExpenseCategory?> {
+        return try {
+            val cipheredData = encryptData(ExpenseCategoryRequest(category))
+                ?: return AppResult.Error("Authentication error")
 
-                    val jsonData = validateCipheredResponse(body, onFailure) ?: return
-
-                    deserialize<BaseResponse<List<T>>>(jsonData)?.let { deserializedResponse ->
-
-                        if (deserializedResponse.success) {
-                            deserializedResponse.data?.let(onSuccess)
-                        } else {
-                            onFailure(SuccessResponse(false, deserializedResponse.message))
-                        }
-
-                    } ?: onFailure(SuccessResponse(false, invalidData))
-                } ?: onFailure(SuccessResponse(false, noDataMessage))
-            }
-
-            override fun onFailure(call: Call<BaseResponse<CipheredResponse>>, t: Throwable) {
-                onFailure(SuccessResponse(false, t.message ?: "Unknown error"))
-            }
+            val response = ApiCall.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
+            parseObjectResponse(response)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error", isControlled = false)
         }
     }
 
+    override suspend fun edit(category: ExpenseCategory): AppResult<ExpenseCategory?> {
+        return try {
+            val cipheredData = encryptData(ExpenseCategoryRequest(category))
+                ?: return AppResult.Error("Authentication error")
 
-    private inline fun <reified T> deserialize(jsonData: String): T? {
-        val type = object : com.google.gson.reflect.TypeToken<BaseResponse<T?>>() {}.type
-        val baseResponse: BaseResponse<T?> = GsonBuilder().create().fromJson(jsonData, type)
-        return baseResponse.data
+            val response = ApiCall.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
+            parseObjectResponse(response)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error", isControlled = false)
+        }
+    }
+
+    override suspend fun deleteById(catId: Long): AppResult<Unit> {
+        return try {
+            val cipheredData = encryptData(ExpenseCategoryIdRequest(catId))
+                ?: return AppResult.Error("Authentication error")
+
+            val response = ApiCall.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
+            if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
+
+            val body = response.body() ?: return AppResult.Error("No data")
+            val jsonData = validateCipheredResponse(body)
+            val parsed = GsonBuilder().create()
+                .fromJson(jsonData, object : com.google.gson.reflect.TypeToken<BaseResponse<Unit>>() {}.type) as BaseResponse<Unit>
+
+            if (parsed.success) AppResult.Success(Unit)
+            else AppResult.Error(parsed.message)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error", isControlled = false)
+        }
+    }
+
+    private fun parseObjectResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<ExpenseCategory?> {
+        if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
+        val body = response.body() ?: return AppResult.Error("No data")
+        val jsonData = validateCipheredResponse(body)
+        val parsed = GsonBuilder().create()
+            .fromJson(jsonData, object : com.google.gson.reflect.TypeToken<BaseResponse<ExpenseCategory>>() {}.type) as BaseResponse<ExpenseCategory>
+
+        return if (parsed.success) AppResult.Success(parsed.data)
+        else AppResult.Error(parsed.message)
+    }
+
+    private fun parseListResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<List<ExpenseCategory>> {
+        if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
+        val body = response.body() ?: return AppResult.Error("No data")
+        val jsonData = validateCipheredResponse(body)
+        val parsed = GsonBuilder().create()
+            .fromJson(jsonData, object : com.google.gson.reflect.TypeToken<BaseResponse<List<ExpenseCategory>>>() {}.type) as BaseResponse<List<ExpenseCategory>>
+
+        return if (parsed.success) AppResult.Success(parsed.data ?: emptyList())
+        else AppResult.Error(parsed.message)
     }
 }
+

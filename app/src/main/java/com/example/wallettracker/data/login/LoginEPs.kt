@@ -1,8 +1,7 @@
 package com.example.wallettracker.data.login
 
 import com.example.wallettracker.data.communication.BaseResponse
-import com.example.wallettracker.data.communication.SuccessResponse
-import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -11,23 +10,23 @@ import retrofit2.http.POST
 interface LoginEPs {
 
     @POST("api/v1/register/")
-    fun register(
+    suspend fun register(
         @Body login: LoginRequest
-    ): Call<ServerPubKeyResponse>
+    ): Response<BaseResponse<ServerPubKeyResponse>>
 
     @POST("api/v1/login/")
-    fun login(
+    suspend fun login(
         @Body login: LoginRequest
-    ): Call<BaseResponse<LoginResponse>>
+    ): Response<BaseResponse<LoginResponse>>
 
     @GET("api/v1/getUserServerPubKey/")
-    fun getUserServerPubKey(
+    suspend fun getUserServerPubKey(
         @Header("Authorization") token: String,
-    ): Call<BaseResponse<ServerPubKeyResponse>>
+    ): Response<BaseResponse<ServerPubKeyResponse>>
 
     @POST("api/v1/setUserClientPubKey/")
-    fun setUserClientPubKey(
+    suspend fun setUserClientPubKey(
         @Header("Authorization") token: String,
         @Body payload: ServerPubKeyRequest
-    ): Call<BaseResponse<Nothing>>
+    ): Response<BaseResponse<Nothing>>
 }

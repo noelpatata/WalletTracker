@@ -1,5 +1,6 @@
 package com.example.wallettracker.ui.adapters
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -33,6 +34,7 @@ class RViewCategoriesAdapter(var list: MutableList<ExpenseCategory>) :
         return list[position].getId()
     }
 
+    @SuppressLint("DefaultLocale", "SetTextI18n")
     override fun onBindViewHolder(holder: ExpenseCategoryViewHolder, position: Int) {
 
         val category = list[position]
@@ -50,7 +52,7 @@ class RViewCategoriesAdapter(var list: MutableList<ExpenseCategory>) :
         if (position in list.indices) {
             list.removeAt(position)
             notifyItemRemoved(position)
-            notifyItemRangeChanged(position, list.size) // Update UI properly
+            notifyItemRangeChanged(position, list.size)
         }
     }
 
@@ -60,7 +62,7 @@ class RViewCategoriesAdapter(var list: MutableList<ExpenseCategory>) :
     }
 
     fun updateData(newCategories: List<ExpenseCategory>) {
-        list = mutableListOf<ExpenseCategory>()
+        list = mutableListOf()
         list.addAll(newCategories)
         notifyItemChanged(0, null)
     }

@@ -14,14 +14,11 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.lifecycleScope
 import com.example.wallettracker.data.expense.ExpenseRepository
-import com.example.wallettracker.data.expense.OnlineExpenseDAO
+import com.example.wallettracker.data.login.AppResult
 import com.example.wallettracker.data.session.SessionDAO
 import com.example.wallettracker.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import provideExpenseRepository
 
@@ -41,8 +38,7 @@ class MainActivity : AppCompatActivity() {
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
+
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_categories,
@@ -54,14 +50,13 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        val headerView = navView.getHeaderView(0)
+        navView.getHeaderView(0)
 
 
     }
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
@@ -74,10 +69,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resetExpenses -> {
-                CoroutineScope(Dispatchers.Main).launch {
-                    ResetExpenses()
-                }
 
+                lifecycleScope.launch {
+                    resetExpenses()
+                }
                 return true
             }
             R.id.logOff -> {
@@ -91,23 +86,24 @@ class MainActivity : AppCompatActivity() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun ResetExpenses() {
-        val expenseDAO: ExpenseRepository =
-            provideExpenseRepository(this.applicationContext)
-        expenseDAO.deleteAll(
-            onSuccess = { response ->
-                if (response.success) {
-                    Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Failed to reset expenses", Toast.LENGTH_SHORT).show()
-                }
-            },
-            onFailure = { error ->
-                Toast.makeText(this, "Error: $error", Toast.LENGTH_SHORT).show()
+    private suspend fun resetExpenses() {
+        val expenseDAO: ExpenseRepository = provideExpenseRepository(this.applicationContext)
 
-            },
-        )
+        when (val result = expenseDAO.deleteAll()) {
+            is AppResult.Success -> {
+                Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
+            }
+            is AppResult.Error -> {
+                val message = if (result.isControlled)
+                    result.message
+                else
+                    "Unexpected error: ${result.message}"
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+
 
     private fun doLogOut() {
         SessionDAO(this).use { sSess ->

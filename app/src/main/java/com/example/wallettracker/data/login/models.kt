@@ -1,5 +1,9 @@
 package com.example.wallettracker.data.login
 
+sealed class AppResult<out T> {
+    data class Success<out T>(val data: T) : AppResult<T>()
+    data class Error(val message: String, val isControlled: Boolean = true) : AppResult<Nothing>()
+}
 data class LoginRequest(
     val username: String,
     val password: String

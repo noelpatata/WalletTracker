@@ -1,5 +1,6 @@
 package com.example.wallettracker.ui.adapters
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -23,7 +24,6 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         val expenseDescription: TextView = itemView.findViewById(R.id.label_description)
     }
 
-    /* Creates and inflates view and return FlowerViewHolder. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.element_rviewexpense, parent, false)
@@ -33,6 +33,7 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
     override fun getItemCount(): Int {
         return list.size
     }
+    @SuppressLint("DefaultLocale", "SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         holder.expensePrice.text = String.format("%.2f", list[position].getPrice())+"€"
@@ -48,7 +49,6 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         }
 
 
-        //listeners
         holder.itemView.setOnClickListener {
             val expenseId = list[position].getId()
             val categoryId = list[position].getCategoryId()
@@ -63,7 +63,7 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         if (position in list.indices) {
             list.removeAt(position)
             notifyItemRemoved(position)
-            notifyItemRangeChanged(position, list.size) // Update UI properly
+            notifyItemRangeChanged(position, list.size)
         }
     }
     fun addItem(position: Int, expense:Expense){
@@ -71,6 +71,7 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         notifyItemInserted(position)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(expenses: MutableList<Expense>) {
         list.clear()
         list.addAll(expenses)

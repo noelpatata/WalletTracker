@@ -13,6 +13,9 @@ import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.communication.SuccessResponse
 import com.example.wallettracker.data.expense.Expense
 import com.example.wallettracker.data.expense.ExpenseRepository
+import com.example.wallettracker.data.login.AppResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 import java.sql.Date
 import java.sql.SQLException
@@ -20,7 +23,9 @@ import java.text.SimpleDateFormat
 import kotlin.Long
 import kotlin.Throws
 
+@RequiresApi(Build.VERSION_CODES.O)
 class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
+
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = DatabaseHelper(context)
 
@@ -37,137 +42,136 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
         dbHelper?.close()
     }
 
-    private fun <T> executeAsyncTask(
-        task: () -> T,
-        onSuccess: (T) -> Unit,
-        onFailure: () -> Unit
-    ) {
-        Thread {
-            try {
-                val result = task()
-                Handler(Looper.getMainLooper()).post { onSuccess(result) }
-            } catch (e: Exception) {
-                Handler(Looper.getMainLooper()).post { onFailure() }
+    @SuppressLint("SimpleDateFormat")
+    override suspend fun create(expense: Expense): AppResult<Expense> = withContext(Dispatchers.IO) {
+        try {
+            val values = ContentValues().apply {
+                put("price", expense.getPrice())
+                put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
+                put("category", expense.getCategoryId())
+                put("description", expense.getDescription())
             }
-        }.start()
+
+            val rowId = database?.insert("Expense", null, values)
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowId == -1L)
+                return@withContext AppResult.Error("Failed to create expense", isControlled = true)
+
+            AppResult.Success(expense)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error creating expense", isControlled = false)
+        }
     }
-    private fun <T> executeAsyncListTask(
-        task: () -> List<T>,
-        onSuccess: (List<T>) -> Unit,
-        onFailure: () -> Unit
-    ) {
-        Thread {
-            try {
-                val result = task()
-                Handler(Looper.getMainLooper()).post { onSuccess(result) }
-            } catch (e: Exception) {
-                Handler(Looper.getMainLooper()).post { onFailure() }
+
+    @SuppressLint("SimpleDateFormat")
+    override suspend fun edit(expense: Expense): AppResult<Expense> = withContext(Dispatchers.IO) {
+        try {
+            val values = ContentValues().apply {
+                put("price", expense.getPrice())
+                put("category", expense.getCategoryId())
+                put("description", expense.getDescription())
+                put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
             }
-        }.start()
+
+            val rowsAffected = database?.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowsAffected == 0)
+                return@withContext AppResult.Error("Failed to update expense", isControlled = true)
+
+            AppResult.Success(expense)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error updating expense", isControlled = false)
+        }
     }
 
-    override fun create(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
-        executeAsyncTask(
-            task = {
-                val values = ContentValues().apply {
-                    put("price", expense.getPrice())
-                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
-                    put("category", expense.getCategoryId())
-                    put("description", expense.getDescription())
+    override suspend fun deleteById(expenseId: Long): AppResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val rowsDeleted = database?.delete("Expense", "id = ?", arrayOf(expenseId.toString()))
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowsDeleted == 0)
+                return@withContext AppResult.Error("Failed to delete expense", isControlled = true)
+
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error deleting expense", isControlled = false)
+        }
+    }
+
+    override suspend fun deleteAll(): AppResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val rowsDeleted = database?.delete("Expense", null, null)
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowsDeleted == 0)
+                return@withContext AppResult.Error("No expenses found to delete", isControlled = true)
+
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error deleting all expenses", isControlled = false)
+        }
+    }
+
+    override suspend fun getByCatId(catId: Long): AppResult<List<Expense>> = withContext(Dispatchers.IO) {
+        try {
+            val expenseList = mutableListOf<Expense>()
+            val cursor = database?.query(
+                "Expense",
+                null,
+                "category = ?",
+                arrayOf(catId.toString()),
+                null,
+                null,
+                "expenseDate DESC, id DESC"
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            cursor.use {
+                while (it.moveToNext()) {
+                    expenseList.add(mapCursor(it))
                 }
-                val rowId = database!!.insert("Expense", null, values)
-                if (rowId == -1L) throw Exception("Failed to create expense")
-            },
-            onSuccess = { onSuccess(expense) },
-            onFailure = { onFailure("Failed to create expense") }
-        )
+            }
+
+            if (expenseList.isEmpty())
+                return@withContext AppResult.Error("No expenses found for category ID: $catId", isControlled = true)
+
+            AppResult.Success(expenseList)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error reading expenses", isControlled = false)
+        }
     }
 
-    override fun edit(expense: Expense, onSuccess: (Expense) -> Unit, onFailure: (String) -> Unit) {
-        executeAsyncTask(
-            task = {
-                val values = ContentValues().apply {
-                    put("price", expense.getPrice())
-                    put("category", expense.getCategoryId())
-                    put("description", expense.getDescription())
-                    put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
+    override suspend fun getById(expenseId: Long): AppResult<Expense> = withContext(Dispatchers.IO) {
+        try {
+            val cursor = database?.query(
+                "Expense",
+                null,
+                "id = ?",
+                arrayOf(expenseId.toString()),
+                null,
+                null,
+                null
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            var expense: Expense? = null
+            cursor.use {
+                if (it.moveToFirst()) {
+                    expense = mapCursor(it)
                 }
-                val rowsAffected = database!!.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
-                if (rowsAffected == 0) throw Exception("Failed to update expense")
-            },
-            onSuccess = { onSuccess(expense) },
-            onFailure = { onFailure("Failed to update expense") }
-        )
+            }
+
+            if (expense == null)
+                return@withContext AppResult.Error("Expense not found with ID: $expenseId", isControlled = true)
+
+            AppResult.Success(expense!!)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error fetching expense", isControlled = false)
+        }
     }
 
-    override fun deleteById(expenseId: Long, onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
-        executeAsyncTask(
-            task = {
-                val rowsDeleted = database!!.delete("Expense", "id = ?", arrayOf(expenseId.toString()))
-                if (rowsDeleted == 0) throw Exception("Failed to delete expense")
-            },
-            onSuccess = { onSuccess(SuccessResponse(true, "Expense deleted successfully")) },
-            onFailure = { onFailure("Failed to delete expense") }
-        )
-    }
-
-    override fun deleteAll(onSuccess: (SuccessResponse) -> Unit, onFailure: (String) -> Unit) {
-        executeAsyncTask(
-            task = {
-                val rowsDeleted = database!!.delete("Expense", null, null)
-                if (rowsDeleted == 0) throw Exception("Failed to delete all expenses")
-            },
-            onSuccess = { onSuccess(SuccessResponse(true, "All expenses deleted successfully")) },
-            onFailure = { onFailure("Failed to delete all expenses") }
-        )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun getByCatId(catId: Long, onSuccess: (List<Expense>) -> Unit, onFailure: (String) -> Unit) {
-        executeAsyncListTask(
-            task = {
-                val expenseList = mutableListOf<Expense>()
-                database!!.query("Expense", null, "category = ?", arrayOf(catId.toString()), null, null, "expenseDate DESC, id DESC")?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val expense = cursor(cursor)
-                        expenseList.add(expense)
-
-                    }
-                }
-                expenseList
-
-            },
-            onSuccess = { result -> onSuccess(result) },
-            onFailure = { onFailure("No expenses found for the given category") }
-        )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun getById(
-        expenseId: Long,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                var expense: Expense? = null
-                val cursor = database!!.query("Expense", null, "id = ?", arrayOf(expenseId.toString()), null, null, null)
-                cursor.use {
-                    if (it.moveToFirst()) {
-                        expense = cursor(it)
-                    }
-                }
-                if (expense == null) throw Exception("Expense not found")
-                expense // Store the result
-            },
-            onSuccess = { result -> onSuccess(result as Expense) },
-            onFailure = { onFailure("Expense not found") }
-        )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
-    private fun cursor(cursor: Cursor): Expense {
+    private fun mapCursor(cursor: Cursor): Expense {
         return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
             setDescription(cursor.getString(cursor.getColumnIndex("description")))
             setPrice(cursor.getDouble(cursor.getColumnIndex("price")))

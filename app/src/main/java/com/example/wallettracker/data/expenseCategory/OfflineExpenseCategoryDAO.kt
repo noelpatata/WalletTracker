@@ -12,175 +12,155 @@ import androidx.annotation.RequiresApi
 import androidx.core.database.getIntOrNull
 import com.example.wallettracker.data.DatabaseHelper
 import com.example.wallettracker.data.communication.SuccessResponse
+import com.example.wallettracker.data.login.AppResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 import java.sql.SQLException
 
-class OfflineExpenseCategoryDAO : Closeable, ExpenseCategoryRepository {
+class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryRepository {
+
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
-    constructor(context: Context?) {
+    init {
         dbHelper = DatabaseHelper(context)
-        database = dbHelper?.getWritableDatabase()
+        database = dbHelper?.writableDatabase
     }
 
     @Throws(SQLException::class)
     fun open() {
-        database = dbHelper?.getWritableDatabase()
+        database = dbHelper?.writableDatabase
     }
 
     override fun close() {
         dbHelper?.close()
     }
 
-    private fun <T> executeAsyncTask(
-        task: () -> T,
-        onSuccess: (T) -> Unit,
-        onFailure: () -> Unit
-    ) {
-        Thread {
-            try {
-                val result = task()
-                Handler(Looper.getMainLooper()).post { onSuccess(result) }
-            } catch (e: Exception) {
-                Handler(Looper.getMainLooper()).post { onFailure() }
-            }
-        }.start()
-    }
-    override fun create(
-        category: ExpenseCategory,
-        onSuccess: (ExpenseCategory?) -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                val values = ContentValues().apply { put("name", category.getName()) }
-                val rowId = database!!.insert("ExpenseCategory", null, values)
-                if (rowId == -1L) {
-                    throw Exception("Failed to create expense category")
-                }
-            },
-            onSuccess = { onSuccess(category) },
-            onFailure = { onFailure(SuccessResponse(false, "Failed to create expense category")) }
-        )
-    }
-
-    override fun edit(
-        category: ExpenseCategory,
-        onSuccess: (ExpenseCategory?) -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                val values = ContentValues().apply {
-                    put("name", category.getName())
-                    put("sortOrder", category.getOrder())
-                }
-                val rowsAffected = database!!.update("ExpenseCategory", values, "id = ?", arrayOf(category.getId().toString()))
-                if (rowsAffected <= 0) throw Exception("Failed to update category")
-            },
-            onSuccess = { onSuccess(category) },
-            onFailure = { onFailure(SuccessResponse(false, "Failed to update category")) }
-        )
-    }
-
-    override fun deleteById(
-        catId: Long,
-        onSuccess: () -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                val rowsDeleted = database!!.delete("ExpenseCategory", "id = ?", arrayOf(catId.toString()))
-                if (rowsDeleted <= 0) throw Exception("Failed to delete category")
-            },
-            onSuccess = { onSuccess() },
-            onFailure = { onFailure(SuccessResponse(false, "Failed to delete category")) }
-        )
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun getAll(
-        onSuccess: (List<ExpenseCategory>) -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                val expenseCategoriesWithTotal = mutableListOf<ExpenseCategory>()
-                val query = """
+    override suspend fun getAll(): AppResult<List<ExpenseCategory>> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val expenseCategories = mutableListOf<ExpenseCategory>()
+
+            val query = """
                 SELECT ec.sortOrder, ec.id, ec.name, SUM(e.price) AS total
-                    FROM ExpenseCategory ec
-                    LEFT JOIN Expense e ON ec.id = e.category
+                FROM ExpenseCategory ec
+                LEFT JOIN Expense e ON ec.id = e.category
                 GROUP BY ec.id
                 ORDER BY 
-                CASE WHEN ec.sortOrder IS NULL THEN 1 ELSE 0 END,
-                ec.sortOrder ASC, 
-                ec.id ASC
+                    CASE WHEN ec.sortOrder IS NULL THEN 1 ELSE 0 END,
+                    ec.sortOrder ASC, 
+                    ec.id ASC
             """
-                val cursor = database!!.rawQuery(query, null)
-                cursor.use {
-                    while (it.moveToNext()) {
-                        val expenseCategory = cursor(it)
-                        expenseCategoriesWithTotal.add(expenseCategory)
-                    }
+
+            val cursor = database?.rawQuery(query, null)
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            cursor.use {
+                while (it.moveToNext()) {
+                    expenseCategories.add(mapCursorToExpenseCategory(it))
                 }
-                expenseCategoriesWithTotal
-            },
-            onSuccess = { categories -> onSuccess(categories) }, // Now runs on the main thread
-            onFailure = { onFailure(SuccessResponse(false, "Failed to fetch categories")) }
-        )
+            }
+
+            AppResult.Success(expenseCategories)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error reading categories", isControlled = false)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun getById(
-        catId: Long,
-        onSuccess: (ExpenseCategory?) -> Unit,
-        onFailure: (SuccessResponse) -> Unit
-    ) {
-        executeAsyncTask(
-            task = {
-                val cursor = database!!.query("ExpenseCategory", null, "id = ?", arrayOf(catId.toString()), null, null, null)
-                cursor.use {
-                    if (it.moveToFirst()) {
-                        return@executeAsyncTask cursor(it)
-                    }
+    override suspend fun getById(catId: Long): AppResult<ExpenseCategory?> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val cursor = database?.query(
+                "ExpenseCategory",
+                null,
+                "id = ?",
+                arrayOf(catId.toString()),
+                null,
+                null,
+                null
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            cursor.use {
+                if (it.moveToFirst()) {
+                    val category = mapCursorToExpenseCategory(it)
+                    return@withContext AppResult.Success(category)
                 }
-                throw Exception("Category not found")
-            },
-            onSuccess = { expenseCategory -> onSuccess(expenseCategory) },
-            onFailure = { onFailure(SuccessResponse(false, "Category not found")) }
-        )
+            }
+
+            AppResult.Error("Category not found", isControlled = true)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error reading category", isControlled = false)
+        }
     }
 
+    override suspend fun create(category: ExpenseCategory): AppResult<ExpenseCategory?> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val values = ContentValues().apply {
+                put("name", category.getName())
+            }
+
+            val rowId = database?.insert("ExpenseCategory", null, values)
+                ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowId == -1L)
+                return@withContext AppResult.Error("Failed to create expense category", isControlled = true)
+
+            AppResult.Success(category)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error creating category", isControlled = false)
+        }
+    }
+
+    override suspend fun edit(category: ExpenseCategory): AppResult<ExpenseCategory?> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val values = ContentValues().apply {
+                put("name", category.getName())
+                put("sortOrder", category.getOrder())
+            }
+
+            val rowsAffected = database?.update(
+                "ExpenseCategory",
+                values,
+                "id = ?",
+                arrayOf(category.getId().toString())
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowsAffected <= 0)
+                return@withContext AppResult.Error("Failed to update category", isControlled = true)
+
+            AppResult.Success(category)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error updating category", isControlled = false)
+        }
+    }
+
+    override suspend fun deleteById(catId: Long): AppResult<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val rowsDeleted = database?.delete(
+                "ExpenseCategory",
+                "id = ?",
+                arrayOf(catId.toString())
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+
+            if (rowsDeleted <= 0)
+                return@withContext AppResult.Error("Failed to delete category", isControlled = true)
+
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error deleting category", isControlled = false)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
-    private fun cursor(cursor: Cursor): ExpenseCategory {
-        val expenseCategory = ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply{
+    private fun mapCursorToExpenseCategory(cursor: Cursor): ExpenseCategory {
+        return ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply {
             setName(cursor.getString(cursor.getColumnIndex("name")))
             setOrder(cursor.getIntOrNull(cursor.getColumnIndex("sortOrder")))
-            if(cursor.getColumnIndex("total")>=0){
+            if (cursor.getColumnIndex("total") >= 0) {
                 setTotal(cursor.getDouble(cursor.getColumnIndex("total")))
             }
-
-
         }
-
-        return expenseCategory
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun getAll(): List<ExpenseCategory>? {
-        val expenseList: MutableList<ExpenseCategory> = ArrayList()
-        val cursor = database!!.query("ExpenseCategory", null, null, null, null, null, null)
-        cursor?.let {
-            it.moveToFirst()
-            while (!it.isAfterLast) {
-                expenseList.add(cursor(it))
-                it.moveToNext()
-            }
-            it.close()
-        }
-        return expenseList
     }
 }

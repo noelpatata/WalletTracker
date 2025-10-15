@@ -1,40 +1,12 @@
 package com.example.wallettracker.data.expense
 
-import com.example.wallettracker.data.communication.SuccessResponse
+import com.example.wallettracker.data.login.AppResult
 
 interface ExpenseRepository {
-    fun getById(
-        expenseId: Long,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
-    )
-
-    fun getByCatId(
-        catId: Long,
-        onSuccess: (List<Expense>) -> Unit,
-        onFailure: (String) -> Unit
-    )
-
-    fun create(
-        expense: Expense,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
-    )
-
-    fun edit(
-        expense: Expense,
-        onSuccess: (Expense) -> Unit,
-        onFailure: (String) -> Unit
-    )
-
-    fun deleteById(
-        expenseId: Long,
-        onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit
-    )
-
-    fun deleteAll(
-        onSuccess: (SuccessResponse) -> Unit,
-        onFailure: (String) -> Unit
-    )
+    suspend fun getById(expenseId: Long): AppResult<Expense>
+    suspend fun getByCatId(catId: Long): AppResult<List<Expense>>
+    suspend fun create(expense: Expense): AppResult<Expense>
+    suspend fun edit(expense: Expense): AppResult<Expense>
+    suspend fun deleteById(expenseId: Long): AppResult<Unit>
+    suspend fun deleteAll(): AppResult<Unit>
 }
