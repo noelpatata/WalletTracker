@@ -1,24 +1,41 @@
+val majorVersion = 1
+val minorVersion = 0
+val patchVersion = 0
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
 
 android {
-    namespace = "com.example.wallettracker"
+    namespace = "win.downops.wallettracker"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.wallettracker"
+        applicationId = "win.downops.wallettracker"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = majorVersion * 10000 + minorVersion * 100 + patchVersion
+        versionName = "$majorVersion.$minorVersion.$patchVersion"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.141:5000\"")
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://api.wallettracker.downops.win\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -32,9 +49,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
-    }
-    buildFeatures {
-        viewBinding = true
     }
 }
 
