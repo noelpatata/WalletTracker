@@ -1,4 +1,4 @@
-package win.downops.wallettracker.data.OfflineExpenseDAO
+package win.downops.wallettracker.data.offline.expense
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -8,11 +8,11 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.DatabaseHelper
-import win.downops.wallettracker.data.expense.Expense
-import win.downops.wallettracker.data.expense.ExpenseRepository
-import win.downops.wallettracker.data.login.AppResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.Expense
+import win.downops.wallettracker.data.online.expense.ExpenseRepository
 import java.io.Closeable
 import java.sql.Date
 import java.sql.SQLException
@@ -57,7 +57,10 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expense created successfully", expense)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error creating expense", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error creating expense",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -79,7 +82,10 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expense modified successfully", expense)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error updating expense", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error updating expense",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -93,7 +99,10 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expense deleted successfully", Unit)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error deleting expense", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error deleting expense",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -107,7 +116,10 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expenses deleted successfully", Unit)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error deleting all expenses", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error deleting all expenses",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -135,7 +147,10 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expenses fetched successfully", expenseList)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error reading expenses", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error reading expenses",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -163,17 +178,24 @@ class OfflineExpenseDAO(context: Context?) : Closeable, ExpenseRepository {
 
             AppResult.Success("Expense fetched successfully", expense!!)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error fetching expense", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error fetching expense",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
     @SuppressLint("Range")
     private fun mapCursor(cursor: Cursor): Expense {
-        return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
-            setDescription(cursor.getString(cursor.getColumnIndex("description")))
-            setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
-            setDate(Date.valueOf(cursor.getString(cursor.getColumnIndex("expenseDate"))))
-            setCategoryId(cursor.getLong(cursor.getColumnIndex("category")))
+        try{
+            return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
+                setDescription(cursor.getString(cursor.getColumnIndex("description")))
+                setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
+                setDate(Date.valueOf(cursor.getString(cursor.getColumnIndex("expenseDate"))))
+                setCategoryId(cursor.getLong(cursor.getColumnIndex("category")))
+            }
+        }catch (e: Exception) {
+            throw e
         }
     }
 }

@@ -1,9 +1,9 @@
-package win.downops.wallettracker.data
+package win.downops.wallettracker.data.online
 
 import win.downops.wallettracker.BuildConfig
-import win.downops.wallettracker.data.expense.OnlineExpenseEPs
-import win.downops.wallettracker.data.expenseCategory.OnlineExpenseCategoryEPs
-import win.downops.wallettracker.data.login.LoginEPs
+import win.downops.wallettracker.data.online.expense.OnlineExpenseEPs
+import win.downops.wallettracker.data.online.expenseCategory.OnlineExpenseCategoryEPs
+import win.downops.wallettracker.data.online.login.LoginEPs
 import okhttp3.ConnectionPool
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

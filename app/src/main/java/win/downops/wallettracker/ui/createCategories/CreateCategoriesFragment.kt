@@ -16,12 +16,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCreatecategoriesBinding
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.ExpenseCategory
+import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.util.Logger
+import win.downops.wallettracker.util.Messages.unexpectedError
 
 
 class CreateCategoriesFragment : Fragment() {
@@ -74,24 +77,21 @@ class CreateCategoriesFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveChanges() {
         val category = GetCategory()
-        val isValid = CheckValidation(category)
+        val isValid = checkValidation(category)
         if(isValid){
             viewLifecycleOwner.lifecycleScope.launch {
                 save()
             }
 
         }else{
-            Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+            Logger.log("Category fields are invalid")
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
 
         }
     }
 
-    private fun CheckValidation(category: ExpenseCategory): Boolean {
-        if(category.getName().isEmpty()){
-            return false
-        }
-
-        return true
+    private fun checkValidation(category: ExpenseCategory): Boolean {
+        return category.getName().isNotEmpty()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -106,11 +106,12 @@ class CreateCategoriesFragment : Fragment() {
                     findNavController().navigate(R.id.nav_categories)
                 }
                 is AppResult.Error -> {
-                    showError("Error creating category: ${result.message}")
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message ?: "Unknown error", Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -121,8 +122,5 @@ class CreateCategoriesFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 }

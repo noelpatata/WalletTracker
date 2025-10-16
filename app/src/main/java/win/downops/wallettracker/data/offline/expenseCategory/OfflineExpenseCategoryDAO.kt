@@ -1,4 +1,4 @@
-package win.downops.wallettracker.data.expenseCategory
+package win.downops.wallettracker.data.offline.expenseCategory
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -9,9 +9,11 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.database.getIntOrNull
 import win.downops.wallettracker.data.DatabaseHelper
-import win.downops.wallettracker.data.login.AppResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.ExpenseCategory
+import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
 import java.io.Closeable
 import java.sql.SQLException
 
@@ -61,7 +63,10 @@ class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryR
 
             AppResult.Success("ExpenseCategory's fetched successfully", expenseCategories)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error reading categories", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error reading categories",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -87,7 +92,10 @@ class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryR
 
             AppResult.Error("Category not found", isControlled = true)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error reading category", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error reading category",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -105,7 +113,10 @@ class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryR
 
             AppResult.Success("ExpenseCategory created successfully", category)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error creating category", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error creating category",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -128,7 +139,10 @@ class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryR
 
             AppResult.Success("ExpenseCategory modified successfully", category)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error updating category", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error updating category",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -145,19 +159,27 @@ class OfflineExpenseCategoryDAO(context: Context?) : Closeable, ExpenseCategoryR
 
             AppResult.Success("ExpenseCategory deleted successfully", Unit)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error deleting category", isControlled = false)
+            AppResult.Error(
+                e.message ?: "Unexpected error deleting category",
+                isControlled = false,
+                e.stackTrace.joinToString("\n"))
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("Range")
     private fun mapCursorToExpenseCategory(cursor: Cursor): ExpenseCategory {
-        return ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply {
-            setName(cursor.getString(cursor.getColumnIndex("name")))
-            setOrder(cursor.getIntOrNull(cursor.getColumnIndex("sortOrder")))
-            if (cursor.getColumnIndex("total") >= 0) {
-                setTotal(cursor.getDouble(cursor.getColumnIndex("total")))
+        try{
+            return ExpenseCategory(cursor.getLong(cursor.getColumnIndex("id"))).apply {
+                setName(cursor.getString(cursor.getColumnIndex("name")))
+                setOrder(cursor.getIntOrNull(cursor.getColumnIndex("sortOrder")))
+                if (cursor.getColumnIndex("total") >= 0) {
+                    setTotal(cursor.getDouble(cursor.getColumnIndex("total")))
+                }
             }
+        }catch (e: Exception) {
+            throw e
         }
+
     }
 }

@@ -1,6 +1,8 @@
-package win.downops.wallettracker.data.expense
+package win.downops.wallettracker.data.online.expense
 
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.Expense
+
 
 interface ExpenseRepository {
     suspend fun getByCatId(catId: Long): AppResult<List<Expense>>

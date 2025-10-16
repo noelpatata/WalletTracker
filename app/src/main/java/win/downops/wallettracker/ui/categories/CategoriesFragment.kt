@@ -16,9 +16,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCategoriesBinding
 import win.downops.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar
@@ -28,6 +26,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.ExpenseCategory
+import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.util.Logger
+import win.downops.wallettracker.util.Messages.unexpectedError
 import java.util.Collections
 
 
@@ -72,7 +75,7 @@ class CategoriesFragment : Fragment() {
                 displayCategories(result.data)
             }
             is AppResult.Error -> {
-                showError(result.message)
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
 
@@ -93,8 +96,8 @@ class CategoriesFragment : Fragment() {
         }
 
         val simpleCallback = object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN, // Drag only up/down
-            ItemTouchHelper.START or ItemTouchHelper.END // Swipe left/right
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.START or ItemTouchHelper.END
         ) {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onMove(
@@ -107,11 +110,7 @@ class CategoriesFragment : Fragment() {
                 Collections.swap(mutableCategories, fromPosition, toPosition)
                 recyclerView.adapter?.notifyItemMoved(fromPosition, toPosition)
 
-                Toast.makeText(
-                    requireContext(),
-                    "${categories[fromPosition].getName()} moved from $fromPosition to $toPosition",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Logger.log("${categories[fromPosition].getName()} moved from $fromPosition to $toPosition")
 
                 mainScope.launch {
                     updateCategoriesSortOrder(mutableCategories)
@@ -157,12 +156,12 @@ class CategoriesFragment : Fragment() {
             }
 
             override fun isItemViewSwipeEnabled(): Boolean {
-                return true // Keep swipe functionality
+                return true
             }
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-                val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN // Allow only vertical movement
-                val swipeFlags = ItemTouchHelper.START or ItemTouchHelper.END // Allow swipe in both directions
+                val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                val swipeFlags = ItemTouchHelper.START or ItemTouchHelper.END
                 return makeMovementFlags(dragFlags, swipeFlags)
             }
         }
@@ -182,7 +181,8 @@ class CategoriesFragment : Fragment() {
             val totalSum = categories.sumOf { it.getTotal() }
             binding.lblTotal.text = String.format("%.2f", totalSum) + "€"
         } catch (ex: Exception) {
-            showError(ex.message.toString())
+            Logger.log(ex)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -201,10 +201,10 @@ class CategoriesFragment : Fragment() {
 
         when (val result = categoryDAO.edit(category)) {
             is AppResult.Success -> {
-                Toast.makeText(requireContext(), "Category updated successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
             }
             is AppResult.Error -> {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
     }
@@ -216,16 +216,12 @@ class CategoriesFragment : Fragment() {
 
         when (val result = categoryDAO.deleteById(categoryId)) {
             is AppResult.Success -> {
-                Toast.makeText(requireContext(), "Category deleted successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
             }
             is AppResult.Error -> {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

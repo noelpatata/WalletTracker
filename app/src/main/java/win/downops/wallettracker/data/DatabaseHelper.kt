@@ -13,20 +13,15 @@ class DatabaseHelper(context: Context?) :
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSION)
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE_CATEGORY)
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE)
-        // Recreate tables
         onCreate(db)
     }
     companion object {
-        // Database constants
         private const val DATABASE_NAME = "walletTracker.db"
         private const val DATABASE_VERSION = 3
-        // Table names
         private const val TABLE_SESSION = "Session"
-        // SQL statement to create the Expense table
         private const val CREATE_TABLE_SESSION = "CREATE TABLE " + TABLE_SESSION + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "online Integer, " +
-                "userId Integer, " +
                 "token TEXT, " +
                 "privateKey TEXT, " +
                 "remember INTEGER, " +

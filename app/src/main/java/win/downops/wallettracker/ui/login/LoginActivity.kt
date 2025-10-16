@@ -13,14 +13,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import win.downops.wallettracker.MainActivity
 import win.downops.wallettracker.data.session.SessionDAO
-import win.downops.wallettracker.data.login.LoginDAO
-import win.downops.wallettracker.data.login.LoginRequest
-import win.downops.wallettracker.data.login.ServerPubKeyRequest
+import win.downops.wallettracker.data.online.login.LoginDAO
 import win.downops.wallettracker.data.session.Session
 import win.downops.wallettracker.databinding.ActivityLoginBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import win.downops.wallettracker.BuildConfig
+import win.downops.wallettracker.data.online.communication.requests.LoginRequest
+import win.downops.wallettracker.data.online.communication.requests.ServerPubKeyRequest
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -40,6 +41,13 @@ class LoginActivity : AppCompatActivity() {
         binding.loginForm.visibility = View.VISIBLE
 
         initListeners()
+
+        if(BuildConfig.DEBUG){
+            lifecycleScope.launch {
+                doLogin(BuildConfig.DEFAULT_USER,
+                    BuildConfig.DEFAULT_PASSWORD)
+            }
+        }
 
     }
 
@@ -112,7 +120,6 @@ class LoginActivity : AppCompatActivity() {
             val sessionDAO = SessionDAO(this@LoginActivity)
             sessionDAO.deleteAll()
             val newSession = Session().apply {
-                this.userId = userId
                 this.token = jwt
                 this.online = true
                 this.serverPublicKey = serverPublicKey

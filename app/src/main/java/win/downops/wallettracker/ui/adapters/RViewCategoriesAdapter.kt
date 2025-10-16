@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
+import win.downops.wallettracker.data.models.ExpenseCategory
 
 class RViewCategoriesAdapter(var list: MutableList<ExpenseCategory>) :
     RecyclerView.Adapter<RViewCategoriesAdapter.ExpenseCategoryViewHolder>() {

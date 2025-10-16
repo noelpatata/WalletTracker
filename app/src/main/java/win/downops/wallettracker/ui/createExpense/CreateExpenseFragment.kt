@@ -17,17 +17,20 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
-import win.downops.wallettracker.data.expense.Expense
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.expense.ExpenseRepository
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
+import win.downops.wallettracker.data.online.expense.ExpenseRepository
 import win.downops.wallettracker.databinding.FragmentCreateexpenseBinding
 import win.downops.wallettracker.ui.adapters.ComboCategoriasAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
 import provideExpenseRepository
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.Expense
+import win.downops.wallettracker.data.models.ExpenseCategory
+import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.util.Logger
+import win.downops.wallettracker.util.Messages.unexpectedError
 import java.sql.Date
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -82,11 +85,9 @@ class CreateExpenseFragment : Fragment() {
 
         }
         catch(e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
-
-
-
 
         return root
     }
@@ -101,7 +102,8 @@ class CreateExpenseFragment : Fragment() {
             }
 
         }catch (e: Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -117,15 +119,11 @@ class CreateExpenseFragment : Fragment() {
             when (val result = expenseDAO.getById(expenseId)) {
                 is AppResult.Success -> {
                     val expense = result.data
-                    if (expense != null) {
-                        loadExpense(expense)
-                    } else {
-                        Toast.makeText(requireContext(), "Expense not found", Toast.LENGTH_LONG).show()
-                    }
+                    loadExpense(expense)
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         }
@@ -145,7 +143,8 @@ class CreateExpenseFragment : Fragment() {
             }
         }
         catch (e: Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -164,7 +163,7 @@ class CreateExpenseFragment : Fragment() {
             }
 
             is AppResult.Error -> {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
     }
@@ -237,16 +236,22 @@ class CreateExpenseFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun createOrSaveChanges() {
-        val expense = getExpense()
-        val isValid = checkValidation(expense)
-        if(isValid){
-            if(expenseId > 0){
-                edit()
+        try{
+            val expense = getExpense()
+            val isValid = checkValidation(expense)
+            if(isValid){
+                if(expenseId > 0){
+                    edit()
+                }else{
+                    save()
+                }
             }else{
-                save()
+                Logger.log("Invalid data")
+                Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
             }
-        }else{
-            Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+        }catch(e: Exception){
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -269,11 +274,12 @@ class CreateExpenseFragment : Fragment() {
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -289,11 +295,12 @@ class CreateExpenseFragment : Fragment() {
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message ?: "Unknown error", Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -310,11 +317,12 @@ class CreateExpenseFragment : Fragment() {
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), e.message ?: "Unexpected error", Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError ?: "Unexpected error", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -354,8 +362,7 @@ class CreateExpenseFragment : Fragment() {
 
         }
         catch (e:Exception){
-            Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
-            return Expense()
+            throw e
         }
 
     }

@@ -1,4 +1,4 @@
-package win.downops.wallettracker.data.expense
+package win.downops.wallettracker.data.models
 
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -10,7 +10,6 @@ class Expense {
     private var description: String = ""
     private var expenseDate: Date? = null
     private var category: Long? = null
-    private var userId: Long? = null
     constructor()
     constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?, description: String) {
         this.id = id
@@ -48,6 +47,11 @@ class Expense {
     fun getDate(): Date {
         return this.expenseDate!!
     }
+    fun getDateString(): String{
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return  dateFormat.format(this.getDate())
+    }
+
     fun setDate(value: Date){
         this.expenseDate = value
     }
@@ -57,31 +61,5 @@ class Expense {
     fun setCategoryId(value: Long){
         this.category = value
     }
-    fun getUserId(): Long{
-        return this.userId!!
-    }
 
 }
-
-class ExpenseRequest() {
-    private var id: Long = -1
-    private var price: Double = -1.0
-    private lateinit var expenseDate: String
-    private var category: Long = -1
-    private var user: Int = -1
-    constructor(exp: Expense, userId: Int) : this() {
-        this.id = exp.getId()
-        this.price = exp.getPrice()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        this.expenseDate = dateFormat.format(exp.getDate())
-        this.category = exp.getCategoryId()
-        this.user = userId
-    }
-}
-data class ExpenseResponse(
-    val category: Long,
-    val expenseDate: String,
-    val id: Long,
-    val price: Double,
-    val user: Int
-)

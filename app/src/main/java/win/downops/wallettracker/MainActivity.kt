@@ -15,12 +15,13 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import win.downops.wallettracker.data.expense.ExpenseRepository
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.online.expense.ExpenseRepository
 import win.downops.wallettracker.data.session.SessionDAO
 import win.downops.wallettracker.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import provideExpenseRepository
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.util.AppResultHandler
 
 class MainActivity : AppCompatActivity() {
 
@@ -90,15 +91,11 @@ class MainActivity : AppCompatActivity() {
         val expenseDAO: ExpenseRepository = provideExpenseRepository(this.applicationContext)
 
         when (val result = expenseDAO.deleteAll()) {
-            is AppResult.Success -> {
+            is AppResult.Success<*> -> {
                 Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
             }
             is AppResult.Error -> {
-                val message = if (result.isControlled)
-                    result.message
-                else
-                    "Unexpected error: ${result.message}"
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                AppResultHandler.handleError(this, result)
             }
         }
     }

@@ -39,7 +39,6 @@ class SessionDAO : Closeable{
     // Update an existing Session in the database
     fun edit(session: Session): Int {
         val values = ContentValues()
-        values.put("userId", session.userId)
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
@@ -52,7 +51,6 @@ class SessionDAO : Closeable{
     // Insert a new Session into the database
     fun insert(session: Session): Long {
         val values = ContentValues()
-        values.put("userId", session.userId)
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
@@ -84,7 +82,6 @@ class SessionDAO : Closeable{
     private fun cursor(cursor: Cursor): Session {
         return Session().apply {
             id = cursor.getInt(cursor.getColumnIndex("id"))
-            userId = cursor.getInt(cursor.getColumnIndex("userId"))
             token = cursor.getString(cursor.getColumnIndex("token"))
             privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
             serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))

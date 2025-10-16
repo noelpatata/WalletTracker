@@ -3,7 +3,6 @@ package win.downops.wallettracker.ui.categoriesExpenses
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -18,16 +17,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import win.downops.wallettracker.BuildConfig
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expense.Expense
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.expense.ExpenseRepository
-import win.downops.wallettracker.data.login.AppResult
+import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
+import win.downops.wallettracker.data.online.expense.ExpenseRepository
 import win.downops.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import win.downops.wallettracker.ui.adapters.RViewExpensesAdapter
-import win.downops.wallettracker.util.LogTag
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +30,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
 import provideExpenseRepository
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.Expense
+import win.downops.wallettracker.data.models.ExpenseCategory
+import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.util.Logger
+import win.downops.wallettracker.util.Messages.unexpectedError
 
 class CategoriesExpensesFragment() : Fragment() {
     var categoryId: Long = 0
@@ -46,6 +46,24 @@ class CategoriesExpensesFragment() : Fragment() {
     private val mainScope = CoroutineScope(Dispatchers.Main + Job())
     private var snackbar: Snackbar? = null
     private lateinit var viewModel: CategoriesExpensesViewModel
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel = ViewModelProvider(this)[CategoriesExpensesViewModel::class.java]
+
+        viewModel.deleteResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+    }
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -71,14 +89,15 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
 
+
+
     @SuppressLint("NewApi")
     private suspend fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
 
-        val expenseCategoryDAO: ExpenseCategoryRepository =
-            provideExpenseCategoryRepository(requireContext())
 
+        val expenseCategoryDAO = provideExpenseCategoryRepository(requireContext())
         when (val result = expenseCategoryDAO.getById(categoryId)) {
             is AppResult.Success -> {
                 val category = result.data
@@ -87,12 +106,8 @@ class CategoriesExpensesFragment() : Fragment() {
                     loadExpenses()
                 }
             }
-
             is AppResult.Error -> {
-                if (BuildConfig.DEBUG) {
-                    Log.d(LogTag.DEBUG, (result.message + "\n" + result.stackTrace) ?: "")
-                }
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
 
@@ -113,10 +128,7 @@ class CategoriesExpensesFragment() : Fragment() {
             }
 
             is AppResult.Error -> {
-                if (BuildConfig.DEBUG) {
-                    Log.d(LogTag.DEBUG, (result.message + "\n" + result.stackTrace))
-                }
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                AppResultHandler.handleError(requireContext(), result)
             }
         }
 
@@ -169,13 +181,9 @@ class CategoriesExpensesFragment() : Fragment() {
 
                     snackbar!!.addCallback(object : Snackbar.Callback() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                            Log.e("noel", "dismissed")
-                            Log.e("noel", event.toString())
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
                                 mainScope.launch {
-                                    Log.e("noel", "tried deleting")
                                     viewModel.deleteExpense(requireContext(), delExpense.getId())
-                                    Log.e("noel", "tried deleted")
                                 }
                             }
                         }
@@ -240,7 +248,8 @@ class CategoriesExpensesFragment() : Fragment() {
 
         }
         else{
-            Toast.makeText(requireContext(), "Invalid data", Toast.LENGTH_LONG).show()
+            Logger.log("Invalid data")
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -259,16 +268,17 @@ class CategoriesExpensesFragment() : Fragment() {
 
             when (val result = categoryDAO.edit(category)) {
                 is AppResult.Success -> {
-                    Toast.makeText(requireContext(), "Category updated successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                     findNavController().navigate(R.id.nav_categories)
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Unexpected error: ${e.message}", Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         } finally {
             binding.loadingPanel.visibility = View.GONE
         }
@@ -289,16 +299,17 @@ class CategoriesExpensesFragment() : Fragment() {
         try {
             when (val result = categoryDAO.deleteById(categoryId)) {
                 is AppResult.Success -> {
-                    Toast.makeText(requireContext(), "Category deleted successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                     findNavController().navigate(R.id.nav_categories)
                 }
 
                 is AppResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    AppResultHandler.handleError(requireContext(), result)
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Unexpected error: ${e.message}", Toast.LENGTH_LONG).show()
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         } finally {
             binding.loadingPanel.visibility = View.GONE
         }

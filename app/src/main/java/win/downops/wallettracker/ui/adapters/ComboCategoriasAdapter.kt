@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expenseCategory.ExpenseCategory
+import win.downops.wallettracker.data.models.ExpenseCategory
 
 class ComboCategoriasAdapter(private val context: Context, private val items: List<ExpenseCategory>) : BaseAdapter() {
     override fun getCount(): Int = items.size

@@ -1,10 +1,4 @@
-package win.downops.wallettracker.data.expenseCategory
-
-data class ExpenseCategoryResponse(
-    val id: Long,
-    val name: String,
-    val total: Double
-)
+package win.downops.wallettracker.data.models
 
 class ExpenseCategory {
     private var id: Long = 0
@@ -42,27 +36,10 @@ class ExpenseCategory {
     fun setTotal(value: Double){
         this.total = value
     }
-
+    override fun toString(): String {
+        return "ExpenseCategory(id=$id, name=$name, total=$total)"
+    }
 
 }
 
-class ExpenseCategoryRequest() {
-    private var id: Long = -1
-    private lateinit var name: String
-
-    constructor(category: ExpenseCategory) : this() {
-        this.id = category.getId()
-        this.name = category.getName()
-    }
-
-    fun getName(): String{
-        return this.name
-    }
-    fun setName(value: String){
-        this.name = value
-    }
-    fun setId(value: Long){
-        this.id = value
-    }
-}
 

@@ -1,11 +1,15 @@
-package win.downops.wallettracker.data.login
+package win.downops.wallettracker.data.online.login
 
-import win.downops.wallettracker.data.communication.BaseResponse
+import win.downops.wallettracker.data.online.communication.responses.BaseResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import win.downops.wallettracker.data.online.communication.requests.LoginRequest
+import win.downops.wallettracker.data.online.communication.requests.ServerPubKeyRequest
+import win.downops.wallettracker.data.online.communication.responses.LoginResponse
+import win.downops.wallettracker.data.online.communication.responses.ServerPubKeyResponse
 
 interface LoginEPs {
 

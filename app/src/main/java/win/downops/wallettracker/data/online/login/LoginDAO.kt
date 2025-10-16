@@ -1,6 +1,10 @@
-package win.downops.wallettracker.data.login
+package win.downops.wallettracker.data.online.login
 
-import win.downops.wallettracker.data.ApiCall
+import win.downops.wallettracker.data.online.ApiCall
+import win.downops.wallettracker.data.online.communication.requests.LoginRequest
+import win.downops.wallettracker.data.online.communication.requests.ServerPubKeyRequest
+import win.downops.wallettracker.data.online.communication.responses.LoginResponse
+import win.downops.wallettracker.data.online.communication.responses.ServerPubKeyResponse
 import win.downops.wallettracker.util.Messages.errorFetchingPublicKey
 import win.downops.wallettracker.util.Messages.errorSendingPublicKey
 import win.downops.wallettracker.util.Messages.loginFailedMessage

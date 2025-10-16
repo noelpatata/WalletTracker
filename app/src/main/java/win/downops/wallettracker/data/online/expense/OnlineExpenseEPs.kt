@@ -1,16 +1,14 @@
-package win.downops.wallettracker.data.expense
+package win.downops.wallettracker.data.online.expense
 
-import win.downops.wallettracker.data.communication.SuccessResponse
-import win.downops.wallettracker.data.communication.CipheredRequest
-import win.downops.wallettracker.data.communication.CipheredResponse
+import win.downops.wallettracker.data.online.communication.responses.CipheredResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
-import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import win.downops.wallettracker.data.communication.BaseResponse
+import win.downops.wallettracker.data.online.communication.requests.CipheredRequest
+import win.downops.wallettracker.data.online.communication.responses.BaseResponse
 
 interface OnlineExpenseEPs {
 
@@ -42,7 +40,7 @@ interface OnlineExpenseEPs {
         @Body expenseCategory: CipheredRequest
     ): Response<BaseResponse<CipheredResponse>>
 
-    @DELETE("/api/v1/Expense/")
+    @POST("/api/v1/Expense/delete")
     suspend fun deleteById(
         @Header("Authorization") token: String,
         @Header("Signature") cipher: String,

@@ -1,4 +1,6 @@
-package win.downops.wallettracker.data.communication
+package win.downops.wallettracker.data.online.communication.responses
+
+import win.downops.wallettracker.data.online.communication.requests.CipheredRequest
 
 data class CipheredResponse(
     val signature: String?,
@@ -9,8 +11,4 @@ data class BaseResponse<T>(
     val data: T?,
     val message: String,
     val success: Boolean
-)
-data class SuccessResponse(
-    val success: Boolean,
-    val message: String
 )

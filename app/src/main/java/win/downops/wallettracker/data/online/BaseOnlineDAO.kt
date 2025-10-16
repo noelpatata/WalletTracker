@@ -1,20 +1,20 @@
+package win.downops.wallettracker.data.online
+
+import Cryptography
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import win.downops.wallettracker.data.communication.BaseResponse
-import win.downops.wallettracker.data.communication.CipheredRequest
-import win.downops.wallettracker.data.communication.CipheredResponse
+import win.downops.wallettracker.data.online.communication.responses.BaseResponse
+import win.downops.wallettracker.data.online.communication.responses.CipheredResponse
 import win.downops.wallettracker.data.session.SessionDAO
 import win.downops.wallettracker.util.Messages.invalidData
 import win.downops.wallettracker.util.Messages.invalidSignature
 import win.downops.wallettracker.util.Messages.noDataMessage
 import com.google.gson.GsonBuilder
-import win.downops.wallettracker.BuildConfig
-import win.downops.wallettracker.util.LogTag
+import win.downops.wallettracker.data.online.communication.requests.CipheredRequest
 
 @RequiresApi(Build.VERSION_CODES.O)
-abstract class BaseDAO<T>(context: Context) {
+abstract class BaseOnlineDAO<T>(context: Context) {
     private lateinit var privateKey: String
     protected lateinit var publicKey: String
     protected lateinit var cipheredText: String
@@ -25,7 +25,6 @@ abstract class BaseDAO<T>(context: Context) {
         SessionDAO(context).getFirstSession()?.let {
             cipheredText = Cryptography().sign(it.privateKey)
             token = it.token
-            userId = it.userId
             privateKey = it.privateKey
             publicKey = it.serverPublicKey
         } ?: throw Exception("No session found")

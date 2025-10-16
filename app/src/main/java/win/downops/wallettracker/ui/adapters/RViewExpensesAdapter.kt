@@ -11,7 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.expense.Expense
+import win.downops.wallettracker.data.models.Expense
 import java.text.SimpleDateFormat
 import java.util.Locale
 
