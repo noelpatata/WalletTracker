@@ -1,4 +1,4 @@
-val majorVersion = 1
+val majorVersion = 2
 val minorVersion = 0
 val patchVersion = 0
 
