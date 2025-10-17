@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import win.downops.wallettracker.BuildConfig
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
+import win.downops.wallettracker.util.Logger
 
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
@@ -117,7 +118,6 @@ class LoginActivity : AppCompatActivity() {
 
             val serverResponse = loginHttpService.getUserServerPubKey(jwt)
             val serverPublicKey = serverResponse.publicKey
-            val userId = serverResponse.userId
 
             val sessionService = SessionService(this@LoginActivity)
             sessionService.deleteAll()
@@ -135,14 +135,8 @@ class LoginActivity : AppCompatActivity() {
             }
 
         } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                showError("Login failed: ${e.message}")
-            }
+            Logger.log(e)
         }
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
     }
 
 
