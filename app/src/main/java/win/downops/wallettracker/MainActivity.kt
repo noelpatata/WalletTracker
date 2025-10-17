@@ -15,14 +15,16 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import win.downops.wallettracker.data.online.expense.ExpenseRepository
-import win.downops.wallettracker.data.session.SessionDAO
+import dagger.hilt.android.AndroidEntryPoint
+import win.downops.wallettracker.data.ExpenseRepository
+import win.downops.wallettracker.data.sqlite.session.SessionService
 import win.downops.wallettracker.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import provideExpenseRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.util.AppResultHandler
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -103,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun doLogOut() {
-        SessionDAO(this).use { sSess ->
+        SessionService(this).use { sSess ->
             sSess.deleteAll()
         }
 

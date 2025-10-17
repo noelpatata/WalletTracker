@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCreatecategoriesBinding
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository

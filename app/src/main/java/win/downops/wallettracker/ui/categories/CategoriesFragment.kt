@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCategoriesBinding
 import win.downops.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar

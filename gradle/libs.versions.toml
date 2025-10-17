@@ -1,6 +1,3 @@
-[plugins]
-android-application = { id = "com.android.application", version = "8.7.3" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version = "1.9.0" }
 [versions]
 androidx-core = "1.12.0"
 androidx-appcompat = "1.6.1"
@@ -18,6 +15,16 @@ gson = "2.9.0"
 activity = "1.8.0"
 ui-android = "1.7.6"
 swiperefreshlayout = "1.2.0-alpha01"
+androidApplicationGradlePluguin = "8.7.3"
+kotlinAndroidGradlePluguin = "2.2.20"
+kspGradlePluguin = "2.2.20-2.0.4"
+hiltGradlePluguin = "2.57.2"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidApplicationGradlePluguin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroidGradlePluguin" }
+ksp = { id ="com.google.devtools.ksp", version.ref = "kspGradlePluguin" }
+hilt = { id ="com.google.dagger.hilt.android", version.ref = "hiltGradlePluguin"}
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }

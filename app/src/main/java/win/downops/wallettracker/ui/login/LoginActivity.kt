@@ -11,18 +11,20 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import win.downops.wallettracker.MainActivity
-import win.downops.wallettracker.data.session.SessionDAO
-import win.downops.wallettracker.data.online.login.LoginDAO
-import win.downops.wallettracker.data.session.Session
+import win.downops.wallettracker.data.sqlite.session.SessionService
+import win.downops.wallettracker.data.api.login.LoginHttpService
+import win.downops.wallettracker.data.models.Session
 import win.downops.wallettracker.databinding.ActivityLoginBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import win.downops.wallettracker.BuildConfig
-import win.downops.wallettracker.data.online.communication.requests.LoginRequest
-import win.downops.wallettracker.data.online.communication.requests.ServerPubKeyRequest
+import win.downops.wallettracker.data.api.communication.requests.LoginRequest
+import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
 
+@AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
 
@@ -84,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.offlineMode.setOnClickListener {
-            SessionDAO(this).use { sSess ->
+            SessionService(this).use { sSess ->
                 sSess.deleteAll()
 
                 val newSess = Session().apply{
@@ -104,21 +106,21 @@ class LoginActivity : AppCompatActivity() {
     suspend fun doLogin(username: String, password: String) = withContext(Dispatchers.IO) {
         try {
             val credentials = LoginRequest(username, password)
-            val loginDAO = LoginDAO()
+            val loginHttpService = LoginHttpService()
 
-            val loginResponse = loginDAO.login(credentials)
+            val loginResponse = loginHttpService.login(credentials)
             val jwt = loginResponse.token
 
             val (privateKey, publicKey) = Cryptography().generateKeys()
 
-            loginDAO.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))
+            loginHttpService.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))
 
-            val serverResponse = loginDAO.getUserServerPubKey(jwt)
+            val serverResponse = loginHttpService.getUserServerPubKey(jwt)
             val serverPublicKey = serverResponse.publicKey
             val userId = serverResponse.userId
 
-            val sessionDAO = SessionDAO(this@LoginActivity)
-            sessionDAO.deleteAll()
+            val sessionService = SessionService(this@LoginActivity)
+            sessionService.deleteAll()
             val newSession = Session().apply {
                 this.token = jwt
                 this.online = true
@@ -126,7 +128,7 @@ class LoginActivity : AppCompatActivity() {
                 this.privateKey = privateKey
                 this.remember = false
             }
-            sessionDAO.insert(newSession)
+            sessionService.insert(newSession)
 
             withContext(Dispatchers.Main) {
                 startMainActivity()

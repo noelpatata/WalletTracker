@@ -5,6 +5,8 @@ val patchVersion = 0
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -28,7 +30,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.141:5000\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000\"")
             buildConfigField("String", "DEFAULT_USER", "\"noel\"")
             buildConfigField("String", "DEFAULT_PASSWORD", "\"noelnoel\"")
             isDebuggable = true
@@ -55,10 +57,6 @@ android {
 }
 
 dependencies {
-
-
-
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -79,4 +77,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.swiperefreshlayout)
 
+    implementation("com.google.dagger:hilt-android:2.57.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.57.1")
 }

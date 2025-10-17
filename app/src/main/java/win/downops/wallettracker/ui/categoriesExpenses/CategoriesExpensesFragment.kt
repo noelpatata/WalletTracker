@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -18,12 +19,13 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.online.expense.ExpenseRepository
+import win.downops.wallettracker.data.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.databinding.FragmentCategoriesexpensesBinding
 import win.downops.wallettracker.ui.adapters.RViewExpensesAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,22 +39,23 @@ import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.util.Logger
 import win.downops.wallettracker.util.Messages.unexpectedError
 
+@AndroidEntryPoint
 class CategoriesExpensesFragment() : Fragment() {
-    var categoryId: Long = 0
-
-
+    private val viewModel: CategoriesExpensesViewModel by viewModels()
     private var _binding: FragmentCategoriesexpensesBinding? = null
     private val binding get() = _binding!!
-    private val mainScope = CoroutineScope(Dispatchers.Main + Job())
     private var snackbar: Snackbar? = null
-    private lateinit var viewModel: CategoriesExpensesViewModel
+    private val mainScope = CoroutineScope(Dispatchers.Main + Job())
+    var categoryId: Long = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this)[CategoriesExpensesViewModel::class.java]
+        initObservers()
+    }
 
+    private fun initObservers(){
         viewModel.deleteResult.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is AppResult.Success -> {
@@ -65,15 +68,12 @@ class CategoriesExpensesFragment() : Fragment() {
         }
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(this)[CategoriesExpensesViewModel::class.java]
-
 
         _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
 
@@ -183,7 +183,7 @@ class CategoriesExpensesFragment() : Fragment() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
                                 mainScope.launch {
-                                    viewModel.deleteExpense(requireContext(), delExpense.getId())
+                                    viewModel.deleteExpense(delExpense.getId())
                                 }
                             }
                         }

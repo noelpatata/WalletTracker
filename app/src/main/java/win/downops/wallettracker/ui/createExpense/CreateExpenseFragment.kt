@@ -17,8 +17,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.online.expenseCategory.ExpenseCategoryRepository
-import win.downops.wallettracker.data.online.expense.ExpenseRepository
+import win.downops.wallettracker.data.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.databinding.FragmentCreateexpenseBinding
 import win.downops.wallettracker.ui.adapters.ComboCategoriasAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

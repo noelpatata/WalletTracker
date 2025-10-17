@@ -1,6 +1,6 @@
 import android.os.Build
 import androidx.annotation.RequiresApi
-import win.downops.wallettracker.data.online.communication.requests.CipheredRequest
+import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
 import java.security.*
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
