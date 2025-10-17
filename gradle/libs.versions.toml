@@ -1,21 +1,21 @@
 [versions]
-androidx-core = "1.12.0"
-androidx-appcompat = "1.6.1"
-material = "1.10.0"
-constraintlayout = "2.1.4"
-lifecycle = "2.6.2"
-navigation = "2.7.4"
+androidx-core = "1.17.0"
+androidx-appcompat = "1.7.1"
+material = "1.13.0"
+constraintlayout = "2.2.1"
+lifecycle = "2.9.4"
+navigation = "2.9.5"
 legacy-support = "1.0.0"
-fragment = "1.6.1"
+fragment = "1.8.9"
 junit = "4.13.2"
-androidx-junit = "1.1.5"
-espresso-core = "3.5.1"
+androidx-junit = "1.3.0"
+espresso-core = "3.7.0"
 retrofit = "2.9.0"
 gson = "2.9.0"
-activity = "1.8.0"
-ui-android = "1.7.6"
+activity = "1.11.0"
+ui-android = "1.9.3"
 swiperefreshlayout = "1.2.0-alpha01"
-androidApplicationGradlePluguin = "8.7.3"
+androidApplicationGradlePluguin = "8.10.1"
 kotlinAndroidGradlePluguin = "2.2.20"
 kspGradlePluguin = "2.2.20-2.0.4"
 hiltGradlePluguin = "2.57.2"
@@ -45,5 +45,7 @@ gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "gson" 
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "ui-android" }
 swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltGradlePluguin" }
+hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltGradlePluguin" }
 
 

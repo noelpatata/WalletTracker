@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 val majorVersion = 2
 val minorVersion = 0
 val patchVersion = 0
@@ -11,7 +13,7 @@ plugins {
 
 android {
     namespace = "win.downops.wallettracker"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "win.downops.wallettracker"
@@ -51,8 +53,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
     }
 }
 
@@ -77,6 +81,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.swiperefreshlayout)
 
-    implementation("com.google.dagger:hilt-android:2.57.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }
