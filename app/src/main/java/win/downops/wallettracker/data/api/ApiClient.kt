@@ -37,13 +37,11 @@ object ApiClient {
     suspend fun isServerReachable(): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                Logger.log("Checking server reachability to $BASE_URL")
                 val request = Request.Builder()
                     .url("${BASE_URL}/api/v${BuildConfig.API_VERSION}/health")
                     .head()
                     .build()
                 val response = okHttpClient.newCall(request).execute()
-                Logger.log("Response code: ${response.code()}")
                 response.isSuccessful
             } catch (e: Exception) {
                 Logger.log("Server check failed: ${e::class.simpleName} - ${e.message}")

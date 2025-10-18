@@ -13,14 +13,15 @@ import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.Expense
 import win.downops.wallettracker.di.ExpenseCategoryRepositoryProvider
 import win.downops.wallettracker.di.ExpenseRepositoryProvider
 
 
 @HiltViewModel
 class CategoriesExpensesViewModel @Inject constructor(
-    private val repositoryProvider: ExpenseRepositoryProvider,
-    private val expenseCategoryRepository: ExpenseCategoryRepositoryProvider
+    private val expenseRepositoryProvider: ExpenseRepositoryProvider,
+    private val expenseCategoryRepositoryProvider: ExpenseCategoryRepositoryProvider
 ) : ViewModel() {
 
     private val _deleteResult = MutableLiveData<AppResult<Unit>>()
@@ -28,7 +29,16 @@ class CategoriesExpensesViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun deleteExpense(expenseId: Long) = viewModelScope.launch {
-        val expenseRepository = repositoryProvider.get()
+        val expenseRepository = expenseRepositoryProvider.get()
         _deleteResult.postValue(expenseRepository.deleteById(expenseId))
+    }
+
+    private val _getallResult = MutableLiveData<AppResult<List<Expense>>>()
+    val getallResult: LiveData<AppResult<List<Expense>>> = _getallResult
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getExpensesByCategory(categoryId: Long) = viewModelScope.launch {
+        val expenseRepository = expenseRepositoryProvider.get()
+        _getallResult.postValue(expenseRepository.getByCatId(categoryId))
     }
 }
