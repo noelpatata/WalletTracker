@@ -45,13 +45,11 @@ class CategoriesExpensesFragment() : Fragment() {
     private var _binding: FragmentCategoriesexpensesBinding? = null
     private val binding get() = _binding!!
     private var snackbar: Snackbar? = null
-    private val mainScope = CoroutineScope(Dispatchers.Main + Job())
     var categoryId: Long = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initObservers()
     }
 
@@ -61,6 +59,56 @@ class CategoriesExpensesFragment() : Fragment() {
                 is AppResult.Success -> {
                     Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                 }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.getByExpenseCategoryByIdResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    val category = result.data
+                    if (category != null) {
+                        binding.inputName.setText(category.getName())
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            loadExpenses()
+                        }
+                    }
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.getExpensesByCategoryIdResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    displayExpenses(result.data)
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.editExpenseCategoryResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.nav_categories)
+                }
+
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.deleteExpenseCategoryResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.nav_categories)
+                }
+
                 is AppResult.Error -> {
                     AppResultHandler.handleError(requireContext(), result)
                 }
@@ -92,45 +140,23 @@ class CategoriesExpensesFragment() : Fragment() {
 
 
     @SuppressLint("NewApi")
-    private suspend fun loadData() {
+    private fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
 
 
-        val expenseCategoryDAO = provideExpenseCategoryRepository(requireContext())
-        when (val result = expenseCategoryDAO.getById(categoryId)) {
-            is AppResult.Success -> {
-                val category = result.data
-                if (category != null) {
-                    binding.inputName.setText(category.getName())
-                    loadExpenses()
-                }
-            }
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
+        viewModel.getExpenseCategoryById(categoryId)
 
         binding.loadingPanel.visibility = View.GONE
         binding.form.visibility = View.VISIBLE
     }
 
     @SuppressLint("NewApi")
-    private suspend fun loadExpenses() {
+    private fun loadExpenses() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
 
-        val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
-
-        when (val result = expenseDAO.getByCatId(categoryId)) {
-            is AppResult.Success -> {
-                displayExpenses(result.data)
-            }
-
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
+        viewModel.getExpensesByCategoryId(categoryId)
 
         binding.loadingPanel.visibility = View.GONE
         binding.form.visibility = View.VISIBLE
@@ -182,9 +208,7 @@ class CategoriesExpensesFragment() : Fragment() {
                     snackbar!!.addCallback(object : Snackbar.Callback() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
-                                mainScope.launch {
-                                    viewModel.deleteExpense(delExpense.getId())
-                                }
+                                viewModel.deleteExpense(delExpense.getId())
                             }
                         }
                     })
@@ -200,11 +224,15 @@ class CategoriesExpensesFragment() : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.rviewExpenses)
     }
 
+    override fun onPause() {
+        super.onPause()
+        snackbar?.dismiss()
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.saveChanges.setOnClickListener {
             saveIfValid()
-
         }
         binding.inputName.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE ||
@@ -226,9 +254,7 @@ class CategoriesExpensesFragment() : Fragment() {
                 .setTitle("Delete Category")
                 .setMessage("Are you sure you want to delete this category?")
                 .setPositiveButton("Delete") { _, _ ->
-                    CoroutineScope(Dispatchers.Main).launch {
-                        deleteCategory()
-                    }
+                    deleteCategory()
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
@@ -239,13 +265,10 @@ class CategoriesExpensesFragment() : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveIfValid() {
-        val category = GetCategory()
+        val category = getCategory()
         val isValid = checkValidation(category)
         if (isValid){
-            CoroutineScope(Dispatchers.Main).launch {
-                saveChanges()
-            }
-
+            saveChanges()
         }
         else{
             Logger.log("Invalid data")
@@ -258,24 +281,12 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun saveChanges() {
+    private fun saveChanges() {
         binding.loadingPanel.visibility = View.VISIBLE
 
         try {
-            val category = GetCategory()
-            val categoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-
-            when (val result = categoryDAO.edit(category)) {
-                is AppResult.Success -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.nav_categories)
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            val category = getCategory()
+            viewModel.editExpenseCategory(category)
         } catch (e: Exception) {
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
@@ -284,40 +295,24 @@ class CategoriesExpensesFragment() : Fragment() {
         }
     }
 
-    private fun GetCategory(): ExpenseCategory {
+    private fun getCategory(): ExpenseCategory {
         val cat = ExpenseCategory(categoryId)
         cat.setName(binding.inputName.text.toString())
         return cat
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun deleteCategory() {
-        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
-
+    private fun deleteCategory() {
         binding.loadingPanel.visibility = View.VISIBLE
 
         try {
-            when (val result = categoryDAO.deleteById(categoryId)) {
-                is AppResult.Success -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.nav_categories)
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            viewModel.deleteExpenseCategory(categoryId)
         } catch (e: Exception) {
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         } finally {
             binding.loadingPanel.visibility = View.GONE
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        snackbar?.dismiss()
     }
 
     override fun onDestroyView() {
