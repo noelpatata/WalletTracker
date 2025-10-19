@@ -1,31 +1,23 @@
 package win.downops.wallettracker.ui.categories
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCategoriesBinding
 import win.downops.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
-import provideExpenseCategoryRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
 import win.downops.wallettracker.util.AppResultHandler
@@ -35,49 +27,67 @@ import java.util.Collections
 
 
 class CategoriesFragment : Fragment() {
-
+    private val viewModel: CategoriesViewModel by viewModels()
     private var _binding: FragmentCategoriesBinding? = null
     private val binding get() = _binding!!
-
-    private val mainScope = CoroutineScope(Dispatchers.Main + Job())
     private var snackbar: Snackbar? = null
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initObservers()
+    }
+
+    private fun initObservers(){
+        viewModel.getCategoriesResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    displayCategories(result.data)
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.editCategoryResult.observe(viewLifecycleOwner){ result ->
+            when (result) {
+                is AppResult.Success -> { }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.deleteCategoryResult.observe(viewLifecycleOwner){ result ->
+            when (result) {
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+    }
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(CategoriesViewModel::class.java)
 
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
 
         initListeners()
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            loadData()
-        }
+
+        loadData()
 
         return binding.root
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun loadData() {
+    private fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.rviewCategories.visibility = View.GONE
 
-        val expenseCategoryRepository: ExpenseCategoryRepository =
-            provideExpenseCategoryRepository(requireContext())
-
-        when (val result = expenseCategoryRepository.getAll()) {
-            is AppResult.Success -> {
-                displayCategories(result.data)
-            }
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
+        viewModel.getCategories()
 
         binding.loadingPanel.visibility = View.GONE
         binding.rviewCategories.visibility = View.VISIBLE
@@ -99,7 +109,6 @@ class CategoriesFragment : Fragment() {
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.START or ItemTouchHelper.END
         ) {
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -112,13 +121,11 @@ class CategoriesFragment : Fragment() {
 
                 Logger.log("${categories[fromPosition].getName()} moved from $fromPosition to $toPosition")
 
-                mainScope.launch {
-                    updateCategoriesSortOrder(mutableCategories)
-                }
+                updateCategoriesSortOrder(mutableCategories)
+
                 return true
             }
 
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val delCat = mutableCategories[viewHolder.adapterPosition]
                 val backupPosition = viewHolder.adapterPosition
@@ -130,7 +137,7 @@ class CategoriesFragment : Fragment() {
                         "Category deleted",
                         Snackbar.LENGTH_LONG
                     )
-                    var undo = false
+                    val undo = false
                     snackbar!!.setAction("Undo") {
                         snackbar = null
                         (binding.rviewCategories.adapter as RViewCategoriesAdapter).addItem(viewHolder.adapterPosition, categories[backupPosition])
@@ -141,9 +148,7 @@ class CategoriesFragment : Fragment() {
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
                                 snackbar = null
-                                mainScope.launch {
-                                    deleteCategory(delCat.getId())
-                                }
+                                deleteCategory(delCat.getId())
                                 loadTotal()
                             }
                         }
@@ -186,8 +191,7 @@ class CategoriesFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun updateCategoriesSortOrder(categories: List<ExpenseCategory>) {
+    private fun updateCategoriesSortOrder(categories: List<ExpenseCategory>) {
         for (i in categories.indices) {
             val updatedCategory = categories[i]
             updatedCategory.setOrder(i)
@@ -195,45 +199,22 @@ class CategoriesFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun editCategory(category: ExpenseCategory) {
-        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
-
-        when (val result = categoryDAO.edit(category)) {
-            is AppResult.Success -> {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-            }
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
+    private fun editCategory(category: ExpenseCategory) {
+        viewModel.editCategory(category)
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun deleteCategory(categoryId: Long) {
-        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
-
-        when (val result = categoryDAO.deleteById(categoryId)) {
-            is AppResult.Success -> {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-            }
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
+    private fun deleteCategory(categoryId: Long) {
+        viewModel.deleteCategory(categoryId)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.createCategory.setOnClickListener {
             findNavController().navigate(R.id.nav_createcategories)
         }
         binding.swiperefresh.setOnRefreshListener {
             snackbar?.dismiss()
-            mainScope.launch {
-                loadData()
-            }
+            loadData()
             binding.swiperefresh.isRefreshing = false
         }
     }
@@ -244,8 +225,5 @@ class CategoriesFragment : Fragment() {
         if (isAdded) {
             snackbar?.dismiss()
         }
-
-        mainScope.coroutineContext.cancelChildren()
-
     }
 }

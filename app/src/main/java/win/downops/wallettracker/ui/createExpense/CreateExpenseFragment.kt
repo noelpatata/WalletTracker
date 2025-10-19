@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
@@ -38,13 +39,73 @@ import java.time.format.DateTimeFormatter
 
 
 class CreateExpenseFragment : Fragment() {
-
+    private val viewModel: CreateExpenseViewModel by viewModels()
     var isFromCatForm: Boolean = false
     var expenseId: Long = 0
 
     private var _binding: FragmentCreateexpenseBinding? = null
 
     private val binding get() = _binding!!
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initObservers()
+    }
+
+    private fun initObservers(){
+        viewModel.getExpenseResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    val expense = result.data
+                    loadExpense(expense)
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.getCategoriesResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    val categories = result.data
+                    loadSpinner(categories)
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.deleteExpenseResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    findNavController().popBackStack()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.editExpenseResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    findNavController().popBackStack()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+        viewModel.createExpenseResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    findNavController().popBackStack()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -64,16 +125,12 @@ class CreateExpenseFragment : Fragment() {
             isFromCatForm = categoryId > 0
 
             expenseId = args.getLong("expenseId")
-
-
         }
 
 
         try {
             initListeners()
-            viewLifecycleOwner.lifecycleScope.launch {
-                loadData(categoryId, expenseId)
-            }
+            loadData(expenseId)
 
             binding.root.post {
                 val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
@@ -92,40 +149,14 @@ class CreateExpenseFragment : Fragment() {
         return root
     }
 
-    private fun selectCategory(categoryId: Long) {
-        try{
-            if(categoryId > 0){
-                val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
-                val pos = adapter.getById(categoryId)
-                if(pos >= 0)
-                    binding.comboCategorias.setSelection(pos)
-            }
-
-        }catch (e: Exception){
-            Logger.log(e)
-            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun loadData(catId: Long, expenseId: Long) {
+    private fun loadData(expenseId: Long) {
         binding.inputDate.isEnabled = false
         loadDefaultDateTime()
-        loadComboCategorias(catId)
+        viewModel.getCategories()
 
         if (expenseId > 0) {
-            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
-
-            when (val result = expenseDAO.getById(expenseId)) {
-                is AppResult.Success -> {
-                    val expense = result.data
-                    loadExpense(expense)
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            viewModel.getExpense(expenseId)
         }
     }
 
@@ -148,35 +179,15 @@ class CreateExpenseFragment : Fragment() {
         }
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun loadComboCategorias(catId: Long) {
-        if (catId <= 0) return
-
-        val categoryDAO: ExpenseCategoryRepository = provideExpenseCategoryRepository(requireContext())
-
-        when (val result = categoryDAO.getAll()) {
-            is AppResult.Success -> {
-                val categories = result.data
-                loadSpinner(categories)
-                selectCategory(catId)
-            }
-
-            is AppResult.Error -> {
-                AppResultHandler.handleError(requireContext(), result)
-            }
-        }
-    }
-
     private fun loadSpinner(categories: List<ExpenseCategory>) {
         binding.comboCategorias
         val spinner: Spinner = binding.comboCategorias
 
-        val adaptador = ComboCategoriasAdapter(
+        val adapter = ComboCategoriasAdapter(
             requireContext(),
             categories
         )
-        spinner.adapter = adaptador
+        spinner.adapter = adapter
     }
 
 
@@ -193,24 +204,16 @@ class CreateExpenseFragment : Fragment() {
         binding.pickDate.setOnClickListener {
             showDatePickerDialog()
         }
-        binding.inputPrice.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+        binding.inputPrice.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_NEXT ||
                 (actionId == EditorInfo.IME_ACTION_DONE)) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    createOrSaveChanges()
-                }
-
-
+                createOrEditChanges()
                 return@setOnEditorActionListener true
             }
             false
         }
         binding.createExpense.setOnClickListener {
-            viewLifecycleOwner.lifecycleScope.launch {
-                createOrSaveChanges()
-            }
-
-
+            createOrEditChanges()
         }
         if (expenseId > 0){
             binding.delete.setOnClickListener {
@@ -235,7 +238,7 @@ class CreateExpenseFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun createOrSaveChanges() {
+    private fun createOrEditChanges() {
         try{
             val expense = getExpense()
             val isValid = checkValidation(expense)
@@ -243,7 +246,7 @@ class CreateExpenseFragment : Fragment() {
                 if(expenseId > 0){
                     edit()
                 }else{
-                    save()
+                    create()
                 }
             }else{
                 Logger.log("Invalid data")
@@ -263,20 +266,9 @@ class CreateExpenseFragment : Fragment() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun delete(expenseId: Long) {
+    private fun delete(expenseId: Long) {
         try {
-            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
-
-            when (val result = expenseDAO.deleteById(expenseId)) {
-                is AppResult.Success -> {
-                    findNavController().popBackStack()
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            viewModel.deleteExpense(expenseId)
         } catch (e: Exception) {
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
@@ -284,20 +276,11 @@ class CreateExpenseFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun edit() {
+    private fun edit() {
         try {
             val expense = getExpense()
-            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
+            viewModel.editExpense(expense)
 
-            when (val result = expenseDAO.edit(expense)) {
-                is AppResult.Success -> {
-                    findNavController().popBackStack()
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
         } catch (e: Exception) {
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
@@ -306,23 +289,13 @@ class CreateExpenseFragment : Fragment() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun save() {
+    private fun create() {
         try {
             val expense = getExpense()
-            val expenseDAO: ExpenseRepository = provideExpenseRepository(requireContext())
-
-            when (val result = expenseDAO.create(expense)) {
-                is AppResult.Success -> {
-                    findNavController().popBackStack()
-                }
-
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            viewModel.createExpense(expense)
         } catch (e: Exception) {
             Logger.log(e)
-            Toast.makeText(requireContext(), unexpectedError ?: "Unexpected error", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -331,7 +304,7 @@ class CreateExpenseFragment : Fragment() {
     private fun getExpense(): Expense {
         try {
             val priceString = binding.inputPrice.text.toString()
-            var price: Double = 0.0
+            var price = 0.0
             if (priceString.isNotEmpty()){
                 price = priceString.toDouble()
             }
@@ -390,7 +363,5 @@ class CreateExpenseFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-
-
     }
 }

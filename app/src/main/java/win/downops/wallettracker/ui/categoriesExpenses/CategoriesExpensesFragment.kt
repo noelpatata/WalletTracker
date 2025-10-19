@@ -47,7 +47,6 @@ class CategoriesExpensesFragment() : Fragment() {
     private var snackbar: Snackbar? = null
     var categoryId: Long = 0
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initObservers()
@@ -64,15 +63,13 @@ class CategoriesExpensesFragment() : Fragment() {
                 }
             }
         }
-        viewModel.getByExpenseCategoryByIdResult.observe(viewLifecycleOwner) { result ->
+        viewModel.getCategoryResult.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is AppResult.Success -> {
                     val category = result.data
                     if (category != null) {
                         binding.inputName.setText(category.getName())
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            loadExpenses()
-                        }
+                        loadExpenses()
                     }
                 }
                 is AppResult.Error -> {
@@ -116,7 +113,6 @@ class CategoriesExpensesFragment() : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -128,9 +124,7 @@ class CategoriesExpensesFragment() : Fragment() {
         val args : Bundle = requireArguments()
         categoryId = args.getLong("catId")
         initListeners()
-        viewLifecycleOwner.lifecycleScope.launch {
-            loadData()
-        }
+        loadData()
 
         val root: View = binding.root
         return root
@@ -139,19 +133,17 @@ class CategoriesExpensesFragment() : Fragment() {
 
 
 
-    @SuppressLint("NewApi")
     private fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
 
 
-        viewModel.getExpenseCategoryById(categoryId)
+        viewModel.getCategory(categoryId)
 
         binding.loadingPanel.visibility = View.GONE
         binding.form.visibility = View.VISIBLE
     }
 
-    @SuppressLint("NewApi")
     private fun loadExpenses() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.form.visibility = View.GONE
@@ -163,8 +155,8 @@ class CategoriesExpensesFragment() : Fragment() {
     }
 
 
-    private fun displayExpenses(lista: List<Expense>) {
-        val mutableExpenses = lista.toMutableList()
+    private fun displayExpenses(list: List<Expense>) {
+        val mutableExpenses = list.toMutableList()
         if(binding.rviewExpenses.layoutManager == null || binding.rviewExpenses.adapter == null){
             binding.rviewExpenses.layoutManager = LinearLayoutManager(requireContext() )
             binding.rviewExpenses.adapter = RViewExpensesAdapter(mutableExpenses)
@@ -176,7 +168,6 @@ class CategoriesExpensesFragment() : Fragment() {
         val simpleCallback = object : ItemTouchHelper.SimpleCallback(
             0,
             ItemTouchHelper.START or ItemTouchHelper.END) {
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -186,7 +177,6 @@ class CategoriesExpensesFragment() : Fragment() {
                 return false
             }
 
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val delExpense = mutableExpenses[viewHolder.adapterPosition]
                 val backupExpense = delExpense
@@ -206,6 +196,7 @@ class CategoriesExpensesFragment() : Fragment() {
                     }
 
                     snackbar!!.addCallback(object : Snackbar.Callback() {
+                        @RequiresApi(Build.VERSION_CODES.O)
                         override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && isAdded) {
                                 viewModel.deleteExpense(delExpense.getId())
@@ -229,7 +220,6 @@ class CategoriesExpensesFragment() : Fragment() {
         snackbar?.dismiss()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.saveChanges.setOnClickListener {
             saveIfValid()
@@ -263,7 +253,6 @@ class CategoriesExpensesFragment() : Fragment() {
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun saveIfValid() {
         val category = getCategory()
         val isValid = checkValidation(category)
@@ -280,7 +269,6 @@ class CategoriesExpensesFragment() : Fragment() {
         return category.getName().isNotEmpty()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun saveChanges() {
         binding.loadingPanel.visibility = View.VISIBLE
 
@@ -301,7 +289,6 @@ class CategoriesExpensesFragment() : Fragment() {
         return cat
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun deleteCategory() {
         binding.loadingPanel.visibility = View.VISIBLE
 

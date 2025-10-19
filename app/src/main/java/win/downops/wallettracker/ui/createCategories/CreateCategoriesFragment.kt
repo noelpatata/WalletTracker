@@ -1,6 +1,5 @@
 package win.downops.wallettracker.ui.createCategories
 
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -9,17 +8,12 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import win.downops.wallettracker.R
-import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.databinding.FragmentCreatecategoriesBinding
-import kotlinx.coroutines.launch
-import provideExpenseCategoryRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
 import win.downops.wallettracker.util.AppResultHandler
@@ -28,18 +22,33 @@ import win.downops.wallettracker.util.Messages.unexpectedError
 
 
 class CreateCategoriesFragment : Fragment() {
-
+    private val viewModel: CreateCategoriesViewModel by viewModels()
     private var _binding: FragmentCreatecategoriesBinding? = null
     private val binding get() = _binding!!
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initObservers()
+    }
+
+    private fun initObservers(){
+        viewModel.createCategoryResult.observe(viewLifecycleOwner){ result ->
+            when (result) {
+                is AppResult.Success -> {
+                    findNavController().navigate(R.id.nav_categories)
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(requireContext(), result)
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(CreateCategoriesViewModel::class.java)
 
         _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
 
@@ -51,13 +60,10 @@ class CreateCategoriesFragment : Fragment() {
             imm?.showSoftInput(binding.inputName, InputMethodManager.SHOW_IMPLICIT)
         }
 
-
-
         val root: View = binding.root
         return root
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
         binding.createCategory.setOnClickListener {
             saveChanges()
@@ -74,14 +80,11 @@ class CreateCategoriesFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun saveChanges() {
-        val category = GetCategory()
+        val category = getCategory()
         val isValid = checkValidation(category)
         if(isValid){
-            viewLifecycleOwner.lifecycleScope.launch {
-                save()
-            }
+            save()
 
         }else{
             Logger.log("Category fields are invalid")
@@ -94,28 +97,17 @@ class CreateCategoriesFragment : Fragment() {
         return category.getName().isNotEmpty()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun save() {
+    private fun save() {
         try {
-            val category = GetCategory()
-            val expenseCategoryDAO: ExpenseCategoryRepository =
-                provideExpenseCategoryRepository(requireContext())
-
-            when (val result = expenseCategoryDAO.create(category)) {
-                is AppResult.Success -> {
-                    findNavController().navigate(R.id.nav_categories)
-                }
-                is AppResult.Error -> {
-                    AppResultHandler.handleError(requireContext(), result)
-                }
-            }
+            val category = getCategory()
+            viewModel.createCategory(category)
         } catch (e: Exception) {
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun GetCategory(): ExpenseCategory {
+    private fun getCategory(): ExpenseCategory {
         return ExpenseCategory(binding.inputName.text.toString())
     }
 
