@@ -1,5 +1,8 @@
 package win.downops.wallettracker.data.api
 
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import win.downops.wallettracker.BuildConfig
 import win.downops.wallettracker.data.api.expense.ExpenseEndpoints
 import win.downops.wallettracker.data.api.expenseCategory.ExpenseCategoryEndpoints
@@ -9,6 +12,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import win.downops.wallettracker.util.Logger
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
@@ -30,16 +34,19 @@ object ApiClient {
             .build()
     }
 
-    fun isServerReachable(): Boolean {
-        return try {
-            val request = Request.Builder()
-                .url(BASE_URL)
-                .head()
-                .build()
-            val response = okHttpClient.newCall(request).execute()
-            response.isSuccessful
-        } catch (e: Exception) {
-            false
+    suspend fun isServerReachable(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${BASE_URL}/api/v${BuildConfig.API_VERSION}/health")
+                    .head()
+                    .build()
+                val response = okHttpClient.newCall(request).execute()
+                response.isSuccessful
+            } catch (e: Exception) {
+                Logger.log("Server check failed: ${e::class.simpleName} - ${e.message}")
+                false
+            }
         }
     }
 

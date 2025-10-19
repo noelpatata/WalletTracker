@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -37,69 +36,79 @@ class LoginActivity : AppCompatActivity() {
     }
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        try{
 
-        binding.loginForm.visibility = View.VISIBLE
+            super.onCreate(savedInstanceState)
+            binding = ActivityLoginBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        initListeners()
+            binding.loginForm.visibility = View.VISIBLE
 
-        if(BuildConfig.DEBUG){
-            lifecycleScope.launch {
-                doLogin(BuildConfig.DEFAULT_USER,
-                    BuildConfig.DEFAULT_PASSWORD)
+            initListeners()
+
+            if(BuildConfig.DEBUG){
+                lifecycleScope.launch {
+                    doLogin(BuildConfig.DEFAULT_USER,
+                        BuildConfig.DEFAULT_PASSWORD)
+                }
             }
+        }catch(e: Exception){
+            Logger.log(e)
         }
 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun initListeners() {
-        binding.login.setOnClickListener {
+        try{
 
-            if (binding.inputUsername.text.toString().trim()
-                    .isEmpty() || binding.inputPassword.text.toString().trim().isEmpty()
-            ) {
-                return@setOnClickListener
-            }
+            binding.login.setOnClickListener {
 
-            lifecycleScope.launch {
-                doLogin(binding.inputUsername.text.toString(),
-                    binding.inputPassword.text.toString())
-            }
-
-
-        }
-
-        binding.inputPassword.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
-            if (actionId == EditorInfo.IME_ACTION_DONE ||
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+                if (binding.inputUsername.text.toString().trim()
+                        .isEmpty() || binding.inputPassword.text.toString().trim().isEmpty()
+                ) {
+                    return@setOnClickListener
+                }
 
                 lifecycleScope.launch {
                     doLogin(binding.inputUsername.text.toString(),
                         binding.inputPassword.text.toString())
                 }
 
-                return@setOnEditorActionListener true
+
             }
-            false
-        }
 
-        binding.offlineMode.setOnClickListener {
-            SessionService(this).use { sSess ->
-                sSess.deleteAll()
+            binding.inputPassword.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                    (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
-                val newSess = Session().apply{
-                    online = false
+                    lifecycleScope.launch {
+                        doLogin(binding.inputUsername.text.toString(),
+                            binding.inputPassword.text.toString())
+                    }
+
+                    return@setOnEditorActionListener true
                 }
-                sSess.insert(newSess)
-                sSess.close()
-
-                startMainActivity()
-
-
+                false
             }
+
+            binding.offlineMode.setOnClickListener {
+                SessionService(this).use { sSess ->
+                    sSess.deleteAll()
+
+                    val newSess = Session().apply{
+                        online = false
+                    }
+                    sSess.insert(newSess)
+                    sSess.close()
+
+                    startMainActivity()
+
+
+                }
+            }
+        }catch(e: Exception){
+            Logger.log(e)
         }
     }
 
@@ -138,6 +147,4 @@ class LoginActivity : AppCompatActivity() {
             Logger.log(e)
         }
     }
-
-
 }

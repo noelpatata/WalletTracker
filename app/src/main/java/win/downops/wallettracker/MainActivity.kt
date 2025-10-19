@@ -21,8 +21,10 @@ import win.downops.wallettracker.data.sqlite.session.SessionService
 import win.downops.wallettracker.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import provideExpenseRepository
+import win.downops.wallettracker.data.api.ApiClient.isServerReachable
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.util.Logger
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -31,29 +33,32 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        try{
+            super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        setSupportActionBar(binding.appBarMain.toolbar)
+            setSupportActionBar(binding.appBarMain.toolbar)
 
-        val drawerLayout: DrawerLayout = binding.drawerLayout
-        val navView: NavigationView = binding.navView
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+            val drawerLayout: DrawerLayout = binding.drawerLayout
+            val navView: NavigationView = binding.navView
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
 
-        appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.nav_categories,
-                R.id.nav_importsheet,
-                R.id.nav_settings,
-                R.id.nav_logout
-            ), drawerLayout
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
-
-        navView.getHeaderView(0)
+            appBarConfiguration = AppBarConfiguration(
+                setOf(
+                    R.id.nav_categories,
+                    R.id.nav_importsheet,
+                    R.id.nav_settings,
+                    R.id.nav_logout
+                ), drawerLayout
+            )
+            setupActionBarWithNavController(navController, appBarConfiguration)
+            navView.setupWithNavController(navController)
+            navView.getHeaderView(0)
+        }catch(e: Exception){
+            Logger.log(e)
+        }
 
 
     }
@@ -90,23 +95,31 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun resetExpenses() {
-        val expenseDAO: ExpenseRepository = provideExpenseRepository(this.applicationContext)
+        try{
+            val expenseDAO: ExpenseRepository = provideExpenseRepository(this.applicationContext)
 
-        when (val result = expenseDAO.deleteAll()) {
-            is AppResult.Success<*> -> {
-                Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
+            when (val result = expenseDAO.deleteAll()) {
+                is AppResult.Success<*> -> {
+                    Toast.makeText(this, "Expenses reset successfully", Toast.LENGTH_SHORT).show()
+                }
+                is AppResult.Error -> {
+                    AppResultHandler.handleError(this, result)
+                }
             }
-            is AppResult.Error -> {
-                AppResultHandler.handleError(this, result)
-            }
+        }catch(e: Exception){
+            Logger.log(e)
         }
     }
 
 
 
     private fun doLogOut() {
-        SessionService(this).use { sSess ->
-            sSess.deleteAll()
+        try{
+            SessionService(this).use { sSess ->
+                sSess.deleteAll()
+            }
+        }catch(e: Exception){
+            Logger.log(e)
         }
 
     }
