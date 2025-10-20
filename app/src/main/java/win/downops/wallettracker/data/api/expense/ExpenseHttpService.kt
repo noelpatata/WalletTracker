@@ -22,8 +22,8 @@ import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ExpenseHttpService @Inject constructor(
-    @ApplicationContext private val context: Context
-) : BaseHttpService<Expense>(context),
+    @ApplicationContext context: Context?
+) : BaseHttpService(context),
     ExpenseRepository{
 
     override suspend fun getById(expenseId: Long): AppResult<Expense?> {

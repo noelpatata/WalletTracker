@@ -48,8 +48,12 @@ class CategoriesExpensesFragment() : Fragment() {
     var categoryId: Long = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initObservers()
+        try{
+            super.onViewCreated(view, savedInstanceState)
+            initObservers()
+        }catch(e: Exception){
+            Logger.log(e)
+        }
     }
 
     private fun initObservers(){
@@ -119,15 +123,18 @@ class CategoriesExpensesFragment() : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
+        try{
+            _binding = FragmentCategoriesexpensesBinding.inflate(inflater, container, false)
 
-        val args : Bundle = requireArguments()
-        categoryId = args.getLong("catId")
-        initListeners()
-        loadData()
+            val args : Bundle = requireArguments()
+            categoryId = args.getLong("catId")
+            initListeners()
+            loadData()
+        }catch(e: Exception){
+            Logger.log(e)
+        }
 
-        val root: View = binding.root
-        return root
+        return binding.root
     }
 
 

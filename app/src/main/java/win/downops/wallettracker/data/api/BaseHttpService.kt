@@ -14,12 +14,11 @@ import com.google.gson.GsonBuilder
 import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
 
 @RequiresApi(Build.VERSION_CODES.O)
-abstract class BaseHttpService<T>(context: Context) {
-    private lateinit var privateKey: String
-    protected lateinit var publicKey: String
-    protected lateinit var cipheredText: String
-    protected lateinit var token: String
-    protected var userId: Int = 0
+abstract class BaseHttpService(context: Context?) {
+    private var privateKey: String
+    protected var publicKey: String
+    protected var cipheredText: String
+    protected var token: String
 
     init {
         SessionService(context).getFirstSession()?.let {
@@ -58,16 +57,6 @@ abstract class BaseHttpService<T>(context: Context) {
             tag
         )
     }
-
-
-    protected fun verifyData(response: CipheredResponse?): String {
-        return if (response?.signature != null && verifySignature(response.signature)) {
-            decryptData(response.encrypted_data)
-        } else {
-            ""
-        }
-    }
-
 
     protected inline fun <reified R> encryptData(data: R): CipheredRequest? {
         return Cryptography().hybridEncrypt(publicKey, GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))

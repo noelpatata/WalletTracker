@@ -23,6 +23,7 @@ import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.databinding.FragmentCreateexpenseBinding
 import win.downops.wallettracker.ui.adapters.ComboCategoriasAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import provideExpenseCategoryRepository
 import provideExpenseRepository
@@ -37,19 +38,24 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-
+@AndroidEntryPoint
 class CreateExpenseFragment : Fragment() {
     private val viewModel: CreateExpenseViewModel by viewModels()
     var isFromCatForm: Boolean = false
     var expenseId: Long = 0
+    var categoryId: Long = 0
 
     private var _binding: FragmentCreateexpenseBinding? = null
 
     private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initObservers()
+        try{
+            super.onViewCreated(view, savedInstanceState)
+            initObservers()
+        }catch(e: Exception){
+            Logger.log(e)
+        }
     }
 
     private fun initObservers(){
@@ -69,6 +75,7 @@ class CreateExpenseFragment : Fragment() {
                 is AppResult.Success -> {
                     val categories = result.data
                     loadSpinner(categories)
+                    selectCategory(categoryId)
                 }
                 is AppResult.Error -> {
                     AppResultHandler.handleError(requireContext(), result)
@@ -114,21 +121,17 @@ class CreateExpenseFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        try{
+            _binding = FragmentCreateexpenseBinding.inflate(inflater, container, false)
 
+            val args : Bundle? = arguments
+            if(args != null){
+                categoryId = args.getLong("catId")
+                isFromCatForm = categoryId > 0
 
-        var categoryId: Long = -1
-        val args : Bundle? = arguments
-        if(args != null){
-            categoryId = args.getLong("catId")
-            isFromCatForm = categoryId > 0
+                expenseId = args.getLong("expenseId")
+            }
 
-            expenseId = args.getLong("expenseId")
-        }
-
-
-        try {
             initListeners()
             loadData(expenseId)
 
@@ -140,13 +143,12 @@ class CreateExpenseFragment : Fragment() {
             if (expenseId <= 0)
                 binding.inputPrice.requestFocus()
 
-        }
-        catch(e:Exception){
+        }catch(e: Exception){
             Logger.log(e)
-            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }
 
-        return root
+
+        return binding.root
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -294,6 +296,21 @@ class CreateExpenseFragment : Fragment() {
             val expense = getExpense()
             viewModel.createExpense(expense)
         } catch (e: Exception) {
+            Logger.log(e)
+            Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun selectCategory(categoryId: Long) {
+        try{
+            if(categoryId > 0){
+                val adapter = binding.comboCategorias.adapter as ComboCategoriasAdapter
+                val pos = adapter.getById(categoryId)
+                if(pos >= 0)
+                    binding.comboCategorias.setSelection(pos)
+            }
+
+        }catch (e: Exception){
             Logger.log(e)
             Toast.makeText(requireContext(), unexpectedError, Toast.LENGTH_LONG).show()
         }

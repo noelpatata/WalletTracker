@@ -17,6 +17,7 @@ import win.downops.wallettracker.R
 import win.downops.wallettracker.databinding.FragmentCategoriesBinding
 import win.downops.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
@@ -25,7 +26,7 @@ import win.downops.wallettracker.util.Logger
 import win.downops.wallettracker.util.Messages.unexpectedError
 import java.util.Collections
 
-
+@AndroidEntryPoint
 class CategoriesFragment : Fragment() {
     private val viewModel: CategoriesViewModel by viewModels()
     private var _binding: FragmentCategoriesBinding? = null
@@ -33,8 +34,13 @@ class CategoriesFragment : Fragment() {
     private var snackbar: Snackbar? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initObservers()
+        try{
+            super.onViewCreated(view, savedInstanceState)
+            initObservers()
+
+        }catch(e: Exception){
+            Logger.log(e)
+        }
     }
 
     private fun initObservers(){
@@ -73,12 +79,13 @@ class CategoriesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
-
-        initListeners()
-
-
-        loadData()
+        try{
+            _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
+            initListeners()
+            loadData()
+        }catch(e: Exception){
+            Logger.log(e)
+        }
 
         return binding.root
     }

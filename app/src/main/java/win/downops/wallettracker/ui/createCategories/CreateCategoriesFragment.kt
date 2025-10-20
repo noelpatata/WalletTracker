@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import dagger.hilt.android.AndroidEntryPoint
 import win.downops.wallettracker.R
 import win.downops.wallettracker.databinding.FragmentCreatecategoriesBinding
 import win.downops.wallettracker.data.models.AppResult
@@ -20,15 +21,19 @@ import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.util.Logger
 import win.downops.wallettracker.util.Messages.unexpectedError
 
-
+@AndroidEntryPoint
 class CreateCategoriesFragment : Fragment() {
     private val viewModel: CreateCategoriesViewModel by viewModels()
     private var _binding: FragmentCreatecategoriesBinding? = null
     private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initObservers()
+        try{
+            super.onViewCreated(view, savedInstanceState)
+            initObservers()
+        }catch(e: Exception){
+            Logger.log(e)
+        }
     }
 
     private fun initObservers(){
@@ -50,18 +55,24 @@ class CreateCategoriesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
+        try{
 
-        initListeners()
+            _binding = FragmentCreatecategoriesBinding.inflate(inflater, container, false)
 
-        binding.inputName.requestFocus()
-        binding.root.post {
-            val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
-            imm?.showSoftInput(binding.inputName, InputMethodManager.SHOW_IMPLICIT)
+            initListeners()
+
+            binding.inputName.requestFocus()
+            binding.root.post {
+                val imm = ContextCompat.getSystemService(requireContext(), InputMethodManager::class.java)
+                imm?.showSoftInput(binding.inputName, InputMethodManager.SHOW_IMPLICIT)
+            }
+
+        }catch(e: Exception){
+            Logger.log(e)
         }
 
-        val root: View = binding.root
-        return root
+        return binding.root
+
     }
 
     private fun initListeners() {

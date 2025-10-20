@@ -19,8 +19,8 @@ import win.downops.wallettracker.data.models.ExpenseCategory
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ExpenseCategoryHttpService @Inject constructor(
-    @ApplicationContext private val context: Context
-) : BaseHttpService<ExpenseCategory>(context),
+    @ApplicationContext context: Context?
+) : BaseHttpService(context),
     ExpenseCategoryRepository {
 
     override suspend fun getAll(): AppResult<List<ExpenseCategory>> {

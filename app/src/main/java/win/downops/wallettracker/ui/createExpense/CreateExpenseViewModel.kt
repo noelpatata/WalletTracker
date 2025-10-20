@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.os.Build
 import androidx.annotation.RequiresApi
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.models.AppResult
@@ -14,6 +15,7 @@ import win.downops.wallettracker.data.models.ExpenseCategory
 import win.downops.wallettracker.di.ExpenseCategoryRepositoryProvider
 import win.downops.wallettracker.di.ExpenseRepositoryProvider
 
+@HiltViewModel
 class CreateExpenseViewModel @Inject constructor(
     private val expenseRepositoryProvider: ExpenseRepositoryProvider,
     private val categoryRepositoryProvider: ExpenseCategoryRepositoryProvider
@@ -31,7 +33,6 @@ class CreateExpenseViewModel @Inject constructor(
     private val _createExpenseResult = MutableLiveData<AppResult<Expense?>>()
     val createExpenseResult: LiveData<AppResult<Expense?>> = _createExpenseResult
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun createExpense(expense: Expense) = viewModelScope.launch {
         val repo = expenseRepositoryProvider.get()
         _createExpenseResult.postValue(repo.create(expense))
@@ -40,7 +41,6 @@ class CreateExpenseViewModel @Inject constructor(
     private val _editExpenseResult = MutableLiveData<AppResult<Expense?>>()
     val editExpenseResult: LiveData<AppResult<Expense?>> = _editExpenseResult
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun editExpense(expense: Expense) = viewModelScope.launch {
         val repo = expenseRepositoryProvider.get()
         _editExpenseResult.postValue(repo.edit(expense))
@@ -49,7 +49,6 @@ class CreateExpenseViewModel @Inject constructor(
     private val _deleteExpenseResult = MutableLiveData<AppResult<Unit>>()
     val deleteExpenseResult: LiveData<AppResult<Unit>> = _deleteExpenseResult
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun deleteExpense(id: Long) = viewModelScope.launch {
         val repo = expenseRepositoryProvider.get()
         _deleteExpenseResult.postValue(repo.deleteById(id))
@@ -58,7 +57,6 @@ class CreateExpenseViewModel @Inject constructor(
     private val _getCategoriesResult = MutableLiveData<AppResult<List<ExpenseCategory>>>()
     val getCategoriesResult: LiveData<AppResult<List<ExpenseCategory>>> = _getCategoriesResult
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getCategories() = viewModelScope.launch {
         val repo = categoryRepositoryProvider.get()
         _getCategoriesResult.postValue(repo.getAll())

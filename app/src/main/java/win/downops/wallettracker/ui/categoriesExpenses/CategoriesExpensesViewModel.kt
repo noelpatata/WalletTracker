@@ -25,7 +25,6 @@ class CategoriesExpensesViewModel @Inject constructor(
     private val _deleteResult = MutableLiveData<AppResult<Unit>>()
     val deleteResult: LiveData<AppResult<Unit>> = _deleteResult
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun deleteExpense(expenseId: Long) = viewModelScope.launch {
         val repo = expenseRepositoryProvider.get()
         _deleteResult.postValue(repo.deleteById(expenseId))

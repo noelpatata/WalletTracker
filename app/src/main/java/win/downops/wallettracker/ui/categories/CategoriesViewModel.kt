@@ -19,7 +19,6 @@ class CategoriesViewModel @Inject constructor(
 
     private val _getCategoriesResult = MutableLiveData<AppResult<List<ExpenseCategory>>>()
     val getCategoriesResult: LiveData<AppResult<List<ExpenseCategory>>> = _getCategoriesResult
-
     fun getCategories() = viewModelScope.launch {
         val repo = expenseCategoryRepositoryProvider.get()
         _getCategoriesResult.postValue(repo.getAll())
@@ -27,7 +26,6 @@ class CategoriesViewModel @Inject constructor(
 
     private val _editCategoryResult = MutableLiveData<AppResult<ExpenseCategory?>>()
     val editCategoryResult: LiveData<AppResult<ExpenseCategory?>> = _editCategoryResult
-
     fun editCategory(category: ExpenseCategory) = viewModelScope.launch {
         val repo = expenseCategoryRepositoryProvider.get()
         _editCategoryResult.postValue(repo.edit(category))
@@ -35,7 +33,6 @@ class CategoriesViewModel @Inject constructor(
 
     private val _deleteCategoryResult = MutableLiveData<AppResult<Unit>>()
     val deleteCategoryResult: LiveData<AppResult<Unit>> = _deleteCategoryResult
-
     fun deleteCategory(id: Long) = viewModelScope.launch {
         val repo = expenseCategoryRepositoryProvider.get()
         _deleteCategoryResult.postValue(repo.deleteById(id))
