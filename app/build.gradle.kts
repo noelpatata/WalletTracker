@@ -42,7 +42,7 @@ android {
 
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"https://api.wallettracker.downops.win\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://api.wallettracker.downops.win\"")
             buildConfigField("String", "API_VERSION", "\"1\"")
             buildConfigField("String", "DEFAULT_USER", "\"\"")
             buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")

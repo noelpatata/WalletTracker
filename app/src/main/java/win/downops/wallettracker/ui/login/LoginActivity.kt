@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import win.downops.wallettracker.BuildConfig
+import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
 import win.downops.wallettracker.util.Logger
@@ -45,6 +46,10 @@ class LoginActivity : AppCompatActivity() {
             binding.loginForm.visibility = View.VISIBLE
 
             initListeners()
+
+            lifecycleScope.launch {
+                binding.offlineMode.isActivated = !ApiClient.isServerReachable()
+            }
 
             if(BuildConfig.DEBUG){
                 lifecycleScope.launch {
@@ -78,7 +83,7 @@ class LoginActivity : AppCompatActivity() {
 
             }
 
-            binding.inputPassword.setOnEditorActionListener { v, actionId, event -> //cuando se presiona enter
+            binding.inputPassword.setOnEditorActionListener { v, actionId, event ->
                 if (actionId == EditorInfo.IME_ACTION_DONE ||
                     (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
 
@@ -103,8 +108,6 @@ class LoginActivity : AppCompatActivity() {
                     sSess.close()
 
                     startMainActivity()
-
-
                 }
             }
         }catch(e: Exception){
