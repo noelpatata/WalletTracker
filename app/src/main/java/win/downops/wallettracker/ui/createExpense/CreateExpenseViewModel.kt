@@ -9,6 +9,8 @@ import androidx.annotation.RequiresApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
+import win.downops.wallettracker.data.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Expense
 import win.downops.wallettracker.data.models.ExpenseCategory
@@ -17,8 +19,8 @@ import win.downops.wallettracker.di.ExpenseRepositoryProvider
 
 @HiltViewModel
 class CreateExpenseViewModel @Inject constructor(
-    private val expenseRepositoryProvider: ExpenseRepositoryProvider,
-    private val categoryRepositoryProvider: ExpenseCategoryRepositoryProvider
+    private val expenseRepo: ExpenseRepository,
+    private val categoryRepo: ExpenseCategoryRepository
 ) : ViewModel() {
 
     private val _getExpenseResult = MutableLiveData<AppResult<Expense?>>()
@@ -26,39 +28,34 @@ class CreateExpenseViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getExpense(id: Long) = viewModelScope.launch {
-        val repo = expenseRepositoryProvider.get()
-        _getExpenseResult.postValue(repo.getById(id))
+        _getExpenseResult.postValue(expenseRepo.getById(id))
     }
 
     private val _createExpenseResult = MutableLiveData<AppResult<Expense?>>()
     val createExpenseResult: LiveData<AppResult<Expense?>> = _createExpenseResult
 
     fun createExpense(expense: Expense) = viewModelScope.launch {
-        val repo = expenseRepositoryProvider.get()
-        _createExpenseResult.postValue(repo.create(expense))
+        _createExpenseResult.postValue(expenseRepo.create(expense))
     }
 
     private val _editExpenseResult = MutableLiveData<AppResult<Expense?>>()
     val editExpenseResult: LiveData<AppResult<Expense?>> = _editExpenseResult
 
     fun editExpense(expense: Expense) = viewModelScope.launch {
-        val repo = expenseRepositoryProvider.get()
-        _editExpenseResult.postValue(repo.edit(expense))
+        _editExpenseResult.postValue(expenseRepo.edit(expense))
     }
 
     private val _deleteExpenseResult = MutableLiveData<AppResult<Unit>>()
     val deleteExpenseResult: LiveData<AppResult<Unit>> = _deleteExpenseResult
 
     fun deleteExpense(id: Long) = viewModelScope.launch {
-        val repo = expenseRepositoryProvider.get()
-        _deleteExpenseResult.postValue(repo.deleteById(id))
+        _deleteExpenseResult.postValue(expenseRepo.deleteById(id))
     }
 
     private val _getCategoriesResult = MutableLiveData<AppResult<List<ExpenseCategory>>>()
     val getCategoriesResult: LiveData<AppResult<List<ExpenseCategory>>> = _getCategoriesResult
 
     fun getCategories() = viewModelScope.launch {
-        val repo = categoryRepositoryProvider.get()
-        _getCategoriesResult.postValue(repo.getAll())
+        _getCategoriesResult.postValue(categoryRepo.getAll())
     }
 }

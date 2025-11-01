@@ -14,14 +14,13 @@ import win.downops.wallettracker.di.ExpenseCategoryRepositoryProvider
 
 @HiltViewModel
 class CreateCategoriesViewModel @Inject constructor(
-    private val expenseCategoryProvider: ExpenseCategoryRepositoryProvider
+    private val repo: ExpenseCategoryRepository
 ) : ViewModel() {
 
     private val _createCategoryResult = MutableLiveData<AppResult<ExpenseCategory?>>()
     val createCategoryResult: LiveData<AppResult<ExpenseCategory?>> = _createCategoryResult
 
     fun createCategory(category: ExpenseCategory) = viewModelScope.launch {
-        val repo = expenseCategoryProvider.get()
         _createCategoryResult.postValue(repo.create(category))
     }
 }

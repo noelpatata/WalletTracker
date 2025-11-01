@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -13,12 +14,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import win.downops.wallettracker.R
 import win.downops.wallettracker.databinding.FragmentCategoriesBinding
 import win.downops.wallettracker.ui.adapters.RViewCategoriesAdapter
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import win.downops.wallettracker.MainActivity
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
 import win.downops.wallettracker.util.AppResultHandler
@@ -38,6 +41,12 @@ class CategoriesFragment : Fragment() {
             super.onViewCreated(view, savedInstanceState)
             initObservers()
 
+            requireActivity().onBackPressedDispatcher.addCallback(
+                viewLifecycleOwner
+            ) {
+                showLogoutConfirmationDialog()
+            }
+
         }catch(e: Exception){
             Logger.log(e)
         }
@@ -50,6 +59,7 @@ class CategoriesFragment : Fragment() {
                     displayCategories(result.data)
                 }
                 is AppResult.Error -> {
+                    Logger.log(result.message)
                     AppResultHandler.handleError(requireContext(), result)
                 }
             }
@@ -93,7 +103,6 @@ class CategoriesFragment : Fragment() {
     private fun loadData() {
         binding.loadingPanel.visibility = View.VISIBLE
         binding.rviewCategories.visibility = View.GONE
-
         viewModel.getCategories()
 
         binding.loadingPanel.visibility = View.GONE
@@ -224,6 +233,20 @@ class CategoriesFragment : Fragment() {
             loadData()
             binding.swiperefresh.isRefreshing = false
         }
+    }
+
+    private fun showLogoutConfirmationDialog() {
+        MaterialAlertDialogBuilder(requireContext(), R.style.ButtonsCustomColor)
+            .setTitle("Log out")
+            .setMessage("Are you sure you want to log out?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                (requireActivity() as MainActivity).doLogOut()
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     override fun onDestroyView() {

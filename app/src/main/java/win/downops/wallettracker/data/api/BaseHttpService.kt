@@ -1,50 +1,45 @@
 package win.downops.wallettracker.data.api
 
 import Cryptography
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 import win.downops.wallettracker.data.api.communication.responses.CipheredResponse
-import win.downops.wallettracker.data.sqlite.session.SessionService
 import com.google.gson.GsonBuilder
+import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
+import win.downops.wallettracker.data.models.Session
 
 @RequiresApi(Build.VERSION_CODES.O)
-abstract class BaseHttpService(context: Context?) {
+abstract class BaseHttpService(
+    protected val sessionRepository: SessionRepository
+) {
 
-    private val sessionService = SessionService(context)
-
-    private val privateKey: String
-        get() = sessionService.getFirstSession()?.privateKey
+    protected val session: Session
+        get() = sessionRepository.getFirstSession()
             ?: throw Exception("No session found")
 
-    protected val publicKey: String
-        get() = sessionService.getFirstSession()?.serverPublicKey
-            ?: throw Exception("No session found")
+    protected fun getPrivateKey(): String = session.privateKey
+    protected fun getPublicKey(): String = session.serverPublicKey
+    protected fun getToken(): String = session.token
+    protected fun getCipheredText(): String = Cryptography().sign(getPrivateKey())
 
-    protected val token: String
-        get() = sessionService.getFirstSession()?.token
-            ?: throw Exception("No session found")
-
-    protected val cipheredText: String
-        get() = Cryptography().sign(privateKey)
-
-    private fun verifySignature(signature: String) = Cryptography().verify(publicKey, signature)
+    private fun verifySignature(signature: String) = Cryptography().verify(getPublicKey(), signature)
 
     private fun decryptData(data: CipheredRequest?): String {
-        val (encryptedAesKey, iv, ciphertext, tag) = data ?: throw IllegalArgumentException("CipheredRequest is null")
+        val (encryptedAesKey, iv, ciphertext, tag) = data
+            ?: throw IllegalArgumentException("CipheredRequest is null")
         if (encryptedAesKey.isNullOrEmpty() || iv.isNullOrEmpty() || ciphertext.isNullOrEmpty() || tag.isNullOrEmpty())
             throw IllegalStateException("Invalid CipheredRequest")
-        return Cryptography().hybridDecrypt(privateKey, encryptedAesKey, iv, ciphertext, tag)
+        return Cryptography().hybridDecrypt(getPrivateKey(), encryptedAesKey, iv, ciphertext, tag)
     }
 
     protected inline fun <reified R> encryptData(data: R): CipheredRequest? =
-        Cryptography().hybridEncrypt(publicKey, GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))
+        Cryptography().hybridEncrypt(getPublicKey(), GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))
 
     protected fun validateCipheredResponse(response: BaseResponse<CipheredResponse>?): String {
-        val ciphered = response?.data ?: throw Exception("No data")
-        if (ciphered.signature.isNullOrEmpty()) throw Exception("Invalid data")
+        val ciphered = response?.data ?: throw Exception("Unexpected error")
+        if (ciphered.signature.isNullOrEmpty()) throw Exception("Invalid signature")
         val decrypted = decryptData(ciphered.encrypted_data)
         if (!verifySignature(ciphered.signature)) throw Exception("Invalid signature")
         return decrypted

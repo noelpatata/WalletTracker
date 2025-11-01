@@ -1,5 +1,6 @@
 package win.downops.wallettracker
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -15,26 +16,25 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.models.AppResult
-import win.downops.wallettracker.data.sqlite.SessionRepository
-import win.downops.wallettracker.di.ExpenseRepositoryProvider
-import win.downops.wallettracker.di.SessionRepositoryProvider
+import win.downops.wallettracker.data.SessionRepository
+import win.downops.wallettracker.ui.login.LoginActivity
 import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.util.Logger
 
 @AndroidEntryPoint
 class MainActivity  : AppCompatActivity() {
     @Inject
-    lateinit var expenseRepositoryProvider: ExpenseRepositoryProvider
     lateinit var expenseRepo: ExpenseRepository
     @Inject
-    lateinit var sessionProvider: SessionRepositoryProvider
     lateinit var sessionRepo: SessionRepository
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -42,11 +42,6 @@ class MainActivity  : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
             super.onCreate(savedInstanceState)
-
-            sessionRepo = sessionProvider.get()
-            lifecycleScope.launch {
-                expenseRepo = expenseRepositoryProvider.get()
-            }
 
             binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
@@ -69,11 +64,6 @@ class MainActivity  : AppCompatActivity() {
             navView.setupWithNavController(navController)
             navView.getHeaderView(0)
 
-            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    showLogoutConfirmationDialog()
-                }
-            })
         }catch(e: Exception){
             Logger.log(e)
         }
@@ -107,21 +97,7 @@ class MainActivity  : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
-    private fun showLogoutConfirmationDialog() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Log out")
-            .setMessage("Are you sure you want to log out?")
-            .setPositiveButton("Yes") { dialog, _ ->
-                doLogOut()
-                dialog.dismiss()
-                finish()
-            }
-            .setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .create()
-            .show()
-    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun resetExpenses() {
         try{
@@ -141,9 +117,12 @@ class MainActivity  : AppCompatActivity() {
 
 
 
-    private fun doLogOut() {
+    fun doLogOut() {
         try{
             sessionRepo.deleteAll()
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
         }catch(e: Exception){
             Logger.log(e)
         }

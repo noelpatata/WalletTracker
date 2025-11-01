@@ -28,6 +28,8 @@
     <string name="button_deleteExpense">Deletes the expense</string>
     <string name="label_username">Usuario</string>
     <string name="label_password">Contraseña</string>
-    <string name="checkbox_fingerprint">Fingerprint</string>
+    <string name="button_fingerprint">Enables/Disables Fingerprint authentication</string>
+    <string name="login_description">Login button</string>
+    <string name="offline_mode_description">Starts the application in offline mode</string>
 
 </resources>

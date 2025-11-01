@@ -32,7 +32,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.141:5000\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000\"")
             buildConfigField("String", "API_VERSION", "\"1\"")
             buildConfigField("String", "DEFAULT_USER", "\"noel\"")
             buildConfigField("String", "DEFAULT_PASSWORD", "\"noelnoel\"")

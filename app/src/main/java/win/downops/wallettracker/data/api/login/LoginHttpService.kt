@@ -1,45 +1,43 @@
 package win.downops.wallettracker.data.api.login
 
+import com.google.gson.GsonBuilder
 import win.downops.wallettracker.data.api.ApiClient
+import win.downops.wallettracker.data.LoginRepository
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
+import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 import win.downops.wallettracker.data.api.communication.responses.LoginResponse
 import win.downops.wallettracker.data.api.communication.responses.ServerPubKeyResponse
+import win.downops.wallettracker.data.models.AppResult
+import win.downops.wallettracker.data.models.ExpenseCategory
 import win.downops.wallettracker.util.Messages.errorFetchingPublicKey
 import win.downops.wallettracker.util.Messages.errorSendingPublicKey
 import win.downops.wallettracker.util.Messages.loginFailedMessage
+import javax.inject.Inject
 
-class LoginHttpService {
+class LoginHttpService @Inject constructor(): LoginRepository {
 
-    suspend fun login(credentials: LoginRequest): LoginResponse {
+    override suspend fun login(credentials: LoginRequest): AppResult<LoginResponse?> {
         val response = ApiClient.login.login(credentials)
-        if (response.isSuccessful) {
-            val body = response.body()
-            if (body?.success == true && body.data != null) {
-                return body.data
-            } else {
-                throw Exception(body?.message ?: loginFailedMessage)
-            }
-        } else {
-            throw Exception("${response.code()}")
-        }
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, body.data)
+        else AppResult.Error(body.message)
     }
 
-    suspend fun setUserClientPubKey(token: String, request: ServerPubKeyRequest) {
+    override suspend fun setUserClientPubKey(token: String, request: ServerPubKeyRequest): AppResult<Unit> {
         val response = ApiClient.login.setUserClientPubKey("Bearer $token", request)
-        val body = response.body()
-        if (!response.isSuccessful || body?.success != true) {
-            throw Exception(body?.message ?: errorSendingPublicKey)
-        }
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, Unit)
+        else AppResult.Error(body.message)
     }
 
-    suspend fun getUserServerPubKey(token: String): ServerPubKeyResponse {
+    override suspend fun getUserServerPubKey(token: String): AppResult<ServerPubKeyResponse?> {
         val response = ApiClient.login.getUserServerPubKey("Bearer $token")
-        val body = response.body()
-        if (response.isSuccessful && body?.success == true && body.data != null) {
-            return body.data
-        } else {
-            throw Exception(body?.message ?: errorFetchingPublicKey)
-        }
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, body.data)
+        else AppResult.Error(body.message)
     }
 }

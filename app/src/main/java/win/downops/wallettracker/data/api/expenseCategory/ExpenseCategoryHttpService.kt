@@ -14,18 +14,19 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import retrofit2.Response
 import win.downops.wallettracker.data.ExpenseCategoryRepository
+import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ExpenseCategoryHttpService @Inject constructor(
-    @ApplicationContext context: Context?
-) : BaseHttpService(context),
+    sessionRepository: SessionRepository
+) : BaseHttpService(sessionRepository),
     ExpenseCategoryRepository {
 
     override suspend fun getAll(): AppResult<List<ExpenseCategory>> {
         return try {
-            val response = ApiClient.expenseCategory.getExpenseCategories("Bearer $token", cipheredText)
+            val response = ApiClient.expenseCategory.getExpenseCategories("Bearer ${this.getToken()}", this.getCipheredText())
             parseListResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -39,7 +40,7 @@ class ExpenseCategoryHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(ExpenseCategoryIdRequest(catId))
                 ?: return AppResult.Error("Authentication error")
-            val response = ApiClient.expenseCategory.getExpenseCategoryById("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expenseCategory.getExpenseCategoryById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -55,7 +56,7 @@ class ExpenseCategoryHttpService @Inject constructor(
                 ?: return AppResult.Error("Authentication error")
 
 
-            val response = ApiClient.expenseCategory.createExpenseCategories("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expenseCategory.createExpenseCategories("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -74,7 +75,7 @@ class ExpenseCategoryHttpService @Inject constructor(
                 )
             )?: return AppResult.Error("Authentication error")
 
-            val response = ApiClient.expenseCategory.editName("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expenseCategory.editName("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -92,8 +93,7 @@ class ExpenseCategoryHttpService @Inject constructor(
                 )
             )?: return AppResult.Error("Authentication error")
 
-            val response = ApiClient.expenseCategory.deleteById("Bearer $token", cipheredText, cipheredData)
-            if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
+            val response = ApiClient.expenseCategory.deleteById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
 
             val body = response.body() ?: return AppResult.Error("No data")
 
@@ -109,7 +109,6 @@ class ExpenseCategoryHttpService @Inject constructor(
 
     private fun parseObjectResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<ExpenseCategory?> {
         try{
-            if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
             val body = response.body() ?: return AppResult.Error("No data")
             val jsonData = validateCipheredResponse(body)
             val parsed = GsonBuilder().create()
@@ -124,7 +123,6 @@ class ExpenseCategoryHttpService @Inject constructor(
 
     private fun parseListResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<List<ExpenseCategory>> {
         try{
-            if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
             val body = response.body() ?: return AppResult.Error("No data")
             val jsonData = validateCipheredResponse(body)
             val parsed = GsonBuilder().create()

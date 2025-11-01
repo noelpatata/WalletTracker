@@ -16,14 +16,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import retrofit2.Response
 import win.downops.wallettracker.data.ExpenseRepository
+import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Expense
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ExpenseHttpService @Inject constructor(
-    @ApplicationContext context: Context?
-) : BaseHttpService(context),
+    sessionRepository: SessionRepository
+) : BaseHttpService(sessionRepository),
     ExpenseRepository{
 
     override suspend fun getById(expenseId: Long): AppResult<Expense?> {
@@ -34,7 +35,7 @@ class ExpenseHttpService @Inject constructor(
                 )
             )?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
 
-            val response = ApiClient.expense.getById("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expense.getById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -52,7 +53,7 @@ class ExpenseHttpService @Inject constructor(
                 )
             )?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
 
-            val response = ApiClient.expense.getByCatId("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expense.getByCatId("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseListResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -73,7 +74,7 @@ class ExpenseHttpService @Inject constructor(
                 )
             ) ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
 
-            val response = ApiClient.expense.create("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expense.create("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -95,7 +96,7 @@ class ExpenseHttpService @Inject constructor(
                 )
             )?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
 
-            val response = ApiClient.expense.edit("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expense.edit("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(
@@ -110,7 +111,7 @@ class ExpenseHttpService @Inject constructor(
             val cipheredData = encryptData(ExpenseIdRequest(expenseId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
 
-            val response = ApiClient.expense.deleteById("Bearer $token", cipheredText, cipheredData)
+            val response = ApiClient.expense.deleteById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
             val body = response.body() ?: return AppResult.Error("No data")
 
             if (body.success) AppResult.Success(body.message, Unit)
@@ -125,7 +126,7 @@ class ExpenseHttpService @Inject constructor(
 
     override suspend fun deleteAll(): AppResult<Unit> {
         return try {
-            val response = ApiClient.expense.deleteAll("Bearer $token", cipheredText)
+            val response = ApiClient.expense.deleteAll("Bearer ${this.getToken()}", this.getCipheredText())
             val body = response.body() ?: return AppResult.Error("No data")
 
             if (body.success) AppResult.Success(body.message, Unit)
@@ -140,7 +141,6 @@ class ExpenseHttpService @Inject constructor(
 
     private fun parseObjectResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<Expense?> {
         try{
-            if (!response.isSuccessful) return AppResult.Error("Network error: ${response.code()}")
             val body = response.body() ?: return AppResult.Error("No data")
             val jsonData = validateCipheredResponse(body)
             val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
@@ -157,10 +157,6 @@ class ExpenseHttpService @Inject constructor(
         response: Response<BaseResponse<CipheredResponse>>
     ): AppResult<List<Expense>> {
         try{
-            if (!response.isSuccessful) {
-                return AppResult.Error("Network error: ${response.code()}")
-            }
-
             val body = response.body() ?: return AppResult.Error("No data")
             val jsonData = validateCipheredResponse(body)
 
