@@ -7,74 +7,64 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.annotation.RequiresApi
+import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
 import win.downops.wallettracker.data.sqlite.DatabaseHelper
 import win.downops.wallettracker.data.models.Session
+import win.downops.wallettracker.data.sqlite.SessionRepository
 import java.io.Closeable
-import java.sql.SQLException
 import kotlin.Int
 import kotlin.Long
-import kotlin.Throws
 import kotlin.arrayOf
 
 
-class SessionService : Closeable{
+class SessionService @Inject constructor(@ApplicationContext context: Context?) : Closeable, SessionRepository {
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
-    constructor(context: Context?) {
+    init {
         dbHelper = DatabaseHelper(context)
-        database = dbHelper?.getWritableDatabase()
+        database = dbHelper?.writableDatabase
     }
-
-    // Open the database for read/write operations
-    @Throws(SQLException::class)
-    fun open() {
-        database = dbHelper?.getWritableDatabase()
-    }
-
-    // Close the database
     override fun close() {
         dbHelper?.close()
     }
 
-    // Update an existing Session in the database
-    fun edit(session: Session): Int {
+    override fun edit(session: Session): Int {
         val values = ContentValues()
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
-        values.put("remember", if (session.remember) 1 else 0)
+        values.put("cipheredCredentials", session.cipheredCredentials)
+        values.put("fingerPrint", if (session.fingerPrint) 1 else 0)
 
         return database!!.update("Session", values, "id = ?", arrayOf(session.id.toString()))
     }
 
 
-    // Insert a new Session into the database
-    fun insert(session: Session): Long {
+    override fun insert(session: Session): Long {
         val values = ContentValues()
         values.put("token", session.token)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
-        values.put("remember", if (session.remember) 1 else 0)
-        values.put("online", if (session.online) 1 else 0)
+        values.put("cipheredCredentials", session.cipheredCredentials)
+        values.put("fingerPrint", if (session.fingerPrint) 1 else 0)
         return database!!.insert("Session", null, values)
     }
 
 
-    fun deleteAll() {
+    override fun deleteAll() {
         database!!.delete("Session", null, null)
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getFirstSession(): Session? {
+    override fun getFirstSession(): Session? {
         var cat: Session? = null
         val cursor = database!!.rawQuery("SELECT * FROM Session LIMIT 1", null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            if(cursor.isFirst){
-                cat = cursor(cursor)
-            }
-            cursor.close()
+        cursor.moveToFirst()
+        if(cursor.isFirst){
+            cat = cursor(cursor)
         }
+        cursor.close()
         return cat
     }
 
@@ -86,8 +76,8 @@ class SessionService : Closeable{
             token = cursor.getString(cursor.getColumnIndex("token"))
             privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
             serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
-            remember = cursor.getInt(cursor.getColumnIndex("remember")) == 1
-            online = cursor.getInt(cursor.getColumnIndex("online")) == 1
+            cipheredCredentials = cursor.getString(cursor.getColumnIndex("cipheredCredentials"))
+            fingerPrint = cursor.getInt(cursor.getColumnIndex("fingerPrint")) == 1
         }
     }
 

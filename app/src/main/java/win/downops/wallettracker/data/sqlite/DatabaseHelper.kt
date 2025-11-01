@@ -19,14 +19,15 @@ class DatabaseHelper(context: Context?) :
     }
     companion object {
         private const val DATABASE_NAME = "walletTracker.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
         private const val TABLE_SESSION = "Session"
         private const val CREATE_TABLE_SESSION = "CREATE TABLE " + TABLE_SESSION + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "online Integer, " +
                 "token TEXT, " +
                 "privateKey TEXT, " +
-                "remember INTEGER, " +
+                "cipheredCredentials TEXT, " +
+                "fingerPrint INTEGER, " +
                 "serverPublicKey TEXT);"
         private const val TABLE_EXPENSE = "Expense"
         private const val TABLE_EXPENSE_CATEGORY = "ExpenseCategory"

@@ -5,6 +5,6 @@ class Session {
     var token: String = ""
     var privateKey: String = ""
     var serverPublicKey: String = ""
-    var remember: Boolean = false
-    var online: Boolean = false
+    var cipheredCredentials: String = ""
+    var fingerPrint: Boolean = false
 }

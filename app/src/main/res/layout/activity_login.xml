@@ -96,6 +96,11 @@
                 app:borderWidth="2dp"
                 app:backgroundTint="@color/black"
                 android:layout_gravity="center" />
+            <CheckBox
+                android:id="@+id/fingerprint_auth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/checkbox_fingerprint"/>
         </LinearLayout>
 
 
