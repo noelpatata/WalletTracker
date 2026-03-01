@@ -56,6 +56,7 @@ class MainActivity  : AppCompatActivity() {
                 setOf(
                     R.id.nav_categories,
                     R.id.nav_importsheet,
+                    R.id.nav_metrics,
                     R.id.nav_settings,
                     R.id.nav_logout
                 ), drawerLayout
