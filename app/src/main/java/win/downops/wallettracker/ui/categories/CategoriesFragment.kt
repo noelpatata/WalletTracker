@@ -165,7 +165,7 @@ class CategoriesFragment : Fragment() {
                             if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
                                 snackbar = null
                                 deleteCategory(delCat.getId())
-                                loadTotal()
+                                if (_binding != null) loadTotal()
                             }
                         }
                     })
@@ -251,9 +251,8 @@ class CategoriesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        snackbar?.dismiss()
+        snackbar = null
         _binding = null
-        if (isAdded) {
-            snackbar?.dismiss()
-        }
     }
 }
