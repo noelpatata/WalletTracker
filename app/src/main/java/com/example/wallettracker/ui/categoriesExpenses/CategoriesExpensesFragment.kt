@@ -281,14 +281,14 @@ class CategoriesExpensesFragment() : Fragment() {
             val categoryDAO: ExpenseCategoryRepository =
                 provideExpenseCategoryRepository(requireContext())
             categoryDAO.deleteById(
-                onSuccess = { lista ->
+                onSuccess = {
+                    findNavController().navigate(R.id.nav_categories)
                 },
                 onFailure = { error ->
                     Toast.makeText(requireContext(), error.message, Toast.LENGTH_LONG).show()
                 },
                 catId = categoryId
             )
-            findNavController().navigate(R.id.nav_categories)
         }catch (e:Exception){
             Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
         }
