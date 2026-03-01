@@ -1,15 +1,45 @@
+# Android/Gradle
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration
 local.properties
+.idea/
+*.iws
+*.ipr
+*.hprof
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Kotlin/Java output
+out/
+
+# Android Studio generated files
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# NDK
+obj/
+
+# Google Services
+google-services.json
+
+# Kotlin specific
+*.kotlin_module
+
+# Jetpack Compose tooling
+*.db
+*.db-journal

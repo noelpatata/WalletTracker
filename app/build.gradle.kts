@@ -1,24 +1,51 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+val majorVersion = 2
+val minorVersion = 1
+val patchVersion = 0
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
-    namespace = "com.example.wallettracker"
-    compileSdk = 35
+    namespace = "win.downops.wallettracker"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.wallettracker"
+        applicationId = "win.downops.wallettracker"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = majorVersion * 10000 + minorVersion * 100 + patchVersion
+        versionName = "$majorVersion.$minorVersion.$patchVersion"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000\"")
+            buildConfigField("String", "API_VERSION", "\"1\"")
+            buildConfigField("String", "DEFAULT_USER", "\"noel\"")
+            buildConfigField("String", "DEFAULT_PASSWORD", "\"noelnoel\"")
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"http://api.wallettracker.downops.win\"")
+            buildConfigField("String", "API_VERSION", "\"1\"")
+            buildConfigField("String", "DEFAULT_USER", "\"\"")
+            buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -30,19 +57,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        viewBinding = true
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
     }
 }
 
 dependencies {
-
-
-
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -63,4 +85,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.swiperefreshlayout)
 
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.biometric)
 }
