@@ -57,6 +57,6 @@ class CategoriesExpensesViewModel @Inject constructor(
     val deleteExpenseCategoryResult: LiveData<AppResult<Unit>> = _deleteExpenseCategoryResult
 
     fun deleteExpenseCategory(categoryId: Long) = viewModelScope.launch {
-        _deleteExpenseCategoryResult.postValue(expenseRepo.deleteById(categoryId))
+        _deleteExpenseCategoryResult.postValue(categoryRepo.deleteById(categoryId))
     }
 }

@@ -87,10 +87,6 @@ class LoginActivity : AppCompatActivity() {
                 sessionRepo.deleteAll()
                 navigateToMain()
             }
-
-            lifecycleScope.launch {
-                offlineMode.isEnabled = !ApiClient.isServerReachable()
-            }
         }
     }
 
