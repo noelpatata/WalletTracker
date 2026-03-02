@@ -16,9 +16,9 @@ activity = "1.11.0"
 ui-android = "1.9.4"
 swiperefreshlayout = "1.2.0-beta01"
 biometricDependency = "1.4.0-alpha04"
-androidApplicationGradlePluguin = "8.10.1"
+androidApplicationGradlePluguin = "9.0.1"
 kotlinAndroidGradlePluguin = "2.2.21"
-kspGradlePluguin = "2.2.20-2.0.4"
+kspGradlePluguin = "2.3.2"
 hiltGradlePluguin = "2.57.2"
 
 [plugins]
