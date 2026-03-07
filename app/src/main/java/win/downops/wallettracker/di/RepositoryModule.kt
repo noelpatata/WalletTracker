@@ -2,6 +2,7 @@ package win.downops.wallettracker.di
 
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import win.downops.wallettracker.data.ExpenseCategoryRepository
@@ -39,4 +40,13 @@ abstract class RepositoryModule {
     abstract fun bindExpenseCategoryRepository(
         impl: ExpenseCategoryRepositoryProvider
     ): ExpenseCategoryRepository
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideAppMode(sessionRepo: SessionRepository): AppMode {
+            val isOnline = sessionRepo.getFirstSession()?.online ?: false
+            return AppMode(isOnline)
+        }
+    }
 }

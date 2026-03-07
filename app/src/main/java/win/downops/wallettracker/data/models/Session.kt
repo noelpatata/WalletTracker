@@ -8,4 +8,5 @@ class Session {
     var cipheredCredentials: String = ""
     var iv: String = ""
     var fingerPrint: Boolean = false
+    var online: Boolean = false
 }

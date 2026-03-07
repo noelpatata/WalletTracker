@@ -39,6 +39,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
         values.put("cipheredCredentials", session.cipheredCredentials)
         values.put("iv", session.iv)
         values.put("fingerPrint", if (session.fingerPrint) 1 else 0)
+        values.put("online", if (session.online) 1 else 0)
 
         return database!!.update("Session", values, "id = ?", arrayOf(session.id.toString()))
     }
@@ -52,6 +53,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
         values.put("cipheredCredentials", session.cipheredCredentials)
         values.put("iv", session.iv)
         values.put("fingerPrint", if (session.fingerPrint) 1 else 0)
+        values.put("online", if (session.online) 1 else 0)
         return database!!.insert("Session", null, values)
     }
 
@@ -82,6 +84,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
             cipheredCredentials = cursor.getString(cursor.getColumnIndex("cipheredCredentials"))
             iv = cursor.getString(cursor.getColumnIndex("iv"))
             fingerPrint = cursor.getInt(cursor.getColumnIndex("fingerPrint")) == 1
+            online = cursor.getInt(cursor.getColumnIndex("online")) == 1
         }
     }
 
