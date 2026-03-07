@@ -18,8 +18,10 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import win.downops.wallettracker.MainActivity
+import win.downops.wallettracker.ui.register.RegisterActivity
 import win.downops.wallettracker.data.models.Session
 import win.downops.wallettracker.databinding.ActivityLoginBinding
+import win.downops.wallettracker.di.AppMode
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.R
 import win.downops.wallettracker.data.LoginRepository
@@ -44,6 +46,7 @@ class LoginActivity : AppCompatActivity() {
 
     @Inject lateinit var sessionRepo: SessionRepository
     @Inject lateinit var loginRepo: LoginRepository
+    @Inject lateinit var appMode: AppMode
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var executor: Executor
@@ -84,8 +87,13 @@ class LoginActivity : AppCompatActivity() {
             }
 
             offlineMode.setOnClickListener {
+                appMode.isOnline = false
                 sessionRepo.deleteAll()
                 navigateToMain()
+            }
+
+            goToRegister.setOnClickListener {
+                startActivity(Intent(this@LoginActivity, RegisterActivity::class.java))
             }
         }
     }
@@ -278,8 +286,10 @@ class LoginActivity : AppCompatActivity() {
             this.cipheredCredentials = cipheredCredentials?.credentials.orEmpty()
             this.iv = cipheredCredentials?.iv.orEmpty()
             fingerPrint = cipheredCredentials?.credentials?.isNotEmpty() == true
+            online = true
         }
 
+        appMode.isOnline = true
         if (oldSession == null) sessionRepo.insert(newSession)
         else sessionRepo.edit(newSession)
     }

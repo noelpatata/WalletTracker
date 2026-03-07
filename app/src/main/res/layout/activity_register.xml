@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.login.LoginActivity">
+    tools:context=".ui.register.RegisterActivity">
+
     <!-- Loading Panel -->
     <RelativeLayout
         android:id="@+id/loadingPanel"
@@ -20,9 +21,9 @@
             android:indeterminate="true" />
     </RelativeLayout>
 
-    <!-- Login Form -->
+    <!-- Register Form -->
     <LinearLayout
-        android:id="@+id/loginForm"
+        android:id="@+id/registerForm"
         android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +33,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Username Label & Input -->
         <TextView
             android:id="@+id/lblUsername"
             android:layout_width="wrap_content"
@@ -50,7 +50,6 @@
             android:textSize="20sp"
             android:inputType="text" />
 
-        <!-- Password Label & Input -->
         <TextView
             android:id="@+id/lblPassword"
             android:layout_width="wrap_content"
@@ -68,7 +67,24 @@
             android:textSize="20sp"
             android:inputType="textPassword" />
 
-        <!-- Buttons -->
+        <TextView
+            android:id="@+id/lblConfirmPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:text="@string/label_confirm_password" />
+
+        <EditText
+            android:id="@+id/inputConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:inputType="textPassword"
+            android:imeOptions="actionDone" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -77,48 +93,27 @@
             android:layout_marginTop="16dp">
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/login"
+                android:id="@+id/register"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/login_description"
+                android:contentDescription="@string/register_description"
                 android:src="@drawable/ic_check"
-                app:backgroundTint="@color/white"
-                app:borderWidth="0dp" />
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/offline_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:contentDescription="@string/offline_mode_description"
-                android:src="@drawable/ic_offline"
-                app:backgroundTint="@color/white"
-                app:borderWidth="0dp" />
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fingerprint_auth"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:contentDescription="@string/button_fingerprint"
-                android:src="@drawable/ic_fingerprint"
                 app:backgroundTint="@color/white"
                 app:borderWidth="0dp" />
 
         </LinearLayout>
 
         <TextView
-            android:id="@+id/goToRegister"
+            android:id="@+id/goToLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:layout_gravity="center"
             android:textSize="16sp"
-            android:text="@string/go_to_register"
+            android:text="@string/go_to_login"
             android:textColor="@color/black"
             android:padding="8dp" />
 
     </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

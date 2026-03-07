@@ -17,6 +17,14 @@ import javax.inject.Inject
 
 class LoginHttpService @Inject constructor(): LoginRepository {
 
+    override suspend fun register(credentials: LoginRequest): AppResult<Unit> {
+        val response = ApiClient.login.register(credentials)
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, Unit)
+        else AppResult.Error(body.message)
+    }
+
     override suspend fun login(credentials: LoginRequest): AppResult<LoginResponse?> {
         val response = ApiClient.login.login(credentials)
         val body = response.body() ?: return AppResult.Error("No data")

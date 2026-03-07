@@ -7,6 +7,7 @@ import win.downops.wallettracker.data.api.communication.responses.ServerPubKeyRe
 import win.downops.wallettracker.data.models.AppResult
 
 interface LoginRepository {
+    suspend fun register(credentials: LoginRequest): AppResult<Unit>
     suspend fun login(credentials: LoginRequest): AppResult<LoginResponse?>
     suspend fun setUserClientPubKey(token: String, request: ServerPubKeyRequest): AppResult<Unit>
     suspend fun getUserServerPubKey(token: String): AppResult<ServerPubKeyResponse?>
