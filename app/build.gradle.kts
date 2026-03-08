@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-val majorVersion = 2
-val minorVersion = 1
+val majorVersion = 1
+val minorVersion = 4
 val patchVersion = 0
 
 plugins {
