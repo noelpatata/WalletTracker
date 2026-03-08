@@ -1,4 +1,5 @@
 import android.os.Build
+import win.downops.wallettracker.BuildConfig
 import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
 import java.security.*
@@ -58,7 +59,7 @@ class Cryptography {
         val signature = Signature.getInstance("SHA256withRSA/PSS")
         signature.initSign(privateKey)
         signature.setParameter(PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1))
-        signature.update("s0m3r4nd0mt3xt".toByteArray())
+        signature.update(BuildConfig.SIGN_SECRET.toByteArray())
         val signBytes = signature.sign()
 
         return Base64.getEncoder().encodeToString(signBytes)
@@ -76,7 +77,7 @@ class Cryptography {
 
             signature.setParameter(PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1))
 
-            signature.update("s0m3r4nd0mt3xt".toByteArray())
+            signature.update(BuildConfig.SIGN_SECRET.toByteArray())
 
             signature.verify(signatureBytes)
         } catch (e: Exception) {

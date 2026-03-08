@@ -36,6 +36,7 @@ android {
             buildConfigField("String", "API_VERSION", "\"1\"")
             buildConfigField("String", "DEFAULT_USER", "\"noel\"")
             buildConfigField("String", "DEFAULT_PASSWORD", "\"noelnoel\"")
+            buildConfigField("String", "SIGN_SECRET", "\"s0m3r4nd0mt3xt\"")
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
@@ -46,6 +47,7 @@ android {
             buildConfigField("String", "API_VERSION", "\"1\"")
             buildConfigField("String", "DEFAULT_USER", "\"\"")
             buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")
+            buildConfigField("String", "SIGN_SECRET", "\"${System.getenv("SIGN_SECRET") ?: ""}\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
