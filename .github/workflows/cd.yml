@@ -34,21 +34,34 @@ jobs:
 
       - name: Sign APK
         id: sign_apk
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          ANDROID_BUILD_TOOLS_VERSION: 36.0.0
+        run: |
+          BUILD_TOOLS=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -1)
+          echo "Using build tools: $BUILD_TOOLS"
+          BUILD_TOOLS_DIR="/usr/local/lib/android/sdk/build-tools/$BUILD_TOOLS"
+
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+          UNSIGNED_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          SIGNED_APK="${UNSIGNED_APK%.apk}-signed.apk"
+
+          jarsigner -verbose \
+            -keystore keystore.jks \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            -signedjar "$SIGNED_APK" \
+            "$UNSIGNED_APK" \
+            "${{ secrets.KEY_ALIAS }}"
+
+          "$BUILD_TOOLS_DIR/zipalign" -v 4 "$SIGNED_APK" "${SIGNED_APK%.apk}-aligned.apk"
+
+          rm -f keystore.jks
+          echo "signedFile=${SIGNED_APK%.apk}-aligned.apk" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: WalletTracker ${{ steps.version.outputs.name }}
-          files: ${{ steps.sign_apk.outputs.signedReleaseFile }}
+          files: ${{ steps.sign_apk.outputs.signedFile }}
           generate_release_notes: true
           make_latest: true
