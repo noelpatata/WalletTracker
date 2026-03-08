@@ -42,7 +42,7 @@ jobs:
             secret/data/wallettracker/app KEYSTORE_PASSWORD ;
             secret/data/wallettracker/app KEY_PASSWORD ;
             secret/data/wallettracker/app KEY_ALIAS ;
-            secret/data/wallettracker/app SIGN_SECRET
+            secret/data/wallettracker/app SIGN_SECRET_WORD
 
       - name: Set up JDK 17
         if: steps.check_release.outputs.exists == 'false'
