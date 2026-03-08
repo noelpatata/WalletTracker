@@ -42,6 +42,7 @@ jobs:
             secret/data/wallettracker/app KEYSTORE_PASSWORD ;
             secret/data/wallettracker/app KEY_PASSWORD ;
             secret/data/wallettracker/app KEY_ALIAS ;
+            secret/data/wallettracker/app API_BASE_URL ;
             secret/data/wallettracker/app SIGN_SECRET_WORD
 
       - name: Set up JDK 17
@@ -59,6 +60,7 @@ jobs:
         if: steps.check_release.outputs.exists == 'false'
         run: ./gradlew assembleRelease
         env:
+          API_BASE_URL: ${{ env.API_BASE_URL }}
           SIGN_SECRET: ${{ env.SIGN_SECRET }}
 
       - name: Sign APK
