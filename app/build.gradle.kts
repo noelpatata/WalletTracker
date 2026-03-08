@@ -43,12 +43,15 @@ android {
 
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"\${System.getenv(\"API_BASE_URL\") ?: ""}\"")
-            buildConfigField("String", "API_VERSION", "\"1\"")
-            buildConfigField("String", "DEFAULT_USER", "\"\"")
-            buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")
-            buildConfigField("String", "SIGN_SECRET", "\"${System.getenv("SIGN_SECRET") ?: ""}\"")
-            isMinifyEnabled = false
+          val apiBaseUrl = System.getenv("API_BASE_URL") ?: ""
+          val signSecret = System.getenv("SIGN_SECRET") ?: ""
+
+          buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+          buildConfigField("String", "API_VERSION", "\"1\"")
+          buildConfigField("String", "DEFAULT_USER", "\"\"")
+          buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")
+          buildConfigField("String", "SIGN_SECRET", "\"$signSecret\"")
+          isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
