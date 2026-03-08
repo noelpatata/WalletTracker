@@ -38,10 +38,10 @@ jobs:
           url: https://vault.downops.win
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-            secret/data/wallettracker/prod KEYSTORE_BASE64 ;
-            secret/data/wallettracker/prod KEYSTORE_PASSWORD ;
-            secret/data/wallettracker/prod KEY_PASSWORD ;
-            secret/data/wallettracker/prod KEY_ALIAS
+            secret/data/wallettracker/app KEYSTORE_BASE64 ;
+            secret/data/wallettracker/app KEYSTORE_PASSWORD ;
+            secret/data/wallettracker/app KEY_PASSWORD ;
+            secret/data/wallettracker/app KEY_ALIAS
 
       - name: Set up JDK 17
         if: steps.check_release.outputs.exists == 'false'
