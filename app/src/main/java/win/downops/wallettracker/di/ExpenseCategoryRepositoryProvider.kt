@@ -3,7 +3,6 @@ package win.downops.wallettracker.di
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import javax.inject.Inject
 import javax.inject.Singleton
-import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.expenseCategory.ExpenseCategoryHttpService
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
@@ -12,15 +11,15 @@ import win.downops.wallettracker.data.sqlite.expenseCategory.ExpenseCategorySqlS
 @Singleton
 class ExpenseCategoryRepositoryProvider @Inject constructor(
     private val apiRepository: dagger.Lazy<ExpenseCategoryHttpService>,
-    private val localRepository: dagger.Lazy<ExpenseCategorySqlService>
+    private val localRepository: dagger.Lazy<ExpenseCategorySqlService>,
+    private val appMode: AppMode
 ) : ExpenseCategoryRepository {
 
-    private suspend fun repo(): ExpenseCategoryRepository {
-        return if (ApiClient.isServerReachable())
+    private fun repo(): ExpenseCategoryRepository {
+        return if (appMode.isOnline)
             apiRepository.get()
         else
             localRepository.get()
-
     }
 
     override suspend fun getAll(): AppResult<List<ExpenseCategory>> {

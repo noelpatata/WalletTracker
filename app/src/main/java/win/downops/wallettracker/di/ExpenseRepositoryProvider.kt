@@ -3,7 +3,6 @@ package win.downops.wallettracker.di
 import win.downops.wallettracker.data.ExpenseRepository
 import javax.inject.Inject
 import javax.inject.Singleton
-import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.expense.ExpenseHttpService
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Expense
@@ -12,10 +11,11 @@ import win.downops.wallettracker.data.sqlite.expense.ExpenseSqlService
 @Singleton
 class ExpenseRepositoryProvider @Inject constructor(
     private val apiRepository: dagger.Lazy<ExpenseHttpService>,
-    private val localRepository: dagger.Lazy<ExpenseSqlService>
+    private val localRepository: dagger.Lazy<ExpenseSqlService>,
+    private val appMode: AppMode
 ) : ExpenseRepository {
-    private suspend fun repo(): ExpenseRepository {
-        return if (ApiClient.isServerReachable())
+    private fun repo(): ExpenseRepository {
+        return if (appMode.isOnline)
             apiRepository.get()
         else
             localRepository.get()
