@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val majorVersion = 1
 val minorVersion = 4
-val patchVersion = 2
+val patchVersion = 3
 
 plugins {
     alias(libs.plugins.android.application)
