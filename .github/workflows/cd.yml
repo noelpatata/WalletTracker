@@ -19,10 +19,7 @@ jobs:
           echo "name=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
           echo "tag=v$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
 
-
-
       - name: Import Secrets from Vault
-        if: steps.check_release.outputs.exists == 'false'
         uses: hashicorp/vault-action@v2
         with:
           url: https://vault.downops.win
