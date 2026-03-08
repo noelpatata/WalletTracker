@@ -44,20 +44,21 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
 
           UNSIGNED_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          ALIGNED_APK="${UNSIGNED_APK%.apk}-aligned.apk"
           SIGNED_APK="${UNSIGNED_APK%.apk}-signed.apk"
 
-          jarsigner -verbose \
-            -keystore keystore.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            -signedjar "$SIGNED_APK" \
-            "$UNSIGNED_APK" \
-            "${{ secrets.KEY_ALIAS }}"
+          "$BUILD_TOOLS_DIR/zipalign" -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
 
-          "$BUILD_TOOLS_DIR/zipalign" -v 4 "$SIGNED_APK" "${SIGNED_APK%.apk}-aligned.apk"
+          "$BUILD_TOOLS_DIR/apksigner" sign \
+            --ks keystore.jks \
+            --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --out "$SIGNED_APK" \
+            "$ALIGNED_APK"
 
           rm -f keystore.jks
-          echo "signedFile=${SIGNED_APK%.apk}-aligned.apk" >> $GITHUB_OUTPUT
+          echo "signedFile=$SIGNED_APK" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
