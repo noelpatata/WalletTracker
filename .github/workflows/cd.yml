@@ -17,22 +17,9 @@ jobs:
           MINOR=$(grep 'val minorVersion' app/build.gradle.kts | grep -o '[0-9]*')
           PATCH=$(grep 'val patchVersion' app/build.gradle.kts | grep -o '[0-9]*')
           echo "name=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
-          echo "tag=v$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
-
-      - name: Check if release exists
-        id: check_release
-        run: |
-          if gh release view ${{ steps.version.outputs.tag }} &>/dev/null; then
-            echo "Release ${{ steps.version.outputs.tag }} already exists. Skipping."
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
+          echo "tag=v$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPU
 
       - name: Import Secrets from Vault
-        if: steps.check_release.outputs.exists == 'false'
         uses: hashicorp/vault-action@v2
         with:
           url: https://vault.downops.win
@@ -46,25 +33,21 @@ jobs:
             secret/data/wallettracker/app SIGN_SECRET_WORD
 
       - name: Set up JDK 17
-        if: steps.check_release.outputs.exists == 'false'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
-        if: steps.check_release.outputs.exists == 'false'
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build release APK
-        if: steps.check_release.outputs.exists == 'false'
         run: ./gradlew assembleRelease
         env:
           API_BASE_URL: ${{ env.API_BASE_URL }}
           SIGN_SECRET: ${{ env.SIGN_SECRET }}
 
       - name: Sign APK
-        if: steps.check_release.outputs.exists == 'false'
         id: sign_apk
         run: |
           BUILD_TOOLS=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -1)
@@ -85,7 +68,6 @@ jobs:
           echo "signedFile=$SIGNED_APK" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
