@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val majorVersion = 1
 val minorVersion = 4
-val patchVersion = 3
+val patchVersion = 4
 
 plugins {
     alias(libs.plugins.android.application)
@@ -34,8 +34,6 @@ android {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:5000\"")
             buildConfigField("String", "API_VERSION", "\"1\"")
-            buildConfigField("String", "DEFAULT_USER", "\"noel\"")
-            buildConfigField("String", "DEFAULT_PASSWORD", "\"noelnoel\"")
             buildConfigField("String", "SIGN_SECRET", "\"s0m3r4nd0mt3xt\"")
             isDebuggable = true
             applicationIdSuffix = ".debug"
@@ -48,8 +46,6 @@ android {
 
           buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
           buildConfigField("String", "API_VERSION", "\"1\"")
-          buildConfigField("String", "DEFAULT_USER", "\"\"")
-          buildConfigField("String", "DEFAULT_PASSWORD", "\"\"")
           buildConfigField("String", "SIGN_SECRET", "\"$signSecret\"")
           isMinifyEnabled = false
             proguardFiles(
