@@ -31,11 +31,6 @@ class ImportSheet : Fragment() {
     private val viewModel: ImportSheetViewModel by viewModels()
     private val sharedCsvViewModel: SharedCsvViewModel by activityViewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //CSVFileCallBack()
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -79,29 +74,6 @@ class ImportSheet : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun CSVFileCallBack() {
-        openCsvLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                if (uri != null) {
-                    try {
-                        val accountDetails = parseCsvFromUri(uri)
-                        if (accountDetails != null) {
-                            viewModel.importCsv(accountDetails)
-                        } else {
-                            Toast.makeText(requireContext(), "Error parsing CSV", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Toast.makeText(requireContext(), "Error reading file", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Log.e("CSVFileCallBack", "No Uri returned from file picker.")
-                }
-            }
-        }
     }
 
     private fun readContentFromUri(uri: Uri): List<String>? {
