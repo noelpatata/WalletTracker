@@ -11,6 +11,7 @@ import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.BaseHttpService
 import win.downops.wallettracker.data.api.communication.requests.CreateImporteRequest
+import win.downops.wallettracker.data.api.communication.requests.CreateImportesBulkRequest
 import win.downops.wallettracker.data.api.communication.requests.ImporteBySeasonIdRequest
 import win.downops.wallettracker.data.api.communication.requests.ImporteIdRequest
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
@@ -61,6 +62,28 @@ class ImporteHttpService @Inject constructor(
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error creating importe", isControlled = false, e.stackTrace.joinToString("\n"))
+        }
+    }
+
+    override suspend fun createAll(importes: List<Importe>): AppResult<Unit> {
+        return try {
+            val requests = importes.map { 
+                CreateImporteRequest(
+                    it.getConcept(),
+                    it.getDateString(),
+                    it.getAmount(),
+                    it.getBalanceAfter(),
+                    it.getSeasonId()
+                )
+            }
+            val bulkRequest = CreateImportesBulkRequest(importes = requests)
+            val cipheredData = encryptData(bulkRequest)
+                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
+            val response = ApiClient.importe.createAll("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val body = response.body() ?: return AppResult.Error("No data")
+            if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error creating importes", isControlled = false, e.stackTrace.joinToString("\n"))
         }
     }
 

@@ -19,7 +19,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
+import win.downops.wallettracker.R
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.databinding.FragmentImportSheetBinding
 
@@ -30,6 +32,29 @@ class ImportSheet : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: ImportSheetViewModel by viewModels()
     private val sharedCsvViewModel: SharedCsvViewModel by activityViewModels()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        openCsvLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri: Uri? = result.data?.data
+                uri?.let {
+                    try {
+                        val accountDetails = parseCsvFromUri(it)
+                        if (accountDetails != null) {
+                            viewModel.importCsv(accountDetails)
+                        } else {
+                            Toast.makeText(requireContext(), "Error parsing CSV", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(requireContext(), "Error reading file", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -75,7 +100,10 @@ class ImportSheet : Fragment() {
         viewModel.importResult.observe(viewLifecycleOwner) { result ->
             result ?: return@observe
             when (result) {
-                is AppResult.Success -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                is AppResult.Success -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.nav_importes)
+                }
                 is AppResult.Error -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
             }
             viewModel.onImportResultConsumed()
@@ -113,8 +141,10 @@ class ImportSheet : Fragment() {
 
     fun parseCsvFromUri(uri: Uri): AccountDetails? {
         val lines = readContentFromUri(uri) ?: return null
+        if (lines.size < 2) return null
 
         val valoresCuenta = lines[1].split(";")
+        if (valoresCuenta.size < 3) return null
         val availableBalance = valoresCuenta[1]
         val period = valoresCuenta[2]
 

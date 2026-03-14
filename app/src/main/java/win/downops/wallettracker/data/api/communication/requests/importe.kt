@@ -9,3 +9,6 @@ data class CreateImporteRequest(
     val balanceAfter: Double?,
     val seasonId: Long
 )
+data class CreateImportesBulkRequest(
+    val importes: List<CreateImporteRequest>
+)
