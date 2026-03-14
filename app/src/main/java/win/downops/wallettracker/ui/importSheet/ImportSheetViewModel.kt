@@ -14,6 +14,7 @@ import win.downops.wallettracker.data.models.Importe
 import win.downops.wallettracker.data.models.Season
 import java.sql.Date
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @HiltViewModel
@@ -22,92 +23,70 @@ class ImportSheetViewModel @Inject constructor(
     private val importeRepository: ImporteRepository
 ) : ViewModel() {
 
-    private val _importResult = MutableLiveData<AppResult<Int>>()
-    val importResult: LiveData<AppResult<Int>> = _importResult
+    private val _importResult = MutableLiveData<AppResult<Int>?>()
+    val importResult: LiveData<AppResult<Int>?> = _importResult
 
-    private val _importes = MutableLiveData<List<Importe>>()
-    val importes: LiveData<List<Importe>> = _importes
+    private val _importing = MutableLiveData<Boolean>(false)
+    val importing: LiveData<Boolean> = _importing
 
-    private val _seasons = MutableLiveData<List<Season>>()
-    val seasons: LiveData<List<Season>> = _seasons
+    private val _importProgress = MutableLiveData<Pair<Int, Int>>()
+    val importProgress: LiveData<Pair<Int, Int>> = _importProgress
 
-    fun loadSeasons() {
-        viewModelScope.launch {
-            val result = seasonRepository.getAll()
-            if (result is AppResult.Success) {
-                _seasons.value = result.data
-            }
-        }
-    }
-
-    fun loadImportesBySeason(seasonId: Long) {
-        viewModelScope.launch {
-            val result = importeRepository.getBySeasonId(seasonId)
-            if (result is AppResult.Success) {
-                _importes.value = result.data
-            }
-        }
+    fun onImportResultConsumed() {
+        _importResult.value = null
     }
 
     fun importCsv(accountDetails: AccountDetails) {
+        _importing.value = true
         viewModelScope.launch {
-            val (year, month) = parsePeriod(accountDetails.period)
-                ?: run {
-                    _importResult.value = AppResult.Error("Invalid period format", isControlled = true)
-                    return@launch
+            try {
+                data class ParsedTransaction(val transaction: Transaction, val date: Date, val yearMonth: Pair<Int, Int>)
+                val parsed = accountDetails.transactions.mapNotNull { t ->
+                    val date = parseDate(t.date) ?: return@mapNotNull null
+                    val cal = Calendar.getInstance().apply { time = date }
+                    val ym = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)
+                    ParsedTransaction(t, date, ym)
                 }
 
-            val seasonResult = seasonRepository.getOrCreate(year, month)
-            if (seasonResult is AppResult.Error) {
-                _importResult.value = AppResult.Error(seasonResult.message, isControlled = true)
-                return@launch
-            }
-            val season = (seasonResult as AppResult.Success).data!!
-
-            var imported = 0
-            for (transaction in accountDetails.transactions) {
-                val date = parseDate(transaction.date) ?: continue
-                val amount = parseAmount(transaction.amount) ?: continue
-                val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
-                val key = duplicateKey(transaction.concept, dateStr, amount)
-
-                val balanceAfter = parseAmount(transaction.balanceAfter) ?: 0.0
-                val importe = Importe(
-                    transaction.concept,
-                    date,
-                    amount,
-                    balanceAfter,
-                    accountDetails.iban,
-                    season.getId()
-                )
-                val result = importeRepository.create(importe)
-                if (result is AppResult.Success) {
-                    imported++
+                val seasonMap = mutableMapOf<Pair<Int, Int>, Season>()
+                for (ym in parsed.map { it.yearMonth }.distinct()) {
+                    val result = seasonRepository.getOrCreate(ym.first, ym.second)
+                    if (result is AppResult.Error) {
+                        _importResult.value = AppResult.Error(result.message, isControlled = true)
+                        return@launch
+                    }
+                    seasonMap[ym] = (result as AppResult.Success).data!!
                 }
-            }
 
-            val message = "Imported $imported transactions"
-            _importResult.value = AppResult.Success(message, imported)
+                val total = parsed.size
+                _importProgress.value = 0 to total
+                var imported = 0
+                for ((index, pt) in parsed.withIndex()) {
+                    val amount = parseAmount(pt.transaction.amount)
+                    val season = seasonMap[pt.yearMonth]
+                    if (amount != null && season != null) {
+                        val balanceAfter = parseAmount(pt.transaction.balanceAfter) ?: 0.0
+                        val importe = Importe(
+                            pt.transaction.concept,
+                            pt.date,
+                            amount,
+                            balanceAfter,
+                            accountDetails.iban,
+                            season.getId()
+                        )
+                        val result = importeRepository.create(importe)
+                        if (result is AppResult.Success) imported++
+                    }
+                    _importProgress.value = (index + 1) to total
+                }
+
+                _importResult.value = AppResult.Success("Imported $imported transactions", imported)
+            } finally {
+                _importing.value = false
+            }
         }
     }
 
-    private fun duplicateKey(concept: String, dateStr: String, amount: Double) =
-        "$concept|$dateStr|$amount"
-
-    // Period format: "09/03/2026 - 10/03/2026" → take start date
-    private fun parsePeriod(period: String): Pair<Int, Int>? {
-        return try {
-            val startPart = period.split(" - ").first().trim()
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val date = sdf.parse(startPart) ?: return null
-            val cal = java.util.Calendar.getInstance().apply { time = date }
-            Pair(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    // Date format from CSV: "09/03/2026"
     private fun parseDate(dateStr: String): Date? {
         return try {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -118,7 +97,6 @@ class ImportSheetViewModel @Inject constructor(
         }
     }
 
-    // Amount format: "-1,70EUR" or "8.641,89EUR"
     private fun parseAmount(amountStr: String): Double? {
         return try {
             amountStr.trim()

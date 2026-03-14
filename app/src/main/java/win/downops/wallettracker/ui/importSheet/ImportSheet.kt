@@ -61,11 +61,24 @@ class ImportSheet : Fragment() {
             openFile(a.absolutePath.toUri())
         }
 
+        viewModel.importing.observe(viewLifecycleOwner) { isImporting ->
+            binding.importingPanel.visibility = if (isImporting) View.VISIBLE else View.GONE
+            binding.selectFile.visibility = if (isImporting) View.GONE else View.VISIBLE
+        }
+
+        viewModel.importProgress.observe(viewLifecycleOwner) { (current, total) ->
+            binding.progressBar.max = total.coerceAtLeast(1)
+            binding.progressBar.progress = current
+            binding.lblImportProgress.text = "Importing: $current / $total"
+        }
+
         viewModel.importResult.observe(viewLifecycleOwner) { result ->
+            result ?: return@observe
             when (result) {
                 is AppResult.Success -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                 is AppResult.Error -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
             }
+            viewModel.onImportResultConsumed()
         }
 
         return root

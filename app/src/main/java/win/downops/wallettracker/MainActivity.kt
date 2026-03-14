@@ -11,8 +11,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import com.google.android.material.navigation.NavigationView
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -68,6 +70,19 @@ class MainActivity  : AppCompatActivity() {
             )
             setupActionBarWithNavController(navController, appBarConfiguration)
             navView.setupWithNavController(navController)
+            navView.setNavigationItemSelectedListener { item ->
+                try {
+                    if (item.itemId == R.id.nav_categories) {
+                        navController.popBackStack(R.id.nav_categories, false)
+                    } else {
+                        NavigationUI.onNavDestinationSelected(item, navController)
+                    }
+                } catch (e: Exception) {
+                    Logger.log(e)
+                }
+                binding.drawerLayout.closeDrawers()
+                true
+            }
 
             val headerView = navView.getHeaderView(0)
             val lblUsername = headerView.findViewById<android.widget.TextView>(R.id.lblUsername)
@@ -98,7 +113,11 @@ class MainActivity  : AppCompatActivity() {
         sharedCsvViewModel.pendingUri = uri
         setIntent(Intent(this, MainActivity::class.java))
         binding.root.post {
-            findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.nav_importsheet)
+            val navOptions = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setPopUpTo(R.id.nav_categories, inclusive = false)
+                .build()
+            findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.nav_importsheet, null, navOptions)
         }
     }
 
