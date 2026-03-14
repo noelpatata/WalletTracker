@@ -7,6 +7,5 @@ data class CreateImporteRequest(
     val importeDate: String,
     val amount: Double,
     val balanceAfter: Double?,
-    val iban: String?,
     val seasonId: Long
 )

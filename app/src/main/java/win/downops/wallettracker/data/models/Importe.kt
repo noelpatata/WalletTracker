@@ -10,25 +10,22 @@ class Importe {
     private var importeDate: Date? = null
     private var amount: Double = 0.0
     private var balanceAfter: Double = 0.0
-    private var iban: String = ""
     private var seasonId: Long = 0
 
     constructor()
-    constructor(id: Long, concept: String, importeDate: Date?, amount: Double, balanceAfter: Double, iban: String, seasonId: Long) {
+    constructor(id: Long, concept: String, importeDate: Date?, amount: Double, balanceAfter: Double, seasonId: Long) {
         this.id = id
         this.concept = concept
         this.importeDate = importeDate
         this.amount = amount
         this.balanceAfter = balanceAfter
-        this.iban = iban
         this.seasonId = seasonId
     }
-    constructor(concept: String, importeDate: Date?, amount: Double, balanceAfter: Double, iban: String, seasonId: Long) {
+    constructor(concept: String, importeDate: Date?, amount: Double, balanceAfter: Double, seasonId: Long) {
         this.concept = concept
         this.importeDate = importeDate
         this.amount = amount
         this.balanceAfter = balanceAfter
-        this.iban = iban
         this.seasonId = seasonId
     }
     constructor(id: Long) {
@@ -45,8 +42,6 @@ class Importe {
     fun setAmount(value: Double) { amount = value }
     fun getBalanceAfter(): Double = balanceAfter
     fun setBalanceAfter(value: Double) { balanceAfter = value }
-    fun getIban(): String = iban
-    fun setIban(value: String) { iban = value }
     fun getSeasonId(): Long = seasonId
     fun setSeasonId(value: Long) { seasonId = value }
 }

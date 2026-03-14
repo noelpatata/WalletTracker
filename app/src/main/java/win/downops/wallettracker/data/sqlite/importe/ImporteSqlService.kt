@@ -73,7 +73,6 @@ class ImporteSqlService @Inject constructor(
                 put("importeDate", SimpleDateFormat("yyyy-MM-dd").format(importe.getDate()))
                 put("amount", importe.getAmount())
                 put("balanceAfter", importe.getBalanceAfter())
-                put("iban", importe.getIban())
                 put("seasonId", importe.getSeasonId())
             }
             val rowId = database?.insert("Importe", null, values)
@@ -114,7 +113,6 @@ class ImporteSqlService @Inject constructor(
             Date.valueOf(cursor.getString(cursor.getColumnIndex("importeDate"))),
             cursor.getDouble(cursor.getColumnIndex("amount")),
             cursor.getDouble(cursor.getColumnIndex("balanceAfter")),
-            cursor.getString(cursor.getColumnIndex("iban")),
             cursor.getLong(cursor.getColumnIndex("seasonId"))
         )
     }

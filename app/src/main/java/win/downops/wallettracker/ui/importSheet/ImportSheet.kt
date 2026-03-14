@@ -115,7 +115,6 @@ class ImportSheet : Fragment() {
         val lines = readContentFromUri(uri) ?: return null
 
         val valoresCuenta = lines[1].split(";")
-        val iban = valoresCuenta[0]
         val availableBalance = valoresCuenta[1]
         val period = valoresCuenta[2]
 
@@ -135,7 +134,6 @@ class ImportSheet : Fragment() {
         }
 
         return AccountDetails(
-            iban = iban,
             availableBalance = availableBalance,
             period = period,
             transactions = transactions
@@ -151,7 +149,6 @@ data class Transaction(
 )
 
 data class AccountDetails(
-    val iban: String,
     val availableBalance: String,
     val period: String,
     val transactions: List<Transaction>
