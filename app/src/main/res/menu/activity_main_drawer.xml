@@ -13,6 +13,10 @@
             android:icon="@drawable/ic_grid"
             android:title="@string/menu_sheet" />
         <item
+            android:id="@+id/nav_importes"
+            android:icon="@drawable/ic_grid"
+            android:title="@string/menu_importes" />
+        <item
             android:id="@+id/nav_metrics"
             android:icon="@drawable/navicon_metrics"
             android:title="@string/menu_metrics" />

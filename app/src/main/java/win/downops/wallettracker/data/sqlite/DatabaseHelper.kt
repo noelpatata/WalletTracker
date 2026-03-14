@@ -12,22 +12,27 @@ class DatabaseHelper(context: Context?) :
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(CREATE_TABLE_SESSION)
         db.execSQL(CREATE_TABLE_EXPENSE_CATEGORY)
+        db.execSQL(CREATE_TABLE_SEASON)
         db.execSQL(CREATE_TABLE_EXPENSE)
+        db.execSQL(CREATE_TABLE_IMPORTE)
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSION)
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE_CATEGORY)
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_IMPORTE)
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE)
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SEASON)
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSE_CATEGORY)
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSION)
         onCreate(db)
     }
     companion object {
         private const val DATABASE_NAME = "walletTracker.db"
-        private const val DATABASE_VERSION = 6
+        private const val DATABASE_VERSION = 8
         private const val TABLE_SESSION = "Session"
         private const val CREATE_TABLE_SESSION = "CREATE TABLE " + TABLE_SESSION + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "online Integer, " +
                 "token TEXT, " +
+                "username TEXT, " +
                 "privateKey TEXT, " +
                 "cipheredCredentials TEXT, " +
                 "iv TEXT, " +
@@ -35,20 +40,36 @@ class DatabaseHelper(context: Context?) :
                 "serverPublicKey TEXT);"
         private const val TABLE_EXPENSE = "Expense"
         private const val TABLE_EXPENSE_CATEGORY = "ExpenseCategory"
+        private const val TABLE_SEASON = "Season"
+        private const val TABLE_IMPORTE = "Importe"
 
         private const val CREATE_TABLE_EXPENSE_CATEGORY =
             "CREATE TABLE " + TABLE_EXPENSE_CATEGORY + " (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "sortOrder Integer NULL, " +
                     "name TEXT NOT NULL);"
+        private const val CREATE_TABLE_SEASON = "CREATE TABLE " + TABLE_SEASON + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "year INTEGER NOT NULL, " +
+                "month INTEGER NOT NULL, " +
+                "UNIQUE(year, month));"
         private const val CREATE_TABLE_EXPENSE = "CREATE TABLE " + TABLE_EXPENSE + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "price DOUBLE, " +
                 "description TEXT, " +
                 "expenseDate DATE, " +
                 "category INTEGER, " +
-                "FOREIGN KEY(category) REFERENCES " + TABLE_EXPENSE_CATEGORY + "(id) ON DELETE CASCADE);"
-
-
+                "seasonId INTEGER NULL, " +
+                "FOREIGN KEY(category) REFERENCES " + TABLE_EXPENSE_CATEGORY + "(id) ON DELETE CASCADE, " +
+                "FOREIGN KEY(seasonId) REFERENCES " + TABLE_SEASON + "(id) ON DELETE SET NULL);"
+        private const val CREATE_TABLE_IMPORTE = "CREATE TABLE " + TABLE_IMPORTE + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "concept TEXT, " +
+                "importeDate DATE, " +
+                "amount DOUBLE, " +
+                "balanceAfter DOUBLE, " +
+                "iban TEXT, " +
+                "seasonId INTEGER NOT NULL, " +
+                "FOREIGN KEY(seasonId) REFERENCES " + TABLE_SEASON + "(id) ON DELETE CASCADE);"
     }
 }

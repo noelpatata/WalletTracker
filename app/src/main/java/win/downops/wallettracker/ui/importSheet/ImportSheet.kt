@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,12 +17,24 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.databinding.FragmentImportSheetBinding
 
+@AndroidEntryPoint
 class ImportSheet : Fragment() {
     private lateinit var openCsvLauncher: ActivityResultLauncher<Intent>
     private var _binding: FragmentImportSheetBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: ImportSheetViewModel by viewModels()
+    private val sharedCsvViewModel: SharedCsvViewModel by activityViewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //CSVFileCallBack()
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
@@ -31,29 +44,58 @@ class ImportSheet : Fragment() {
         _binding = FragmentImportSheetBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        CSVFileCallBack()
 
-        binding.selectFile.setOnClickListener(){
+        val sharedUri = sharedCsvViewModel.pendingUri
+        sharedCsvViewModel.pendingUri = null
+        if (sharedUri != null) {
+            try {
+                val accountDetails = parseCsvFromUri(sharedUri)
+                if (accountDetails != null) {
+                    viewModel.importCsv(accountDetails)
+                } else {
+                    Toast.makeText(requireContext(), "Error parsing CSV", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), "Error reading file", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.selectFile.setOnClickListener {
             val a = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             openFile(a.absolutePath.toUri())
         }
 
-
-
-
+        viewModel.importResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                is AppResult.Error -> Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+            }
+        }
 
         return root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun CSVFileCallBack() {
         openCsvLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data // Use .data to get the Uri directly
+                val uri = result.data?.data
                 if (uri != null) {
                     try {
-                        val list = parseCsvFromUri(uri)
+                        val accountDetails = parseCsvFromUri(uri)
+                        if (accountDetails != null) {
+                            viewModel.importCsv(accountDetails)
+                        } else {
+                            Toast.makeText(requireContext(), "Error parsing CSV", Toast.LENGTH_SHORT).show()
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        Toast.makeText(requireContext(), "Error reading file", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Log.e("CSVFileCallBack", "No Uri returned from file picker.")
@@ -61,19 +103,18 @@ class ImportSheet : Fragment() {
             }
         }
     }
+
     private fun readContentFromUri(uri: Uri): List<String>? {
         return try {
-            val contentResolver = requireContext().contentResolver // Replace `context` with your Activity or Context reference
-            val inputStream = contentResolver.openInputStream(uri)
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
             val lines = inputStream?.bufferedReader()?.use { it.readLines() }
             inputStream?.close()
-            return lines
+            lines
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun openFile(pickerInitialUri: Uri) {
@@ -82,51 +123,41 @@ class ImportSheet : Fragment() {
             type = "text/*"
             putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
         }
-
         openCsvLauncher.launch(intent)
     }
 
-
-    // Método para leer el archivo CSV desde un URI y convertirlo en una lista de objetos
     fun parseCsvFromUri(uri: Uri): AccountDetails? {
+        val lines = readContentFromUri(uri) ?: return null
 
+        val valoresCuenta = lines[1].split(";")
+        val iban = valoresCuenta[0]
+        val availableBalance = valoresCuenta[1]
+        val period = valoresCuenta[2]
 
-        val lines = readContentFromUri(uri)
-
-        if (lines != null) {
-            val valoresCuenta = lines[1].split(";")
-            val iban = valoresCuenta[0]
-            val availableBalance = valoresCuenta[1]
-            val period = valoresCuenta[2] //dd-mm-yyyy
-
-            // Parseamos las transacciones
-            val transactions = mutableListOf<Transaction>()
-            for (i in 3 until lines.size-1) {
-                val transactionLine = lines[i].split(";")
-                if (transactionLine.size >= 4) {
-                    transactions.add(
-                        Transaction(
-                            concept = transactionLine[0],
-                            date = transactionLine[1],//dd-mm-yyyy
-                            amount = transactionLine[2],
-                            balanceAfter = transactionLine[3]
-                        )
+        val transactions = mutableListOf<Transaction>()
+        for (i in 3 until lines.size - 1) {
+            val transactionLine = lines[i].split(";")
+            if (transactionLine.size >= 4) {
+                transactions.add(
+                    Transaction(
+                        concept = transactionLine[0],
+                        date = transactionLine[1],
+                        amount = transactionLine[2],
+                        balanceAfter = transactionLine[3]
                     )
-                }
+                )
             }
-
-            return AccountDetails(
-                iban = iban,
-                availableBalance = availableBalance,
-                period = period,
-                transactions = transactions
-            )
         }
-        return null
 
-
+        return AccountDetails(
+            iban = iban,
+            availableBalance = availableBalance,
+            period = period,
+            transactions = transactions
+        )
     }
 }
+
 data class Transaction(
     val concept: String,
     val date: String,
@@ -134,7 +165,6 @@ data class Transaction(
     val balanceAfter: String
 )
 
-// Clase para representar el encabezado general del CSV
 data class AccountDetails(
     val iban: String,
     val availableBalance: String,

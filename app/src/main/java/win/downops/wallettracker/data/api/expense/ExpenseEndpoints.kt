@@ -27,6 +27,13 @@ interface ExpenseEndpoints {
         @Body catId: CipheredRequest
     ): Response<BaseResponse<CipheredResponse>>
 
+    @POST("/api/v${BuildConfig.API_VERSION}/Expense/season/")
+    suspend fun getBySeasonId(
+        @Header("Authorization") token: String,
+        @Header("Signature") cipher: String,
+        @Body seasonId: CipheredRequest
+    ): Response<BaseResponse<CipheredResponse>>
+
     @POST("/api/v${BuildConfig.API_VERSION}/Expense/")
     suspend fun create(
         @Header("Authorization") token: String,

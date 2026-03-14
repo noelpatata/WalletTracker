@@ -93,6 +93,11 @@ class CategoriesExpensesFragment() : Fragment() {
                 }
             }
         }
+        viewModel.showAll.observe(viewLifecycleOwner) { isAll ->
+            if (binding.toggleSeasonAll.isChecked != isAll) {
+                binding.toggleSeasonAll.isChecked = isAll
+            }
+        }
         viewModel.deleteExpenseCategoryResult.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is AppResult.Success -> {
@@ -235,6 +240,9 @@ class CategoriesExpensesFragment() : Fragment() {
             val bundle = Bundle()
             bundle.putLong("catId", categoryId)
             findNavController().navigate(R.id.nav_createexpense, bundle)
+        }
+        binding.toggleSeasonAll.setOnCheckedChangeListener { _, _ ->
+            viewModel.toggleShowAll(categoryId)
         }
         binding.delete.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext(), R.style.ButtonsCustomColor)

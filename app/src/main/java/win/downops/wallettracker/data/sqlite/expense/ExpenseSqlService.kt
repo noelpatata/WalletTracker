@@ -46,11 +46,13 @@ class ExpenseSqlService @Inject constructor(
     @SuppressLint("SimpleDateFormat")
     override suspend fun create(expense: Expense): AppResult<Expense?> = withContext(Dispatchers.IO) {
         try {
+            val seasonId = getOrCreateSeasonId(expense.getDate())
             val values = ContentValues().apply {
                 put("price", expense.getPrice())
                 put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
                 put("category", expense.getCategoryId())
                 put("description", expense.getDescription())
+                if (seasonId != null) put("seasonId", seasonId) else putNull("seasonId")
             }
 
             val rowId = database?.insert("Expense", null, values)
@@ -71,11 +73,13 @@ class ExpenseSqlService @Inject constructor(
     @SuppressLint("SimpleDateFormat")
     override suspend fun edit(expense: Expense): AppResult<Expense?> = withContext(Dispatchers.IO) {
         try {
+            val seasonId = getOrCreateSeasonId(expense.getDate())
             val values = ContentValues().apply {
                 put("price", expense.getPrice())
                 put("category", expense.getCategoryId())
                 put("description", expense.getDescription())
                 put("expenseDate", SimpleDateFormat("yyyy-MM-dd").format(expense.getDate()))
+                if (seasonId != null) put("seasonId", seasonId) else putNull("seasonId")
             }
 
             val rowsAffected = database?.update("Expense", values, "id = ?", arrayOf(expense.getId().toString()))
@@ -124,6 +128,20 @@ class ExpenseSqlService @Inject constructor(
                 e.message ?: "Unexpected error deleting all expenses",
                 isControlled = false,
                 e.stackTrace.joinToString("\n"))
+        }
+    }
+
+    override suspend fun getBySeasonId(seasonId: Long): AppResult<List<Expense>> = withContext(Dispatchers.IO) {
+        try {
+            val expenseList = mutableListOf<Expense>()
+            val cursor = database?.query(
+                "Expense", null, "seasonId = ?", arrayOf(seasonId.toString()),
+                null, null, "expenseDate DESC, id DESC"
+            ) ?: return@withContext AppResult.Error("Database not available", isControlled = true)
+            cursor.use { while (it.moveToNext()) expenseList.add(mapCursor(it)) }
+            AppResult.Success("Expenses fetched successfully", expenseList)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error reading expenses", isControlled = false, e.stackTrace.joinToString("\n"))
         }
     }
 
@@ -191,15 +209,39 @@ class ExpenseSqlService @Inject constructor(
 
     @SuppressLint("Range")
     private fun mapCursor(cursor: Cursor): Expense {
-        try{
+        try {
             return Expense(cursor.getLong(cursor.getColumnIndex("id"))).apply {
                 setDescription(cursor.getString(cursor.getColumnIndex("description")))
                 setPrice(cursor.getDouble(cursor.getColumnIndex("price")))
                 setDate(Date.valueOf(cursor.getString(cursor.getColumnIndex("expenseDate"))))
                 setCategoryId(cursor.getLong(cursor.getColumnIndex("category")))
+                val seasonIdx = cursor.getColumnIndex("seasonId")
+                if (seasonIdx != -1 && !cursor.isNull(seasonIdx))
+                    setSeasonId(cursor.getLong(seasonIdx))
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             throw e
+        }
+    }
+
+    private fun getOrCreateSeasonId(date: Date): Long? {
+        return try {
+            val cal = java.util.Calendar.getInstance().apply { time = date }
+            val year = cal.get(java.util.Calendar.YEAR)
+            val month = cal.get(java.util.Calendar.MONTH) + 1
+            database?.execSQL(
+                "INSERT OR IGNORE INTO Season (year, month) VALUES (?, ?)",
+                arrayOf(year.toString(), month.toString())
+            )
+            val cursor = database?.query(
+                "Season", arrayOf("id"), "year = ? AND month = ?",
+                arrayOf(year.toString(), month.toString()), null, null, null
+            )
+            var id: Long? = null
+            cursor?.use { if (it.moveToFirst()) id = it.getLong(0) }
+            id
+        } catch (e: Exception) {
+            null
         }
     }
 }

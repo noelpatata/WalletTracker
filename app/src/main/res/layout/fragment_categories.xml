@@ -68,6 +68,17 @@
                 tools:layout_editor_absoluteY="142dp" />
         </LinearLayout>
     </FrameLayout>
+    <TextView
+        android:id="@+id/lblSeason"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@id/total"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/swiperefresh"
@@ -76,7 +87,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/total">
+        app:layout_constraintTop_toBottomOf="@id/lblSeason">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rview_categories"
             android:layout_width="match_parent"

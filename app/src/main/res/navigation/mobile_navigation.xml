@@ -45,6 +45,12 @@
         tools:layout="@layout/fragment_metrics" />
 
     <fragment
+        android:id="@+id/nav_importes"
+        android:name="win.downops.wallettracker.ui.importes.ImportesFragment"
+        android:label="@string/menu_importes"
+        tools:layout="@layout/fragment_importes" />
+
+    <fragment
         android:id="@+id/nav_logout"
         android:name="win.downops.wallettracker.ui.settings.SettingsFragment"
         android:label="@string/menu_logoff"

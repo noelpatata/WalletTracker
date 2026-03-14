@@ -6,7 +6,9 @@ import kotlinx.coroutines.withContext
 import win.downops.wallettracker.BuildConfig
 import win.downops.wallettracker.data.api.expense.ExpenseEndpoints
 import win.downops.wallettracker.data.api.expenseCategory.ExpenseCategoryEndpoints
+import win.downops.wallettracker.data.api.importe.ImporteEndpoints
 import win.downops.wallettracker.data.api.login.LoginEndpoints
+import win.downops.wallettracker.data.api.season.SeasonEndpoints
 import okhttp3.ConnectionPool
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -53,5 +55,7 @@ object ApiClient {
     val login: LoginEndpoints by lazy { retrofit.create(LoginEndpoints::class.java) }
     val expenseCategory: ExpenseCategoryEndpoints by lazy { retrofit.create(ExpenseCategoryEndpoints::class.java) }
     val expense: ExpenseEndpoints by lazy { retrofit.create(ExpenseEndpoints::class.java) }
+    val season: SeasonEndpoints by lazy { retrofit.create(SeasonEndpoints::class.java) }
+    val importe: ImporteEndpoints by lazy { retrofit.create(ImporteEndpoints::class.java) }
 }
 

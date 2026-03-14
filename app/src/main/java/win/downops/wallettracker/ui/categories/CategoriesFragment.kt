@@ -82,6 +82,9 @@ class CategoriesFragment : Fragment() {
                 }
             }
         }
+        viewModel.seasonLabel.observe(viewLifecycleOwner) { label ->
+            binding.lblSeason.text = label
+        }
     }
     override fun onCreateView(
         inflater: LayoutInflater,

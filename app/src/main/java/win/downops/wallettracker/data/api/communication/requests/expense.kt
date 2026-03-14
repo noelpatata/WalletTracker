@@ -1,12 +1,9 @@
 package win.downops.wallettracker.data.api.communication.requests
 
 
-data class ExpenseByCategoryIdRequest(
-    val catId: Long
-)
-data class ExpenseIdRequest(
-    val id: Long
-)
+data class ExpenseByCategoryIdRequest(val catId: Long)
+data class ExpenseBySeasonIdRequest(val seasonId: Long)
+data class ExpenseIdRequest(val id: Long)
 data class CreateExpenseRequest(
     val price: Double,
     val expenseDate: String,
