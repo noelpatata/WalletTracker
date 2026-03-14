@@ -32,6 +32,9 @@ class ImportesViewModel @Inject constructor(
     private val _months = MutableLiveData<List<MonthOption>>()
     val months: LiveData<List<MonthOption>> = _months
 
+    private val _selectedMonthId = MutableLiveData<Long>()
+    val selectedMonthId: LiveData<Long> = _selectedMonthId
+
     private val _importes = MutableLiveData<List<Importe>>()
     val importes: LiveData<List<Importe>> = _importes
 
@@ -62,7 +65,7 @@ class ImportesViewModel @Inject constructor(
                     .sortedDescending()
                     .map { YearOption(it, it.toString()) }
                 _years.value = yearList
-                // Auto-select first year
+
                 if (yearList.isNotEmpty()) selectYear(yearList.first().year)
             }
         }
@@ -74,11 +77,30 @@ class ImportesViewModel @Inject constructor(
             .sortedByDescending { it.getMonth() }
             .map { season -> MonthOption(season, monthNames.getOrElse(season.getMonth() - 1) { season.getMonth().toString() }) }
         _months.value = monthList
-        // Auto-select first month
-        if (monthList.isNotEmpty()) loadImportes(monthList.first().season.getId())
+
+        viewModelScope.launch {
+            var validSeasonId: Long = 0
+            for (month in monthList) {
+                val seasonId = month.season.getId()
+                val result = importeRepository.getBySeasonId(seasonId)
+                if(result is AppResult.Success && result.data.isNotEmpty()){
+                    validSeasonId = seasonId
+                    break
+                }
+            }
+            if(validSeasonId <= 0 && monthList.isNotEmpty()){
+                validSeasonId = monthList.first().season.getId()
+            }
+
+            if (validSeasonId > 0) {
+                _selectedMonthId.value = validSeasonId
+                loadImportes(validSeasonId)
+            }
+        }
     }
 
     fun loadImportes(seasonId: Long) {
+        _selectedMonthId.value = seasonId
         viewModelScope.launch {
             val result = importeRepository.getBySeasonId(seasonId)
             if (result is AppResult.Success) {
@@ -92,6 +114,15 @@ class ImportesViewModel @Inject constructor(
                 _total.value = 0.0
                 _totalIncome.value = 0.0
                 _totalExpense.value = 0.0
+            }
+        }
+    }
+
+    fun emptySeason(seasonId: Long) {
+        viewModelScope.launch {
+            val result = importeRepository.deleteBySeasonId(seasonId)
+            if (result is AppResult.Success) {
+                loadImportes(seasonId)
             }
         }
     }

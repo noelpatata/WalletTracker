@@ -9,10 +9,6 @@
             android:icon="@drawable/navicon_home"
             android:title="@string/menu_categoriesexpenses" />
         <item
-            android:id="@+id/nav_importsheet"
-            android:icon="@drawable/ic_grid"
-            android:title="@string/menu_sheet" />
-        <item
             android:id="@+id/nav_importes"
             android:icon="@drawable/ic_grid"
             android:title="@string/menu_importes" />

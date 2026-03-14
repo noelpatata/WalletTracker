@@ -1,6 +1,6 @@
 package win.downops.wallettracker.ui.metrics
 
-import android.annotation.SuppressLint
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,15 +8,15 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import win.downops.wallettracker.R
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.databinding.FragmentMetricsBinding
-import win.downops.wallettracker.util.Logger
+import java.util.Locale
 
 @AndroidEntryPoint
 class MetricsFragment : Fragment() {
@@ -24,9 +24,6 @@ class MetricsFragment : Fragment() {
     private val viewModel: MetricsViewModel by viewModels()
     private var _binding: FragmentMetricsBinding? = null
     private val binding get() = _binding!!
-
-    private var categoryOptions: List<CategoryOption> = emptyList()
-    private var monthOptions: List<MonthOption> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,125 +36,161 @@ class MetricsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupSpinnerListeners()
-        initObservers()
-        loadData()
-    }
 
-    private fun loadData() {
-        binding.loadingPanel.visibility = View.VISIBLE
-        binding.filterRow.visibility = View.GONE
-        binding.scrollView.visibility = View.GONE
-        binding.lblEmpty.visibility = View.GONE
+        setupSpinners()
+        observeViewModel()
+
         viewModel.loadMetrics()
     }
 
-    private fun initObservers() {
-        viewModel.categoryOptions.observe(viewLifecycleOwner) { options ->
-            categoryOptions = options
-            if (options.isNotEmpty()) setupCategorySpinner()
-        }
-
-        viewModel.monthOptions.observe(viewLifecycleOwner) { options ->
-            monthOptions = options
-            setupMonthSpinner()
-            if (options.isNotEmpty()) binding.filterRow.visibility = View.VISIBLE
-        }
-
-        viewModel.metricsResult.observe(viewLifecycleOwner) { result ->
-            binding.loadingPanel.visibility = View.GONE
-            when (result) {
-                is AppResult.Success -> {
-                    binding.scrollView.visibility = View.VISIBLE
-                    binding.lblEmpty.visibility = View.GONE
-                    displayMetrics(result.data)
-                }
-                is AppResult.Error -> {
-                    Logger.log(result.message)
-                    binding.scrollView.visibility = View.GONE
-                    binding.lblEmpty.text = result.message
-                    binding.lblEmpty.visibility = View.VISIBLE
-                }
-            }
-        }
-    }
-
-    private fun setupCategorySpinner() {
-        val labels = mutableListOf("All Categories") + categoryOptions.map { it.name }
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, labels)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = adapter
-
-        val selectedIdx = categoryOptions.indexOfFirst { it.id == viewModel.selectedCategoryId }
-        binding.spinnerCategory.setSelection(if (selectedIdx >= 0) selectedIdx + 1 else 0)
-    }
-
-    private fun setupMonthSpinner() {
-        val labels = mutableListOf("All Months") + monthOptions.map { it.label }
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, labels)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerMonth.adapter = adapter
-
-        val selectedIdx = monthOptions.indexOfFirst { it.key == viewModel.selectedMonthKey }
-        binding.spinnerMonth.setSelection(if (selectedIdx >= 0) selectedIdx + 1 else 0)
-    }
-
-    private fun setupSpinnerListeners() {
+    private fun setupSpinners() {
         binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val catId = if (position == 0) null else categoryOptions.getOrNull(position - 1)?.id
-                if (catId == viewModel.selectedCategoryId) return
-                viewModel.setFilter(catId, viewModel.selectedMonthKey)
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedItem = parent.getItemAtPosition(position)
+                if (selectedItem is CategoryOption) {
+                    val selectedCatId = if (selectedItem.id == -1L) null else selectedItem.id
+                    viewModel.setFilter(selectedCatId, viewModel.selectedMonthKey)
+                }
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
         binding.spinnerMonth.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val monthKey = if (position == 0) null else monthOptions.getOrNull(position - 1)?.key
-                if (monthKey == viewModel.selectedMonthKey) return
-                viewModel.setFilter(viewModel.selectedCategoryId, monthKey)
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedItem = parent.getItemAtPosition(position)
+                if (selectedItem is MonthOption) {
+                    val selectedMonthKey = if (selectedItem.key == "") null else selectedItem.key
+                    viewModel.setFilter(viewModel.selectedCategoryId, selectedMonthKey)
+                }
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
-    @SuppressLint("DefaultLocale", "SetTextI18n")
-    private fun displayMetrics(data: MetricsData) {
-        binding.lblTotal.text = String.format("%.2f€", data.total)
+    private fun observeViewModel() {
+        viewModel.categoryOptions.observe(viewLifecycleOwner) { options ->
+            val list = mutableListOf(CategoryOption(-1, "All Categories")) + options
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, list)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            binding.spinnerCategory.adapter = adapter
+        }
+
+        viewModel.monthOptions.observe(viewLifecycleOwner) { options ->
+            val list = mutableListOf(MonthOption("", "All Months")) + options
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, list)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            binding.spinnerMonth.adapter = adapter
+        }
+
+        viewModel.metricsResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AppResult.Success -> {
+                    showData(result.data)
+                }
+                is AppResult.Error -> {
+                    showEmpty(result.message)
+                }
+            }
+        }
+    }
+
+    private fun showData(data: MetricsData) {
+        binding.loadingPanel.visibility = View.GONE
+        binding.lblEmpty.visibility = View.GONE
+        binding.filterRow.visibility = View.VISIBLE
+        binding.scrollView.visibility = View.VISIBLE
+
+        binding.lblTotal.text = String.format(Locale.getDefault(), "%.2f€", data.total)
         binding.lblCount.text = data.count.toString()
-        binding.lblAverage.text = String.format("%.2f€", data.average)
+        binding.lblAverage.text = String.format(Locale.getDefault(), "%.2f€", data.average)
 
         binding.categoryContainer.removeAllViews()
-        data.categories.forEach { cat ->
-            addMetricRow(
-                binding.categoryContainer,
-                cat.name,
-                String.format("%.2f€", cat.total),
-                cat.percentage.toInt()
-            )
+        data.categories.forEach { metric ->
+            val view = createMetricItem(metric.name, metric.total, metric.percentage)
+            binding.categoryContainer.addView(view)
         }
 
         binding.monthlyContainer.removeAllViews()
-        data.months.forEach { month ->
-            addMetricRow(
-                binding.monthlyContainer,
-                month.label,
-                String.format("%.2f€", month.total),
-                month.percentage.toInt()
-            )
+        data.months.forEach { metric ->
+            val view = createMetricItem(metric.label, metric.total, metric.percentage)
+            binding.monthlyContainer.addView(view)
+        }
+
+        // Handle Comparison section
+        binding.comparisonSection.visibility = if (data.comparison != null) View.VISIBLE else View.GONE
+        data.comparison?.let { comp ->
+            binding.lblCompExpenses.text = String.format(Locale.getDefault(), "%.2f€", comp.expenseTotal)
+            binding.lblCompImports.text = String.format(Locale.getDefault(), "%.2f€", comp.importTotalExpense)
+            binding.lblCompDiff.text = String.format(Locale.getDefault(), "%.2f€", comp.difference)
+            binding.lblCompMatch.text = String.format(Locale.getDefault(), "%.1f%%", comp.matchPercentage)
+            
+            val colorRes = when {
+                comp.matchPercentage >= 95 -> R.color.purple_500
+                comp.matchPercentage >= 80 -> android.R.color.holo_orange_dark
+                else -> R.color.red
+            }
+            binding.lblCompMatch.setTextColor(ContextCompat.getColor(requireContext(), colorRes))
         }
     }
 
-    private fun addMetricRow(container: LinearLayout, label: String, value: String, progress: Int) {
-        val rowView = LayoutInflater.from(requireContext())
-            .inflate(R.layout.item_metric_row, container, false)
+    private fun createMetricItem(label: String, value: Double, percentage: Double): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 0, 0, 16) }
+        }
 
-        rowView.findViewById<TextView>(R.id.lblMetricName).text = label
-        rowView.findViewById<TextView>(R.id.lblMetricValue).text = value
-        rowView.findViewById<ProgressBar>(R.id.progressMetric).progress = progress
+        val header = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
 
-        container.addView(rowView)
+        header.addView(TextView(requireContext()).apply {
+            text = label
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        })
+
+        header.addView(TextView(requireContext()).apply {
+            text = String.format(Locale.getDefault(), "%.2f€ (%.1f%%)", value, percentage)
+            setTypeface(null, Typeface.BOLD)
+        })
+
+        layout.addView(header)
+
+        val progressBackground = View(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                8
+            ).apply { setMargins(0, 8, 0, 0) }
+            setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.light_gray))
+        }
+
+        val progressForeground = View(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                8
+            ).apply { setMargins(0, -8, 0, 0) }
+            setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.purple_500))
+            post {
+                val params = layoutParams as LinearLayout.LayoutParams
+                params.width = (width * (percentage / 100.0)).toInt()
+                layoutParams = params
+            }
+        }
+
+        layout.addView(progressBackground)
+        layout.addView(progressForeground)
+
+        return layout
+    }
+
+    private fun showEmpty(message: String) {
+        binding.loadingPanel.visibility = View.GONE
+        binding.scrollView.visibility = View.GONE
+        binding.lblEmpty.visibility = View.VISIBLE
+        binding.lblEmpty.text = message
+        binding.filterRow.visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {

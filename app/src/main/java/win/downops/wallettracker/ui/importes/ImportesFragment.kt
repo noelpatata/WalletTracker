@@ -8,8 +8,11 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import win.downops.wallettracker.R
 import win.downops.wallettracker.databinding.FragmentImportesBinding
 import java.util.Locale
 
@@ -42,7 +45,6 @@ class ImportesFragment : Fragment() {
             viewModel.loadSeasons()
         }
 
-        // Year spinner
         binding.spinnerYear.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, v: View?, pos: Int, id: Long) {
                 if (suppressYearListener) return
@@ -52,7 +54,6 @@ class ImportesFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // Month spinner
         binding.spinnerMonth.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, v: View?, pos: Int, id: Long) {
                 if (suppressMonthListener) return
@@ -62,7 +63,23 @@ class ImportesFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // Observe years
+        binding.btnImportCsv.setOnClickListener {
+            findNavController().navigate(R.id.nav_importsheet)
+        }
+
+        binding.btnEmptySeason.setOnClickListener {
+            val selectedSeasonId = viewModel.selectedMonthId.value ?: return@setOnClickListener
+
+            MaterialAlertDialogBuilder(requireContext(), R.style.ButtonsCustomColor)
+                .setTitle("Vaciar mes")
+                .setMessage("¿Estás seguro de que quieres eliminar todos los importes de este mes?")
+                .setPositiveButton("Eliminar") { _, _ ->
+                    viewModel.emptySeason(selectedSeasonId)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+
         viewModel.years.observe(viewLifecycleOwner) { yearList ->
             suppressYearListener = true
             val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, yearList)
@@ -71,22 +88,36 @@ class ImportesFragment : Fragment() {
             suppressYearListener = false
         }
 
-        // Observe months
         viewModel.months.observe(viewLifecycleOwner) { monthList ->
             suppressMonthListener = true
             val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, monthList)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             binding.spinnerMonth.adapter = spinnerAdapter
+            
+            viewModel.selectedMonthId.value?.let { monthId ->
+                val index = monthList.indexOfFirst { it.season.getId() == monthId }
+                if (index >= 0) {
+                    binding.spinnerMonth.setSelection(index)
+                }
+            }
             suppressMonthListener = false
         }
 
-        // Observe importes
+        viewModel.selectedMonthId.observe(viewLifecycleOwner) { monthId ->
+            val monthList = viewModel.months.value ?: return@observe
+            val index = monthList.indexOfFirst { it.season.getId() == monthId }
+            if (index >= 0 && binding.spinnerMonth.selectedItemPosition != index) {
+                suppressMonthListener = true
+                binding.spinnerMonth.setSelection(index)
+                suppressMonthListener = false
+            }
+        }
+
         viewModel.importes.observe(viewLifecycleOwner) { list ->
             adapter.setData(list)
             binding.swiperefresh.isRefreshing = false
         }
 
-        // Observe totals
         viewModel.total.observe(viewLifecycleOwner) { total ->
             binding.lblTotal.text = String.format(Locale.getDefault(), "%.2f€", total)
         }
