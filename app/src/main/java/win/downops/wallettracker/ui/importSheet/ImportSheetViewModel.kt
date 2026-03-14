@@ -71,7 +71,6 @@ class ImportSheetViewModel @Inject constructor(
                             pt.date,
                             amount,
                             balanceAfter,
-                            accountDetails.iban,
                             season.getId()
                         )
                         val result = importeRepository.create(importe)

@@ -54,7 +54,6 @@ class ImporteHttpService @Inject constructor(
                     importe.getDateString(),
                     importe.getAmount(),
                     importe.getBalanceAfter(),
-                    importe.getIban(),
                     importe.getSeasonId()
                 )
             ) ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
