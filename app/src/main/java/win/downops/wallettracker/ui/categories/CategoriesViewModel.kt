@@ -8,19 +8,63 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.ExpenseCategoryRepository
+import win.downops.wallettracker.data.ExpenseRepository
+import win.downops.wallettracker.data.SeasonRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.ExpenseCategory
-import win.downops.wallettracker.di.ExpenseCategoryRepositoryProvider
+import java.util.Calendar
 
 @HiltViewModel
 class CategoriesViewModel @Inject constructor(
-    private val repo: ExpenseCategoryRepository
+    private val repo: ExpenseCategoryRepository,
+    private val expenseRepo: ExpenseRepository,
+    private val seasonRepo: SeasonRepository
 ) : ViewModel() {
 
     private val _getCategoriesResult = MutableLiveData<AppResult<List<ExpenseCategory>>>()
     val getCategoriesResult: LiveData<AppResult<List<ExpenseCategory>>> = _getCategoriesResult
+
+    private val _seasonLabel = MutableLiveData<String>()
+    val seasonLabel: LiveData<String> = _seasonLabel
+
+    private val monthNames = listOf(
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    )
+
     fun getCategories() = viewModelScope.launch {
-        _getCategoriesResult.postValue(repo.getAll())
+        val categoriesResult = repo.getAll()
+        if (categoriesResult !is AppResult.Success) {
+            _getCategoriesResult.postValue(categoriesResult)
+            return@launch
+        }
+
+        val categories = categoriesResult.data.map { cat ->
+            ExpenseCategory(cat.getId()).apply {
+                setName(cat.getName())
+                setOrder(cat.getOrder())
+                setTotal(0.0)
+            }
+        }
+
+        val cal = Calendar.getInstance()
+        val year = cal.get(Calendar.YEAR)
+        val month = cal.get(Calendar.MONTH) + 1
+        val monthName = monthNames.getOrElse(month - 1) { month.toString() }
+        _seasonLabel.postValue("$monthName $year")
+
+        val seasonResult = seasonRepo.getByYearMonth(year, month)
+        if (seasonResult is AppResult.Success && seasonResult.data != null) {
+            val expensesResult = expenseRepo.getBySeasonId(seasonResult.data!!.getId())
+            if (expensesResult is AppResult.Success) {
+                val totals = expensesResult.data
+                    .groupBy { it.getCategoryId() }
+                    .mapValues { (_, list) -> list.sumOf { it.getPrice() } }
+                categories.forEach { cat -> cat.setTotal(totals[cat.getId()] ?: 0.0) }
+            }
+        }
+
+        _getCategoriesResult.postValue(AppResult.Success(categoriesResult.message, categories))
     }
 
     private val _editCategoryResult = MutableLiveData<AppResult<ExpenseCategory?>>()

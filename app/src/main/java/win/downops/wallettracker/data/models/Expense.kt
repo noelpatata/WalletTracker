@@ -10,6 +10,7 @@ class Expense {
     private var description: String = ""
     private var expenseDate: Date? = null
     private var category: Long? = null
+    private var seasonId: Long? = null
     constructor()
     constructor(id:Long, price: Double?, expenseDate: Date?, category: Long?, description: String) {
         this.id = id
@@ -23,7 +24,6 @@ class Expense {
         this.expenseDate = expenseDate
         this.category = category
         this.description = description
-
     }
     constructor(id: Long) {
         this.id = id
@@ -61,5 +61,6 @@ class Expense {
     fun setCategoryId(value: Long){
         this.category = value
     }
-
+    fun getSeasonId(): Long? = seasonId
+    fun setSeasonId(value: Long) { seasonId = value }
 }

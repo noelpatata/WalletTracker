@@ -10,6 +10,7 @@ import win.downops.wallettracker.data.api.communication.requests.ExpenseIdReques
 import win.downops.wallettracker.data.api.communication.requests.CreateExpenseRequest
 import win.downops.wallettracker.data.api.communication.requests.EditExpenseRequest
 import win.downops.wallettracker.data.api.communication.requests.ExpenseByCategoryIdRequest
+import win.downops.wallettracker.data.api.communication.requests.ExpenseBySeasonIdRequest
 import win.downops.wallettracker.util.Messages.authenticationErrorMessage
 import com.google.gson.GsonBuilder
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -42,6 +43,17 @@ class ExpenseHttpService @Inject constructor(
                 e.message ?: "Unexpected error fetching expense",
                 isControlled = false,
                 e.stackTrace.joinToString("\n"))
+        }
+    }
+
+    override suspend fun getBySeasonId(seasonId: Long): AppResult<List<Expense>> {
+        return try {
+            val cipheredData = encryptData(ExpenseBySeasonIdRequest(seasonId))
+                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
+            val response = ApiClient.expense.getBySeasonId("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
+            parseListResponse(response)
+        } catch (e: Exception) {
+            AppResult.Error(e.message ?: "Unexpected error fetching expenses by season", isControlled = false, e.stackTrace.joinToString("\n"))
         }
     }
 

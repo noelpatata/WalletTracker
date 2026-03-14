@@ -64,6 +64,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.loginForm.visibility = View.VISIBLE
 
+        if (tryAutoLogin()) return
+
         initUi()
         initBiometricPrompt()
         checkStoredCredentials()
@@ -105,6 +107,35 @@ class LoginActivity : AppCompatActivity() {
         binding.fingerprintAuth.backgroundTintList =
             ColorStateList.valueOf(ContextCompat.getColor(this, backgroundColor))
         binding.fingerprintAuth.setColorFilter(ContextCompat.getColor(this, iconColor))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun tryAutoLogin(): Boolean {
+        val session = sessionRepo.getFirstSession() ?: return false
+        if (!session.online) {
+            appMode.isOnline = false
+            navigateToMain()
+            return true
+        }
+        if (session.token.isNotEmpty() && isTokenValid(session.token)) {
+            appMode.isOnline = true
+            navigateToMain()
+            return true
+        }
+        return false
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun isTokenValid(jwt: String): Boolean {
+        return try {
+            val payload = jwt.split(".").getOrNull(1) ?: return false
+            val padded = payload.padEnd((payload.length + 3) / 4 * 4, '=')
+            val decoded = String(Base64.getDecoder().decode(padded))
+            val exp = Regex("\"exp\":(\\d+)").find(decoded)?.groupValues?.get(1)?.toLong() ?: return false
+            System.currentTimeMillis() / 1000 < exp
+        } catch (e: Exception) {
+            false
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -253,7 +284,7 @@ class LoginActivity : AppCompatActivity() {
             val serverPublicKey = handleResult(loginRepo.getUserServerPubKey(jwt))?.publicKey
                 ?: throw IllegalStateException("Server's public key is missing")
 
-            saveSession(jwt, privateKey, serverPublicKey, cipheredCredentials)
+            saveSession(jwt, username, privateKey, serverPublicKey, cipheredCredentials)
             navigateToMain()
 
         } catch (e: Exception) {
@@ -276,11 +307,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveSession(jwt: String, privateKey: String, serverPublicKey: String, cipheredCredentials: CipheredCredentials?) {
+    private fun saveSession(jwt: String, username: String, privateKey: String, serverPublicKey: String, cipheredCredentials: CipheredCredentials?) {
         val oldSession = sessionRepo.getFirstSession()
         val newSession = Session().apply {
             id = oldSession?.id ?: 0
             token = jwt
+            this.username = username
             this.privateKey = privateKey
             this.serverPublicKey = serverPublicKey
             this.cipheredCredentials = cipheredCredentials?.credentials.orEmpty()

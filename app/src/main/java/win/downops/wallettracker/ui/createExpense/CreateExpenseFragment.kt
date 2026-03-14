@@ -367,7 +367,7 @@ class CreateExpenseFragment : Fragment() {
             requireContext(),
             dateSetListener,
             currDate.year,
-            currDate.monthValue,
+            currDate.monthValue - 1,
             currDate.dayOfMonth
         )
         datePicker.show()

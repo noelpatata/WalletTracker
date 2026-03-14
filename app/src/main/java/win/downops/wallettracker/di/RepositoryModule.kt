@@ -7,7 +7,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.data.ExpenseRepository
+import win.downops.wallettracker.data.ImporteRepository
 import win.downops.wallettracker.data.LoginRepository
+import win.downops.wallettracker.data.SeasonRepository
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.login.LoginHttpService
 import win.downops.wallettracker.data.sqlite.session.SessionSqlService
@@ -40,6 +42,18 @@ abstract class RepositoryModule {
     abstract fun bindExpenseCategoryRepository(
         impl: ExpenseCategoryRepositoryProvider
     ): ExpenseCategoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSeasonRepository(
+        impl: SeasonRepositoryProvider
+    ): SeasonRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindImporteRepository(
+        impl: ImporteRepositoryProvider
+    ): ImporteRepository
 
     companion object {
         @Provides

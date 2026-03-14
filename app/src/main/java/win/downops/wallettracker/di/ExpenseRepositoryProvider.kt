@@ -25,6 +25,10 @@ class ExpenseRepositoryProvider @Inject constructor(
         return repo().getByCatId(catId)
     }
 
+    override suspend fun getBySeasonId(seasonId: Long): AppResult<List<Expense>> {
+        return repo().getBySeasonId(seasonId)
+    }
+
     override suspend fun getById(expenseId: Long): AppResult<Expense?> {
         return repo().getById(expenseId)
     }

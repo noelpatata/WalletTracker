@@ -34,6 +34,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
     override fun edit(session: Session): Int {
         val values = ContentValues()
         values.put("token", session.token)
+        values.put("username", session.username)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
         values.put("cipheredCredentials", session.cipheredCredentials)
@@ -48,6 +49,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
     override fun insert(session: Session): Long {
         val values = ContentValues()
         values.put("token", session.token)
+        values.put("username", session.username)
         values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
         values.put("cipheredCredentials", session.cipheredCredentials)
@@ -79,6 +81,7 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
         return Session().apply {
             id = cursor.getInt(cursor.getColumnIndex("id"))
             token = cursor.getString(cursor.getColumnIndex("token"))
+            username = cursor.getString(cursor.getColumnIndex("username")) ?: ""
             privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
             serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
             cipheredCredentials = cursor.getString(cursor.getColumnIndex("cipheredCredentials"))

@@ -1,16 +1,20 @@
 package win.downops.wallettracker
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import com.google.android.material.navigation.NavigationView
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -28,6 +32,7 @@ import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.ui.login.LoginActivity
 import win.downops.wallettracker.util.AppResultHandler
+import win.downops.wallettracker.ui.importSheet.SharedCsvViewModel
 import win.downops.wallettracker.util.Logger
 
 @AndroidEntryPoint
@@ -36,6 +41,7 @@ class MainActivity  : AppCompatActivity() {
     lateinit var expenseRepo: ExpenseRepository
     @Inject
     lateinit var sessionRepo: SessionRepository
+    private val sharedCsvViewModel: SharedCsvViewModel by viewModels()
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     @RequiresApi(Build.VERSION_CODES.O)
@@ -56,6 +62,7 @@ class MainActivity  : AppCompatActivity() {
                 setOf(
                     R.id.nav_categories,
                     R.id.nav_importsheet,
+                    R.id.nav_importes,
                     R.id.nav_metrics,
                     R.id.nav_settings,
                     R.id.nav_logout
@@ -63,15 +70,58 @@ class MainActivity  : AppCompatActivity() {
             )
             setupActionBarWithNavController(navController, appBarConfiguration)
             navView.setupWithNavController(navController)
-            navView.getHeaderView(0)
+            navView.setNavigationItemSelectedListener { item ->
+                try {
+                    if (item.itemId == R.id.nav_categories) {
+                        navController.popBackStack(R.id.nav_categories, false)
+                    } else {
+                        NavigationUI.onNavDestinationSelected(item, navController)
+                    }
+                } catch (e: Exception) {
+                    Logger.log(e)
+                }
+                binding.drawerLayout.closeDrawers()
+                true
+            }
 
+            val headerView = navView.getHeaderView(0)
+            val lblUsername = headerView.findViewById<android.widget.TextView>(R.id.lblUsername)
+            val session = sessionRepo.getFirstSession()
+            if (session != null && session.username.isNotEmpty()) {
+                lblUsername.text = session.username
+            }
+
+            handleShareIntent(intent)
         }catch(e: Exception){
             Logger.log(e)
         }
-
-
     }
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleShareIntent(intent)
+    }
+
+    private fun handleShareIntent(intent: Intent) {
+        if (intent.action != Intent.ACTION_SEND) return
+        val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+        } ?: return
+        sharedCsvViewModel.pendingUri = uri
+        setIntent(Intent(this, MainActivity::class.java))
+        binding.root.post {
+            val navOptions = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setPopUpTo(R.id.nav_categories, inclusive = false)
+                .build()
+            findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.nav_importsheet, null, navOptions)
+        }
+    }
+
+override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         return true
     }

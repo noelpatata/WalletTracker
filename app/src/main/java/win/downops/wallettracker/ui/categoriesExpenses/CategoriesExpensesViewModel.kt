@@ -11,23 +11,25 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.data.ExpenseRepository
+import win.downops.wallettracker.data.SeasonRepository
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Expense
 import win.downops.wallettracker.data.models.ExpenseCategory
-import win.downops.wallettracker.di.ExpenseCategoryRepositoryProvider
-import win.downops.wallettracker.di.ExpenseRepositoryProvider
+import java.util.Calendar
 
 @HiltViewModel
 class CategoriesExpensesViewModel @Inject constructor(
     private val expenseRepo: ExpenseRepository,
-    private val categoryRepo: ExpenseCategoryRepository
+    private val categoryRepo: ExpenseCategoryRepository,
+    private val seasonRepo: SeasonRepository
 ) : ViewModel() {
+
+    val showAll = MutableLiveData(false)
 
     private val _deleteResult = MutableLiveData<AppResult<Unit>>()
     val deleteResult: LiveData<AppResult<Unit>> = _deleteResult
 
     fun deleteExpense(expenseId: Long) = viewModelScope.launch {
-
         _deleteResult.postValue(expenseRepo.deleteById(expenseId))
     }
 
@@ -42,8 +44,30 @@ class CategoriesExpensesViewModel @Inject constructor(
     val getExpensesByCategoryIdResult: LiveData<AppResult<List<Expense>>> = _getExpensesByCategoryIdResult
 
     fun getExpensesByCategoryId(categoryId: Long) = viewModelScope.launch {
+        if (showAll.value == true) {
+            _getExpensesByCategoryIdResult.postValue(expenseRepo.getByCatId(categoryId))
+        } else {
+            val cal = Calendar.getInstance()
+            val year = cal.get(Calendar.YEAR)
+            val month = cal.get(Calendar.MONTH) + 1
+            val seasonResult = seasonRepo.getByYearMonth(year, month)
+            if (seasonResult is AppResult.Success && seasonResult.data != null) {
+                val seasonExpenses = expenseRepo.getBySeasonId(seasonResult.data!!.getId())
+                if (seasonExpenses is AppResult.Success) {
+                    val filtered = seasonExpenses.data.filter { it.getCategoryId() == categoryId }
+                    _getExpensesByCategoryIdResult.postValue(AppResult.Success("Expenses fetched", filtered))
+                } else {
+                    _getExpensesByCategoryIdResult.postValue(seasonExpenses)
+                }
+            } else {
+                _getExpensesByCategoryIdResult.postValue(AppResult.Success("No expenses for this season", emptyList()))
+            }
+        }
+    }
 
-        _getExpensesByCategoryIdResult.postValue(expenseRepo.getByCatId(categoryId))
+    fun toggleShowAll(categoryId: Long) {
+        showAll.value = !(showAll.value ?: false)
+        getExpensesByCategoryId(categoryId)
     }
 
     private val _editExpenseCategoryResult = MutableLiveData<AppResult<ExpenseCategory?>>()
