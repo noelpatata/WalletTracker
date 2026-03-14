@@ -58,28 +58,36 @@ class ImportSheetViewModel @Inject constructor(
                     seasonMap[ym] = (result as AppResult.Success).data!!
                 }
 
-                val total = parsed.size
-                _importProgress.value = 0 to total
-                var imported = 0
-                for ((index, pt) in parsed.withIndex()) {
+                val importesToCreate = mutableListOf<Importe>()
+                for (pt in parsed) {
                     val amount = parseAmount(pt.transaction.amount)
                     val season = seasonMap[pt.yearMonth]
                     if (amount != null && season != null) {
                         val balanceAfter = parseAmount(pt.transaction.balanceAfter) ?: 0.0
-                        val importe = Importe(
+                        importesToCreate.add(Importe(
                             pt.transaction.concept,
                             pt.date,
                             amount,
                             balanceAfter,
                             season.getId()
-                        )
-                        val result = importeRepository.create(importe)
-                        if (result is AppResult.Success) imported++
+                        ))
                     }
-                    _importProgress.value = (index + 1) to total
                 }
 
-                _importResult.value = AppResult.Success("Imported $imported transactions", imported)
+                if (importesToCreate.isNotEmpty()) {
+                    _importProgress.value = 0 to importesToCreate.size
+                    val result = importeRepository.createAll(importesToCreate)
+                    if (result is AppResult.Success) {
+                        _importProgress.value = importesToCreate.size to importesToCreate.size
+                        _importResult.value = AppResult.Success("Imported ${importesToCreate.size} transactions", importesToCreate.size)
+                    } else if (result is AppResult.Error) {
+                        _importResult.value = AppResult.Error(result.message, result.isControlled)
+                    }
+                } else {
+                    _importResult.value = AppResult.Success("No valid transactions found to import", 0)
+                }
+            } catch (e: Exception) {
+                _importResult.value = AppResult.Error(e.message ?: "Unexpected error during import")
             } finally {
                 _importing.value = false
             }
