@@ -1,3 +1,5 @@
+package win.downops.wallettracker.util
+
 import android.os.Build
 import win.downops.wallettracker.BuildConfig
 import androidx.annotation.RequiresApi
@@ -14,7 +16,7 @@ import java.util.*
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class Cryptography {
+object Cryptography {
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateKeys(): List<String> {
         val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
@@ -183,5 +185,18 @@ class Cryptography {
         val decodedBytes = Base64.getDecoder().decode(base64String)
         val keySpec = X509EncodedKeySpec(decodedBytes)
         return KeyFactory.getInstance("RSA").generatePublic(keySpec) as RSAPublicKey
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun isTokenValid(jwt: String): Boolean {
+        return try {
+            val payload = jwt.split(".").getOrNull(1) ?: return false
+            val padded = payload.padEnd((payload.length + 3) / 4 * 4, '=')
+            val decoded = String(Base64.getDecoder().decode(padded))
+            val exp = Regex("\"exp\":(\\d+)").find(decoded)?.groupValues?.get(1)?.toLong() ?: return false
+            System.currentTimeMillis() / 1000 < exp
+        } catch (e: Exception) {
+            false
+        }
     }
 }
