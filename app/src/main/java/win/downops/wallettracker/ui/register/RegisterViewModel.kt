@@ -1,6 +1,7 @@
 package win.downops.wallettracker.ui.register
 
-import Cryptography
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,7 @@ import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyReq
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Session
 import win.downops.wallettracker.di.AppMode
+import win.downops.wallettracker.util.Cryptography
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +28,7 @@ class RegisterViewModel @Inject constructor(
     private val _registerResult = MutableLiveData<AppResult<Unit>>()
     val registerResult: LiveData<AppResult<Unit>> = _registerResult
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun register(username: String, password: String) {
         viewModelScope.launch {
             val credentials = LoginRequest(username, password)
@@ -47,7 +50,7 @@ class RegisterViewModel @Inject constructor(
                     return@launch
                 }
 
-            val (privateKey, publicKey) = Cryptography().generateKeys()
+            val (privateKey, publicKey) = Cryptography.generateKeys()
 
             val setKeyResult = loginRepo.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))
             if (setKeyResult is AppResult.Error) {

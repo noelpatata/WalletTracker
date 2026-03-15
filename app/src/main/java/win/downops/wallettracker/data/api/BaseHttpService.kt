@@ -1,6 +1,5 @@
 package win.downops.wallettracker.data.api
 
-import Cryptography
 import android.os.Build
 import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
@@ -9,6 +8,7 @@ import com.google.gson.GsonBuilder
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
 import win.downops.wallettracker.data.models.Session
+import win.downops.wallettracker.util.Cryptography
 
 @RequiresApi(Build.VERSION_CODES.O)
 abstract class BaseHttpService(
@@ -22,20 +22,20 @@ abstract class BaseHttpService(
     protected fun getPrivateKey(): String = session.privateKey
     protected fun getPublicKey(): String = session.serverPublicKey
     protected fun getToken(): String = session.token
-    protected fun getCipheredText(): String = Cryptography().sign(getPrivateKey())
+    protected fun getCipheredText(): String = Cryptography.sign(getPrivateKey())
 
-    private fun verifySignature(signature: String) = Cryptography().verify(getPublicKey(), signature)
+    private fun verifySignature(signature: String) = Cryptography.verify(getPublicKey(), signature)
 
     private fun decryptData(data: CipheredRequest?): String {
         val (encryptedAesKey, iv, ciphertext, tag) = data
             ?: throw IllegalArgumentException("CipheredRequest is null")
         if (encryptedAesKey.isNullOrEmpty() || iv.isNullOrEmpty() || ciphertext.isNullOrEmpty() || tag.isNullOrEmpty())
             throw IllegalStateException("Invalid CipheredRequest")
-        return Cryptography().hybridDecrypt(getPrivateKey(), encryptedAesKey, iv, ciphertext, tag)
+        return Cryptography.hybridDecrypt(getPrivateKey(), encryptedAesKey, iv, ciphertext, tag)
     }
 
     protected inline fun <reified R> encryptData(data: R): CipheredRequest? =
-        Cryptography().hybridEncrypt(getPublicKey(), GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))
+        Cryptography.hybridEncrypt(getPublicKey(), GsonBuilder().setDateFormat("yyyy-MM-dd").create().toJson(data))
 
     protected fun validateCipheredResponse(response: BaseResponse<CipheredResponse>?): String {
         val ciphered = response?.data ?: throw Exception("Unexpected error")

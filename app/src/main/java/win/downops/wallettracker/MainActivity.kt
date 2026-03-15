@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import com.google.android.material.navigation.NavigationView
@@ -20,9 +19,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import win.downops.wallettracker.data.ExpenseRepository
@@ -44,6 +41,7 @@ class MainActivity  : AppCompatActivity() {
     private val sharedCsvViewModel: SharedCsvViewModel by viewModels()
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
@@ -61,7 +59,6 @@ class MainActivity  : AppCompatActivity() {
             appBarConfiguration = AppBarConfiguration(
                 setOf(
                     R.id.nav_categories,
-                    R.id.nav_importsheet,
                     R.id.nav_importes,
                     R.id.nav_metrics,
                     R.id.nav_settings,
@@ -97,11 +94,13 @@ class MainActivity  : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleShareIntent(intent)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleShareIntent(intent: Intent) {
         if (intent.action != Intent.ACTION_SEND) return
         val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -121,7 +120,7 @@ class MainActivity  : AppCompatActivity() {
         }
     }
 
-override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
@@ -166,8 +165,6 @@ override fun onCreateOptionsMenu(menu: Menu): Boolean {
         }
     }
 
-
-
     fun doLogOut() {
         try{
             sessionRepo.deleteAll()
@@ -177,6 +174,5 @@ override fun onCreateOptionsMenu(menu: Menu): Boolean {
         }catch(e: Exception){
             Logger.log(e)
         }
-
     }
 }

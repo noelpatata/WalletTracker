@@ -1,6 +1,5 @@
 package win.downops.wallettracker.ui.login
 
-import Cryptography
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Build
@@ -33,6 +32,7 @@ import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.CipheredCredentials
 import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.util.Biometrics
+import win.downops.wallettracker.util.Cryptography
 import win.downops.wallettracker.util.Logger
 import java.nio.charset.Charset
 import java.security.UnrecoverableKeyException
@@ -112,30 +112,20 @@ class LoginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun tryAutoLogin(): Boolean {
         val session = sessionRepo.getFirstSession() ?: return false
+        
         if (!session.online) {
             appMode.isOnline = false
             navigateToMain()
             return true
         }
-        if (session.token.isNotEmpty() && isTokenValid(session.token)) {
+        
+        if (session.token.isNotEmpty() && Cryptography.isTokenValid(session.token)) {
             appMode.isOnline = true
             navigateToMain()
             return true
         }
-        return false
-    }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun isTokenValid(jwt: String): Boolean {
-        return try {
-            val payload = jwt.split(".").getOrNull(1) ?: return false
-            val padded = payload.padEnd((payload.length + 3) / 4 * 4, '=')
-            val decoded = String(Base64.getDecoder().decode(padded))
-            val exp = Regex("\"exp\":(\\d+)").find(decoded)?.groupValues?.get(1)?.toLong() ?: return false
-            System.currentTimeMillis() / 1000 < exp
-        } catch (e: Exception) {
-            false
-        }
+        return false
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -278,7 +268,7 @@ class LoginActivity : AppCompatActivity() {
             val loginResponse = handleResult(loginRepo.login(credentials)) ?: return
             val jwt = loginResponse.token
 
-            val (privateKey, publicKey) = Cryptography().generateKeys()
+            val (privateKey, publicKey) = Cryptography.generateKeys()
             handleResult(loginRepo.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))) ?: return
 
             val serverPublicKey = handleResult(loginRepo.getUserServerPubKey(jwt))?.publicKey
@@ -326,8 +316,18 @@ class LoginActivity : AppCompatActivity() {
         else sessionRepo.edit(newSession)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun navigateToMain() {
-        startActivity(Intent(this, MainActivity::class.java))
+        val currentIntent = intent
+        if (currentIntent.action == Intent.ACTION_SEND) {
+            // Forward the original share intent to MainActivity
+            val newIntent = Intent(currentIntent)
+            newIntent.setClass(this, MainActivity::class.java)
+            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(newIntent)
+        } else {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
         finish()
     }
 }
