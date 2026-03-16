@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 val majorVersion = 2
 val minorVersion = 1
@@ -32,7 +33,12 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:5000\"")
+            val localProps = Properties().apply {
+                val f = rootProject.file("local.properties")
+                if (f.exists()) load(f.inputStream())
+            }
+            val signSecret = localProps.getProperty("SIGN_SECRET") ?: error("SIGN_SECRET not set in local.properties")
+            buildConfigField("String", "API_BASE_URL", signSecret)
             buildConfigField("String", "API_VERSION", "\"1\"")
             buildConfigField("String", "SIGN_SECRET", "\"s0m3r4nd0mt3xt\"")
             isDebuggable = true
