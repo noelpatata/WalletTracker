@@ -20,6 +20,7 @@ androidApplicationGradlePluguin = "9.0.1"
 kotlinAndroidGradlePluguin = "2.2.21"
 kspGradlePluguin = "2.3.2"
 hiltGradlePluguin = "2.57.2"
+security-crypto = "1.1.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidApplicationGradlePluguin" }
@@ -49,5 +50,4 @@ androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", vers
 swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltGradlePluguin" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltGradlePluguin" }
-
-
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }

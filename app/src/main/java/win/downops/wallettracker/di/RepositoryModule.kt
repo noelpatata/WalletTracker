@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import win.downops.wallettracker.data.EncryptedSessionRepository
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.data.ExpenseRepository
 import win.downops.wallettracker.data.ImporteRepository
@@ -12,7 +13,6 @@ import win.downops.wallettracker.data.LoginRepository
 import win.downops.wallettracker.data.SeasonRepository
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.login.LoginHttpService
-import win.downops.wallettracker.data.sqlite.session.SessionSqlService
 import javax.inject.Singleton
 
 @Module
@@ -28,7 +28,7 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSessionRepository(
-        impl: SessionSqlService
+        impl: EncryptedSessionRepository
     ): SessionRepository
 
     @Binds

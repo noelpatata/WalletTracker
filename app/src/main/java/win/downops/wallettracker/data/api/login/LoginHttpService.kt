@@ -1,18 +1,12 @@
 package win.downops.wallettracker.data.api.login
 
-import com.google.gson.GsonBuilder
 import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.LoginRepository
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
-import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 import win.downops.wallettracker.data.api.communication.responses.LoginResponse
 import win.downops.wallettracker.data.api.communication.responses.ServerPubKeyResponse
 import win.downops.wallettracker.data.models.AppResult
-import win.downops.wallettracker.data.models.ExpenseCategory
-import win.downops.wallettracker.util.Messages.errorFetchingPublicKey
-import win.downops.wallettracker.util.Messages.errorSendingPublicKey
-import win.downops.wallettracker.util.Messages.loginFailedMessage
 import javax.inject.Inject
 
 class LoginHttpService @Inject constructor(): LoginRepository {
@@ -30,6 +24,22 @@ class LoginHttpService @Inject constructor(): LoginRepository {
         val body = response.body() ?: return AppResult.Error("No data")
 
         return if (body.success) AppResult.Success(body.message, body.data)
+        else AppResult.Error(body.message)
+    }
+
+    override suspend fun refresh(token: String): AppResult<LoginResponse?> {
+        val response = ApiClient.login.refresh("Bearer $token")
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, body.data)
+        else AppResult.Error(body.message)
+    }
+
+    override suspend fun logout(token: String): AppResult<Unit> {
+        val response = ApiClient.login.logout("Bearer $token")
+        val body = response.body() ?: return AppResult.Error("No data")
+
+        return if (body.success) AppResult.Success(body.message, Unit)
         else AppResult.Error(body.message)
     }
 

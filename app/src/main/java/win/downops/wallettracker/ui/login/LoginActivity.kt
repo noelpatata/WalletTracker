@@ -14,8 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
-import jakarta.inject.Inject
 import win.downops.wallettracker.MainActivity
 import win.downops.wallettracker.ui.register.RegisterActivity
 import win.downops.wallettracker.data.models.Session
@@ -24,12 +24,10 @@ import win.downops.wallettracker.di.AppMode
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.R
 import win.downops.wallettracker.data.LoginRepository
-import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.models.AppResult
-import win.downops.wallettracker.data.models.CipheredCredentials
 import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.util.Biometrics
 import win.downops.wallettracker.util.Cryptography
@@ -38,6 +36,7 @@ import java.nio.charset.Charset
 import java.security.UnrecoverableKeyException
 import java.util.Base64
 import java.util.concurrent.Executor
+import javax.inject.Inject
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 
@@ -63,6 +62,9 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.loginForm.visibility = View.VISIBLE
+
+        // Step 1: Ensure Client RSA Key Pair exists in Keystore
+        Cryptography.getOrCreateClientKeyPair()
 
         if (tryAutoLogin()) return
 
@@ -131,12 +133,12 @@ class LoginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun checkStoredCredentials() {
         val session = sessionRepo.getFirstSession()
-        foundCredentials = session?.fingerPrint == true && session.cipheredCredentials.isNotEmpty()
+        foundCredentials = session?.fingerPrint == true && session.biometricsCredentials.isNotEmpty()
 
         if (foundCredentials) {
             isFingerprintActive = true
             updateFingerprintFabState()
-            loginWithFingerprint(session!!.iv)
+            loginWithFingerprint(session!!.biometricsIv)
         }
     }
 
@@ -165,17 +167,16 @@ class LoginActivity : AppCompatActivity() {
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
-                sessionRepo.deleteAll()
+                // Don't delete all if just cancelled
             }
 
             override fun onAuthenticationFailed() {
                 super.onAuthenticationFailed()
-                sessionRepo.deleteAll()
             }
         })
 
         promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Biometric login for my app")
+            .setTitle("Biometric login")
             .setSubtitle("Log in using your biometric credential")
             .setNegativeButtonText("Use account password")
             .build()
@@ -184,7 +185,7 @@ class LoginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun handleBiometricSuccess(result: BiometricPrompt.AuthenticationResult) {
         val session = sessionRepo.getFirstSession()
-        if (session != null && session.cipheredCredentials.isNotEmpty()) {
+        if (session != null && session.biometricsCredentials.isNotEmpty()) {
             decryptStoredCredentials(session, result)
         } else {
             encryptAndLoginCredentials(result)
@@ -194,13 +195,13 @@ class LoginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun decryptStoredCredentials(session: Session, result: BiometricPrompt.AuthenticationResult) {
         try {
-            val input = Base64.getDecoder().decode(session.cipheredCredentials)
+            val input = Base64.getDecoder().decode(session.biometricsCredentials)
             val decryptedBytes = result.cryptoObject?.cipher?.doFinal(input)
             val decryptedArray = decryptedBytes?.toString(Charset.defaultCharset())?.split(";") ?: return
 
             if (decryptedArray.size == 2) {
                 lifecycleScope.launch {
-                    doLogin(decryptedArray[0], decryptedArray[1], CipheredCredentials(session.cipheredCredentials, session.iv))
+                    doLogin(decryptedArray[0], decryptedArray[1], true)
                 }
             }
         } catch (e: Exception) {
@@ -211,17 +212,17 @@ class LoginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun encryptAndLoginCredentials(result: BiometricPrompt.AuthenticationResult) {
         try {
-            val input = "${binding.inputUsername.text};${binding.inputPassword.text}".toByteArray(Charset.defaultCharset())
+            val username = binding.inputUsername.text.toString()
+            val password = binding.inputPassword.text.toString()
+            val input = "$username;$password".toByteArray(Charset.defaultCharset())
             val encryptedBytes = result.cryptoObject?.cipher?.doFinal(input)
             val iv = result.cryptoObject?.cipher?.iv ?: throw Exception("Invalid iv")
 
-            val cipheredCredentials = CipheredCredentials(
-                Base64.getEncoder().encodeToString(encryptedBytes),
-                Base64.getEncoder().encodeToString(iv)
-            )
+            val encryptedCreds = Base64.getEncoder().encodeToString(encryptedBytes)
+            val ivString = Base64.getEncoder().encodeToString(iv)
 
             lifecycleScope.launch {
-                doLogin(binding.inputUsername.text.toString(), binding.inputPassword.text.toString(), cipheredCredentials)
+                doLogin(username, password, true, encryptedCreds, ivString)
             }
         } catch (e: Exception) {
             Logger.log(e)
@@ -261,20 +262,47 @@ class LoginActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun doLogin(username: String, password: String, cipheredCredentials: CipheredCredentials? = null) {
+    private suspend fun doLogin(
+        username: String, 
+        password: String, 
+        enableFingerprint: Boolean = false,
+        biometricsCreds: String? = null,
+        biometricsIv: String? = null
+    ) {
         try {
             showLoading(true)
-            val credentials = LoginRequest(username, password)
-            val loginResponse = handleResult(loginRepo.login(credentials)) ?: return
+            val loginResponse = handleResult(loginRepo.login(LoginRequest(username, password))) ?: return
             val jwt = loginResponse.token
 
-            val (privateKey, publicKey) = Cryptography.generateKeys()
-            handleResult(loginRepo.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))) ?: return
-
-            val serverPublicKey = handleResult(loginRepo.getUserServerPubKey(jwt))?.publicKey
+            // Step 2: Fetch server public key
+            val serverPubKeyResponse = handleResult(loginRepo.getUserServerPubKey(jwt))
+            val serverPublicKey = serverPubKeyResponse?.publicKey 
                 ?: throw IllegalStateException("Server's public key is missing")
 
-            saveSession(jwt, username, privateKey, serverPublicKey, cipheredCredentials)
+            // Step 3: Send client public key (from Keystore)
+            val clientPubKey = Cryptography.getClientPublicKeyPem()
+            handleResult(loginRepo.setUserClientPubKey(jwt, ServerPubKeyRequest(clientPubKey))) ?: return
+
+            // Step 4: Encrypt credentials with server public key for re-authentication (Hybrid Encryption)
+            val encryptedCredentials = Cryptography.hybridEncrypt(serverPublicKey, Gson().toJson(LoginRequest(username, password)))
+            val encryptedCredsJson = Gson().toJson(encryptedCredentials)
+
+            // Step 5: Save Session
+            val session = Session().apply {
+                token = jwt
+                this.username = username
+                this.serverPublicKey = serverPublicKey
+                this.encryptedCredentials = encryptedCredsJson
+                this.fingerPrint = enableFingerprint
+                this.online = true
+                if (enableFingerprint) {
+                    this.biometricsCredentials = biometricsCreds ?: ""
+                    this.biometricsIv = biometricsIv ?: ""
+                }
+            }
+            sessionRepo.insert(session)
+            appMode.isOnline = true
+            
             navigateToMain()
 
         } catch (e: Exception) {
@@ -297,30 +325,10 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveSession(jwt: String, username: String, privateKey: String, serverPublicKey: String, cipheredCredentials: CipheredCredentials?) {
-        val oldSession = sessionRepo.getFirstSession()
-        val newSession = Session().apply {
-            id = oldSession?.id ?: 0
-            token = jwt
-            this.username = username
-            this.privateKey = privateKey
-            this.serverPublicKey = serverPublicKey
-            this.cipheredCredentials = cipheredCredentials?.credentials.orEmpty()
-            this.iv = cipheredCredentials?.iv.orEmpty()
-            fingerPrint = cipheredCredentials?.credentials?.isNotEmpty() == true
-            online = true
-        }
-
-        appMode.isOnline = true
-        if (oldSession == null) sessionRepo.insert(newSession)
-        else sessionRepo.edit(newSession)
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun navigateToMain() {
         val currentIntent = intent
         if (currentIntent.action == Intent.ACTION_SEND) {
-            // Forward the original share intent to MainActivity
             val newIntent = Intent(currentIntent)
             newIntent.setClass(this, MainActivity::class.java)
             newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

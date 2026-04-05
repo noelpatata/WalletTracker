@@ -1,6 +1,7 @@
 package win.downops.wallettracker.data.api.login
 
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
+import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -22,6 +23,21 @@ interface LoginEndpoints {
     suspend fun login(
         @Body login: LoginRequest
     ): Response<BaseResponse<LoginResponse>>
+
+    @POST("api/v1/refresh/")
+    fun refreshSync(
+        @Header("Authorization") token: String,
+    ): Call<BaseResponse<LoginResponse>>
+
+    @POST("api/v1/refresh/")
+    suspend fun refresh(
+        @Header("Authorization") token: String,
+    ): Response<BaseResponse<LoginResponse>>
+
+    @POST("api/v1/logout/")
+    suspend fun logout(
+        @Header("Authorization") token: String,
+    ): Response<BaseResponse<Nothing>>
 
     @GET("api/v1/getUserServerPubKey/")
     suspend fun getUserServerPubKey(

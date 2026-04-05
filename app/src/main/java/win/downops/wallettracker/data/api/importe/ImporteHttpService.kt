@@ -22,6 +22,7 @@ import win.downops.wallettracker.util.Messages.authenticationErrorMessage
 
 @RequiresApi(Build.VERSION_CODES.O)
 class ImporteHttpService @Inject constructor(
+    private val apiClient: ApiClient,
     sessionRepository: SessionRepository
 ) : BaseHttpService(sessionRepository), ImporteRepository {
 
@@ -29,7 +30,7 @@ class ImporteHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(ImporteBySeasonIdRequest(seasonId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.getBySeasonId("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.getBySeasonId(cipheredData)
             parseListResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error fetching importes", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -40,7 +41,7 @@ class ImporteHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(ImporteIdRequest(importeId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.getById("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.getById(cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error fetching importe", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -58,7 +59,7 @@ class ImporteHttpService @Inject constructor(
                     importe.getSeasonId()
                 )
             ) ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.create("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.create(cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error creating importe", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -76,10 +77,10 @@ class ImporteHttpService @Inject constructor(
                     it.getSeasonId()
                 )
             }
-            val bulkRequest = CreateImportesBulkRequest(importes = requests)
+            val bulkRequest = CreateImportesBulkRequest(requests)
             val cipheredData = encryptData(bulkRequest)
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.createAll("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.createAll(cipheredData)
             val body = response.body() ?: return AppResult.Error("No data")
             if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
         } catch (e: Exception) {
@@ -91,7 +92,7 @@ class ImporteHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(ImporteIdRequest(importeId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.deleteById("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.deleteById(cipheredData)
             val body = response.body() ?: return AppResult.Error("No data")
             if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
         } catch (e: Exception) {
@@ -103,7 +104,7 @@ class ImporteHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(ImporteBySeasonIdRequest(seasonId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.deleteBySeasonId("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.importe.deleteBySeasonId(cipheredData)
             val body = response.body() ?: return AppResult.Error("No data")
             if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
         } catch (e: Exception) {

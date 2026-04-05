@@ -20,12 +20,13 @@ import win.downops.wallettracker.util.Messages.authenticationErrorMessage
 
 @RequiresApi(Build.VERSION_CODES.O)
 class SeasonHttpService @Inject constructor(
+    private val apiClient: ApiClient,
     sessionRepository: SessionRepository
 ) : BaseHttpService(sessionRepository), SeasonRepository {
 
     override suspend fun getAll(): AppResult<List<Season>> {
         return try {
-            val response = ApiClient.season.getAll("Bearer ${getToken()}", getCipheredText())
+            val response = apiClient.season.getAll()
             parseListResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error fetching seasons", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -36,7 +37,7 @@ class SeasonHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(SeasonIdRequest(seasonId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.season.getById("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.season.getById(cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error fetching season", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -47,7 +48,7 @@ class SeasonHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(GetOrCreateSeasonRequest(year, month))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.season.getOrCreate("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.season.getOrCreate(cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error fetching season", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -58,7 +59,7 @@ class SeasonHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(GetOrCreateSeasonRequest(year, month))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.season.getOrCreate("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.season.getOrCreate(cipheredData)
             parseObjectResponse(response)
         } catch (e: Exception) {
             AppResult.Error(e.message ?: "Unexpected error creating season", isControlled = false, e.stackTrace.joinToString("\n"))
@@ -69,7 +70,7 @@ class SeasonHttpService @Inject constructor(
         return try {
             val cipheredData = encryptData(SeasonIdRequest(seasonId))
                 ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.season.deleteById("Bearer ${getToken()}", getCipheredText(), cipheredData)
+            val response = apiClient.season.deleteById(cipheredData)
             val body = response.body() ?: return AppResult.Error("No data")
             if (body.success) AppResult.Success(body.message, Unit)
             else AppResult.Error(body.message)

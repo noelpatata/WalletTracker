@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
 import win.downops.wallettracker.data.api.communication.responses.CipheredResponse
 import com.google.gson.GsonBuilder
+import win.downops.wallettracker.BuildConfig
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.communication.requests.CipheredRequest
 import win.downops.wallettracker.data.models.Session
@@ -19,10 +20,11 @@ abstract class BaseHttpService(
         get() = sessionRepository.getFirstSession()
             ?: throw Exception("No session found")
 
-    protected fun getPrivateKey(): String = session.privateKey
     protected fun getPublicKey(): String = session.serverPublicKey
     protected fun getToken(): String = session.token
-    protected fun getCipheredText(): String = Cryptography.sign(getPrivateKey())
+    
+    protected fun getCipheredText(): String = 
+        Cryptography.signWithKeystore(BuildConfig.SIGN_SECRET.toByteArray())
 
     private fun verifySignature(signature: String) = Cryptography.verify(getPublicKey(), signature)
 
@@ -31,7 +33,7 @@ abstract class BaseHttpService(
             ?: throw IllegalArgumentException("CipheredRequest is null")
         if (encryptedAesKey.isNullOrEmpty() || iv.isNullOrEmpty() || ciphertext.isNullOrEmpty() || tag.isNullOrEmpty())
             throw IllegalStateException("Invalid CipheredRequest")
-        return Cryptography.hybridDecrypt(getPrivateKey(), encryptedAesKey, iv, ciphertext, tag)
+        return Cryptography.decryptWithKeystore(encryptedAesKey, iv, ciphertext, tag)
     }
 
     protected inline fun <reified R> encryptData(data: R): CipheredRequest? =
