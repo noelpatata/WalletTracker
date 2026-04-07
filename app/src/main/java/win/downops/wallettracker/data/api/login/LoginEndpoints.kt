@@ -23,6 +23,16 @@ interface LoginEndpoints {
         @Body login: LoginRequest
     ): Response<BaseResponse<LoginResponse>>
 
+    @POST("api/v1/refresh/")
+    suspend fun refresh(
+        @Header("Authorization") refreshToken: String
+    ): Response<BaseResponse<LoginResponse>>
+
+    @POST("api/v1/logout/")
+    suspend fun logout(
+        @Header("Authorization") token: String
+    ): Response<BaseResponse<Nothing>>
+
     @GET("api/v1/getUserServerPubKey/")
     suspend fun getUserServerPubKey(
         @Header("Authorization") token: String,

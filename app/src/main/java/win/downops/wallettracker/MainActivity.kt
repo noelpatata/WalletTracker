@@ -27,6 +27,7 @@ import win.downops.wallettracker.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.SessionRepository
+import win.downops.wallettracker.data.LoginRepository
 import win.downops.wallettracker.ui.login.LoginActivity
 import win.downops.wallettracker.util.AppResultHandler
 import win.downops.wallettracker.ui.importSheet.SharedCsvViewModel
@@ -38,6 +39,8 @@ class MainActivity  : AppCompatActivity() {
     lateinit var expenseRepo: ExpenseRepository
     @Inject
     lateinit var sessionRepo: SessionRepository
+    @Inject
+    lateinit var loginRepo: LoginRepository
     private val sharedCsvViewModel: SharedCsvViewModel by viewModels()
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -71,6 +74,8 @@ class MainActivity  : AppCompatActivity() {
                 try {
                     if (item.itemId == R.id.nav_categories) {
                         navController.popBackStack(R.id.nav_categories, false)
+                    } else if (item.itemId == R.id.nav_logout) {
+                        doLogOut()
                     } else {
                         NavigationUI.onNavDestinationSelected(item, navController)
                     }
@@ -141,7 +146,6 @@ class MainActivity  : AppCompatActivity() {
             }
             R.id.logOff -> {
                 doLogOut()
-                finish()
                 return true
             }
         }
@@ -166,13 +170,20 @@ class MainActivity  : AppCompatActivity() {
     }
 
     fun doLogOut() {
-        try{
-            sessionRepo.deleteAll()
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-        }catch(e: Exception){
-            Logger.log(e)
+        lifecycleScope.launch {
+            try {
+                val session = sessionRepo.getFirstSession()
+                if (session != null && session.token.isNotEmpty()) {
+                    loginRepo.logout(session.token)
+                }
+                sessionRepo.deleteAll()
+                val intent = Intent(this@MainActivity, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            } catch (e: Exception) {
+                Logger.log(e)
+            }
         }
     }
 }
