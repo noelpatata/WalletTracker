@@ -24,7 +24,6 @@ import win.downops.wallettracker.di.AppMode
 import kotlinx.coroutines.launch
 import win.downops.wallettracker.R
 import win.downops.wallettracker.data.LoginRepository
-import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.communication.requests.LoginRequest
 import win.downops.wallettracker.data.api.communication.requests.ServerPubKeyRequest
 import win.downops.wallettracker.data.SessionRepository
@@ -119,13 +118,37 @@ class LoginActivity : AppCompatActivity() {
             return true
         }
         
-        if (session.token.isNotEmpty() && Cryptography.isTokenValid(session.token)) {
-            appMode.isOnline = true
-            navigateToMain()
-            return true
+        lifecycleScope.launch {
+            showLoading(true)
+            val result = loginRepo.refresh(session.token)
+            if (result is AppResult.Success) {
+                val newToken = result.data?.token
+                if (newToken != null) {
+                    val updatedSession = sessionRepo.getFirstSession() ?: session
+                    updatedSession.token = newToken
+                    sessionRepo.edit(updatedSession)
+                    appMode.isOnline = true
+                    navigateToMain()
+                } else {
+                    showLoading(false)
+                }
+            } else if (result is AppResult.Error) {
+                if (result.code == 401) {
+                    sessionRepo.deleteAll()
+                    showLoading(false)
+                    initUi()
+                    initBiometricPrompt()
+                    checkStoredCredentials()
+                } else {
+                    AppResultHandler.handleError(this@LoginActivity, result)
+                    showLoading(false)
+                    initUi()
+                    initBiometricPrompt()
+                    checkStoredCredentials()
+                }
+            }
         }
-
-        return false
+        return true
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

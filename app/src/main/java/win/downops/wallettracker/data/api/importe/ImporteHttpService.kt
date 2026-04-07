@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import jakarta.inject.Inject
-import retrofit2.Response
 import win.downops.wallettracker.data.ImporteRepository
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.api.ApiClient
@@ -15,7 +14,6 @@ import win.downops.wallettracker.data.api.communication.requests.CreateImportesB
 import win.downops.wallettracker.data.api.communication.requests.ImporteBySeasonIdRequest
 import win.downops.wallettracker.data.api.communication.requests.ImporteIdRequest
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
-import win.downops.wallettracker.data.api.communication.responses.CipheredResponse
 import win.downops.wallettracker.data.models.AppResult
 import win.downops.wallettracker.data.models.Importe
 import win.downops.wallettracker.util.Messages.authenticationErrorMessage
@@ -26,106 +24,76 @@ class ImporteHttpService @Inject constructor(
 ) : BaseHttpService(sessionRepository), ImporteRepository {
 
     override suspend fun getBySeasonId(seasonId: Long): AppResult<List<Importe>> {
-        return try {
-            val cipheredData = encryptData(ImporteBySeasonIdRequest(seasonId))
-                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.getBySeasonId("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            parseListResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error fetching importes", isControlled = false, e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { token -> ApiClient.importe.getBySeasonId("Bearer $token", getCipheredText(), encryptData(ImporteBySeasonIdRequest(seasonId)) ?: throw Exception(authenticationErrorMessage)) },
+            parser = { json ->
+                val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
+                    .fromJson<BaseResponse<List<Importe>>>(json, object : TypeToken<BaseResponse<List<Importe>>>() {}.type)
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data ?: emptyList())
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun getById(importeId: Long): AppResult<Importe?> {
-        return try {
-            val cipheredData = encryptData(ImporteIdRequest(importeId))
-                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.getById("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            parseObjectResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error fetching importe", isControlled = false, e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { token -> ApiClient.importe.getById("Bearer $token", getCipheredText(), encryptData(ImporteIdRequest(importeId)) ?: throw Exception(authenticationErrorMessage)) },
+            parser = { json ->
+                val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
+                    .fromJson<BaseResponse<Importe?>>(json, object : TypeToken<BaseResponse<Importe?>>() {}.type)
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data)
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun create(importe: Importe): AppResult<Importe?> {
-        return try {
-            val cipheredData = encryptData(
-                CreateImporteRequest(
-                    importe.getConcept(),
-                    importe.getDateString(),
-                    importe.getAmount(),
-                    importe.getBalanceAfter(),
-                    importe.getSeasonId()
-                )
-            ) ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.create("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            parseObjectResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error creating importe", isControlled = false, e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { token -> ApiClient.importe.create("Bearer $token", getCipheredText(), encryptData(CreateImporteRequest(importe.getConcept(), importe.getDateString(), importe.getAmount(), importe.getBalanceAfter(), importe.getSeasonId())) ?: throw Exception(authenticationErrorMessage)) },
+            parser = { json ->
+                val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
+                    .fromJson<BaseResponse<Importe?>>(json, object : TypeToken<BaseResponse<Importe?>>() {}.type)
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data)
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun createAll(importes: List<Importe>): AppResult<Unit> {
-        return try {
-            val requests = importes.map { 
-                CreateImporteRequest(
-                    it.getConcept(),
-                    it.getDateString(),
-                    it.getAmount(),
-                    it.getBalanceAfter(),
-                    it.getSeasonId()
-                )
+        val requests = importes.map { 
+            CreateImporteRequest(it.getConcept(), it.getDateString(), it.getAmount(), it.getBalanceAfter(), it.getSeasonId())
+        }
+        val bulkRequest = CreateImportesBulkRequest(importes = requests)
+        
+        return safeApiCall { token ->
+            ApiClient.importe.createAll("Bearer $token", getCipheredText(), encryptData(bulkRequest) ?: throw Exception(authenticationErrorMessage))
+        }.let { result ->
+            when (result) {
+                is AppResult.Success -> AppResult.Success(result.message, Unit)
+                is AppResult.Error -> result
             }
-            val bulkRequest = CreateImportesBulkRequest(importes = requests)
-            val cipheredData = encryptData(bulkRequest)
-                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.createAll("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            val body = response.body() ?: return AppResult.Error("No data")
-            if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error creating importes", isControlled = false, e.stackTrace.joinToString("\n"))
         }
     }
 
     override suspend fun deleteById(importeId: Long): AppResult<Unit> {
-        return try {
-            val cipheredData = encryptData(ImporteIdRequest(importeId))
-                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.deleteById("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            val body = response.body() ?: return AppResult.Error("No data")
-            if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error deleting importe", isControlled = false, e.stackTrace.joinToString("\n"))
+        return safeApiCall { token ->
+            ApiClient.importe.deleteById("Bearer $token", getCipheredText(), encryptData(ImporteIdRequest(importeId)) ?: throw Exception(authenticationErrorMessage))
+        }.let { result ->
+            when (result) {
+                is AppResult.Success -> AppResult.Success(result.message, Unit)
+                is AppResult.Error -> result
+            }
         }
     }
 
     override suspend fun deleteBySeasonId(seasonId: Long): AppResult<Unit> {
-        return try {
-            val cipheredData = encryptData(ImporteBySeasonIdRequest(seasonId))
-                ?: return AppResult.Error(authenticationErrorMessage, isControlled = true)
-            val response = ApiClient.importe.deleteBySeasonId("Bearer ${getToken()}", getCipheredText(), cipheredData)
-            val body = response.body() ?: return AppResult.Error("No data")
-            if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message)
-        } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error deleting importes by season", isControlled = false, e.stackTrace.joinToString("\n"))
+        return safeApiCall { token ->
+            ApiClient.importe.deleteBySeasonId("Bearer $token", getCipheredText(), encryptData(ImporteBySeasonIdRequest(seasonId)) ?: throw Exception(authenticationErrorMessage))
+        }.let { result ->
+            when (result) {
+                is AppResult.Success -> AppResult.Success(result.message, Unit)
+                is AppResult.Error -> result
+            }
         }
-    }
-
-    private fun parseObjectResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<Importe?> {
-        val body = response.body() ?: return AppResult.Error("No data")
-        val json = validateCipheredResponse(body)
-        val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
-            .fromJson<BaseResponse<Importe?>>(json, object : TypeToken<BaseResponse<Importe?>>() {}.type)
-        return if (parsed.success) AppResult.Success(parsed.message, parsed.data)
-        else AppResult.Error(parsed.message)
-    }
-
-    private fun parseListResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<List<Importe>> {
-        val body = response.body() ?: return AppResult.Error("No data")
-        val json = validateCipheredResponse(body)
-        val parsed = GsonBuilder().setDateFormat("yyyy-MM-dd").create()
-            .fromJson<BaseResponse<List<Importe>>>(json, object : TypeToken<BaseResponse<List<Importe>>>() {}.type)
-        return if (parsed.success) AppResult.Success(parsed.message, parsed.data ?: emptyList())
-        else AppResult.Error(parsed.message)
     }
 }

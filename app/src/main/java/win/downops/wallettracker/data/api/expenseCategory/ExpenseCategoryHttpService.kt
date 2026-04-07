@@ -1,18 +1,14 @@
 package win.downops.wallettracker.data.api.expenseCategory
 import win.downops.wallettracker.data.api.BaseHttpService
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import win.downops.wallettracker.data.api.ApiClient
 import win.downops.wallettracker.data.api.communication.responses.BaseResponse
-import win.downops.wallettracker.data.api.communication.responses.CipheredResponse
 import win.downops.wallettracker.data.api.communication.requests.ExpenseCategoryIdRequest
 import win.downops.wallettracker.data.api.communication.requests.CreateExpenseCategoryRequest
 import win.downops.wallettracker.data.api.communication.requests.EditExpenseCategoryRequest
 import com.google.gson.GsonBuilder
-import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
-import retrofit2.Response
 import win.downops.wallettracker.data.ExpenseCategoryRepository
 import win.downops.wallettracker.data.SessionRepository
 import win.downops.wallettracker.data.models.AppResult
@@ -25,115 +21,70 @@ class ExpenseCategoryHttpService @Inject constructor(
     ExpenseCategoryRepository {
 
     override suspend fun getAll(): AppResult<List<ExpenseCategory>> {
-        return try {
-            val response = ApiClient.expenseCategory.getExpenseCategories("Bearer ${this.getToken()}", this.getCipheredText())
-            parseListResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(
-                e.message ?: "Unexpected error",
-                isControlled = false,
-                e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { ApiClient.expenseCategory.getExpenseCategories("Bearer ${getToken()}", getCipheredText()) },
+            parser = { json ->
+                val parsed = GsonBuilder().create()
+                    .fromJson(json, object : com.google.gson.reflect.TypeToken<BaseResponse<List<ExpenseCategory>>>() {}.type) as BaseResponse<List<ExpenseCategory>>
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data ?: emptyList())
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun getById(catId: Long): AppResult<ExpenseCategory?> {
-        return try {
-            val cipheredData = encryptData(ExpenseCategoryIdRequest(catId))
-                ?: return AppResult.Error("Authentication error")
-            val response = ApiClient.expenseCategory.getExpenseCategoryById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
-            parseObjectResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(
-                e.message ?: "Unexpected error",
-                isControlled = false,
-                e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { ApiClient.expenseCategory.getExpenseCategoryById("Bearer ${getToken()}", getCipheredText(), encryptData(ExpenseCategoryIdRequest(catId)) ?: throw Exception("Auth error")) },
+            parser = { json ->
+                val parsed = GsonBuilder().create()
+                    .fromJson(json, object : com.google.gson.reflect.TypeToken<BaseResponse<ExpenseCategory?>>() {}.type) as BaseResponse<ExpenseCategory?>
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data)
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun create(category: ExpenseCategory): AppResult<ExpenseCategory?> {
-        return try {
-            val cipheredData = encryptData(CreateExpenseCategoryRequest(category.getName()))
-                ?: return AppResult.Error("Authentication error")
-
-
-            val response = ApiClient.expenseCategory.createExpenseCategories("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
-            parseObjectResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(
-                e.message ?: "Unexpected error",
-                isControlled = false,
-                e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { ApiClient.expenseCategory.createExpenseCategories("Bearer ${getToken()}", getCipheredText(), encryptData(CreateExpenseCategoryRequest(category.getName())) ?: throw Exception("Auth error")) },
+            parser = { json ->
+                val parsed = GsonBuilder().create()
+                    .fromJson(json, object : com.google.gson.reflect.TypeToken<BaseResponse<ExpenseCategory?>>() {}.type) as BaseResponse<ExpenseCategory?>
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data)
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun edit(category: ExpenseCategory): AppResult<ExpenseCategory?> {
-        return try {
-            val cipheredData = encryptData(
-                EditExpenseCategoryRequest(
-                    category.getId(),
-                    category.getName()
-                )
-            )?: return AppResult.Error("Authentication error")
-
-            val response = ApiClient.expenseCategory.editName("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
-            parseObjectResponse(response)
-        } catch (e: Exception) {
-            AppResult.Error(
-                e.message ?: "Unexpected error",
-                isControlled = false,
-                e.stackTrace.joinToString("\n"))
-        }
+        return safeCipheredApiCall(
+            call = { ApiClient.expenseCategory.editName("Bearer ${getToken()}", getCipheredText(), encryptData(EditExpenseCategoryRequest(category.getId(), category.getName())) ?: throw Exception("Auth error")) },
+            parser = { json ->
+                val parsed = GsonBuilder().create()
+                    .fromJson(json, object : com.google.gson.reflect.TypeToken<BaseResponse<ExpenseCategory?>>() {}.type) as BaseResponse<ExpenseCategory?>
+                if (parsed.success) AppResult.Success(parsed.message, parsed.data)
+                else AppResult.Error(parsed.message)
+            }
+        )
     }
 
     override suspend fun deleteById(catId: Long): AppResult<Unit> {
-        return try {
-            val cipheredData = encryptData(
-                ExpenseCategoryIdRequest(
-                    catId
-                )
-            )?: return AppResult.Error("Authentication error")
-
-            val response = ApiClient.expenseCategory.deleteById("Bearer ${this.getToken()}", this.getCipheredText(), cipheredData)
-
-            val body = response.body() ?: return AppResult.Error("No data")
-
-            if (body.success) AppResult.Success(body.message, Unit)
-            else AppResult.Error(body.message)
-        } catch (e: Exception) {
-            AppResult.Error(
-                e.message ?: "Unexpected error",
-                isControlled = false,
-                e.stackTrace.joinToString("\n"))
+        val response = ApiClient.expenseCategory.deleteById("Bearer ${getToken()}", getCipheredText(), encryptData(ExpenseCategoryIdRequest(catId)) ?: throw Exception("Auth error"))
+        if (response.code() == 401) {
+             val refresh = ApiClient.login.refresh("Bearer ${getToken()}")
+             if (refresh.isSuccessful && refresh.body()?.success == true) {
+                 val newToken = refresh.body()?.data?.token
+                 if (newToken != null) {
+                     val currentSession = session
+                     currentSession.token = newToken
+                     sessionRepository.edit(currentSession)
+                     val retryResponse = ApiClient.expenseCategory.deleteById("Bearer ${newToken}", getCipheredText(), encryptData(ExpenseCategoryIdRequest(catId)) ?: throw Exception("Auth error"))
+                     val body = retryResponse.body() ?: return AppResult.Error("No data", code = retryResponse.code())
+                     return if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message, code = retryResponse.code())
+                 }
+             }
         }
-    }
-
-    private fun parseObjectResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<ExpenseCategory?> {
-        try{
-            val body = response.body() ?: return AppResult.Error("No data")
-            val jsonData = validateCipheredResponse(body)
-            val parsed = GsonBuilder().create()
-                .fromJson(jsonData, object : com.google.gson.reflect.TypeToken<BaseResponse<ExpenseCategory?>>() {}.type) as BaseResponse<ExpenseCategory>
-            return if (parsed.success) AppResult.Success(parsed.message, parsed.data)
-            else AppResult.Error(parsed.message)
-        } catch (e: Exception) {
-            throw e
-        }
-
-    }
-
-    private fun parseListResponse(response: Response<BaseResponse<CipheredResponse>>): AppResult<List<ExpenseCategory>> {
-        try{
-            val body = response.body() ?: return AppResult.Error("No data")
-            val jsonData = validateCipheredResponse(body)
-            val parsed = GsonBuilder().create()
-                .fromJson(jsonData, object : com.google.gson.reflect.TypeToken<BaseResponse<List<ExpenseCategory>>>() {}.type) as BaseResponse<List<ExpenseCategory>>
-
-            return if (parsed.success) AppResult.Success(parsed.message, parsed.data ?: emptyList())
-            else AppResult.Error(parsed.message)
-        }catch (e: Exception) {
-            throw e
-        }
-
+        val body = response.body() ?: return AppResult.Error("No data", code = response.code())
+        return if (body.success) AppResult.Success(body.message, Unit) else AppResult.Error(body.message, code = response.code())
     }
 }
-
