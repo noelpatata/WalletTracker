@@ -47,23 +47,17 @@ abstract class BaseHttpService(
         return decrypted
     }
 
-    /**
-     * Helper for API calls that return CipheredResponse.
-     * Automatically attempts to refresh the access token if it receives a 401.
-     */
-    protected suspend fun <T> safeCipheredApiCall(
-        call: suspend (String) -> Response<BaseResponse<CipheredResponse>>,
-        parser: (String) -> AppResult<T>
-    ): AppResult<T> {
+    private suspend fun <T, R> safeApiCallInternal(
+        call: suspend (String) -> Response<BaseResponse<T>>,
+        onSuccess: (BaseResponse<T>) -> AppResult<R>
+    ): AppResult<R> {
         var response = call(getToken())
-        
+
         if (response.code() == 401) {
             val refreshResult = attemptTokenRefresh()
             if (refreshResult is AppResult.Success) {
-                // Retry original call with new token
                 response = call(refreshResult.data)
             } else if (refreshResult is AppResult.Error && refreshResult.code == 401) {
-                // Refresh token also expired
                 return AppResult.Error("Session expired", code = 401)
             }
         }
@@ -73,40 +67,26 @@ abstract class BaseHttpService(
         }
 
         val body = response.body() ?: return AppResult.Error("No data", code = response.code())
-        
-        return try {
+        return onSuccess(body)
+    }
+
+    protected suspend fun <T> safeCipheredApiCall(
+        call: suspend (String) -> Response<BaseResponse<CipheredResponse>>,
+        parser: (String) -> AppResult<T>
+    ): AppResult<T> = safeApiCallInternal(call) { body ->
+        try {
             val jsonData = validateCipheredResponse(body)
             parser(jsonData)
         } catch (e: Exception) {
-            AppResult.Error(e.message ?: "Unexpected error", false, e.stackTrace.joinToString("\n"), code = response.code())
+            AppResult.Error(e.message ?: "Unexpected error", false, e.stackTrace.joinToString("\n"), code = 400)
         }
     }
 
-    /**
-     * Helper for standard API calls (e.g. Delete).
-     * Automatically attempts to refresh the access token if it receives a 401.
-     */
     protected suspend fun <T> safeApiCall(
         call: suspend (String) -> Response<BaseResponse<T>>
-    ): AppResult<T?> {
-        var response = call(getToken())
-
-        if (response.code() == 401) {
-            val refreshResult = attemptTokenRefresh()
-            if (refreshResult is AppResult.Success) {
-                response = call(refreshResult.data)
-            } else if (refreshResult is AppResult.Error && refreshResult.code == 401) {
-                return AppResult.Error("Session expired", code = 401)
-            }
-        }
-
-        val body = response.body()
-        return if (response.isSuccessful && body != null) {
-            if (body.success) AppResult.Success(body.message, body.data)
-            else AppResult.Error(body.message, code = response.code())
-        } else {
-            AppResult.Error(response.message(), code = response.code())
-        }
+    ): AppResult<T?> = safeApiCallInternal(call) { body ->
+        if (body.success) AppResult.Success(body.message, body.data)
+        else AppResult.Error(body.message, code = 400)
     }
 
     private suspend fun attemptTokenRefresh(): AppResult<String> {
