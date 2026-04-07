@@ -73,7 +73,6 @@ class RegisterViewModel @Inject constructor(
             val session = Session().apply {
                 id = oldSession?.id ?: 0
                 token = jwt
-                this.privateKey = privateKey
                 this.serverPublicKey = serverPublicKey
                 cipheredCredentials = ""
                 iv = ""

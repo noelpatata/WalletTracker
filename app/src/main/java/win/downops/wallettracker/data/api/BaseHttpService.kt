@@ -21,10 +21,9 @@ abstract class BaseHttpService(
         get() = sessionRepository.getFirstSession()
             ?: throw Exception("No session found")
 
-    protected fun getPrivateKey(): String = session.privateKey
     protected fun getPublicKey(): String = session.serverPublicKey
     protected fun getToken(): String = session.token
-    protected fun getCipheredText(): String = Cryptography.sign(getPrivateKey())
+    protected fun getCipheredText(): String = Cryptography.sign()
 
     private fun verifySignature(signature: String) = Cryptography.verify(getPublicKey(), signature)
 
@@ -33,7 +32,7 @@ abstract class BaseHttpService(
             ?: throw IllegalArgumentException("CipheredRequest is null")
         if (encryptedAesKey.isNullOrEmpty() || iv.isNullOrEmpty() || ciphertext.isNullOrEmpty() || tag.isNullOrEmpty())
             throw IllegalStateException("Invalid CipheredRequest")
-        return Cryptography.hybridDecrypt(getPrivateKey(), encryptedAesKey, iv, ciphertext, tag)
+        return Cryptography.hybridDecrypt( encryptedAesKey, iv, ciphertext, tag)
     }
 
     protected inline fun <reified R> encryptData(data: R): CipheredRequest? =

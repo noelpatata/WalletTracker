@@ -33,7 +33,6 @@ class DatabaseHelper(context: Context?) :
                 "online Integer, " +
                 "token TEXT, " +
                 "username TEXT, " +
-                "privateKey TEXT, " +
                 "cipheredCredentials TEXT, " +
                 "iv TEXT, " +
                 "fingerPrint INTEGER, " +

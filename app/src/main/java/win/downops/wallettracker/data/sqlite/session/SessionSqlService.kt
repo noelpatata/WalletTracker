@@ -35,7 +35,6 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
         val values = ContentValues()
         values.put("token", session.token)
         values.put("username", session.username)
-        values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
         values.put("cipheredCredentials", session.cipheredCredentials)
         values.put("iv", session.iv)
@@ -50,7 +49,6 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
         val values = ContentValues()
         values.put("token", session.token)
         values.put("username", session.username)
-        values.put("privateKey", session.privateKey)
         values.put("serverPublicKey", session.serverPublicKey)
         values.put("cipheredCredentials", session.cipheredCredentials)
         values.put("iv", session.iv)
@@ -82,7 +80,6 @@ class SessionSqlService @Inject constructor(@ApplicationContext context: Context
             id = cursor.getInt(cursor.getColumnIndex("id"))
             token = cursor.getString(cursor.getColumnIndex("token"))
             username = cursor.getString(cursor.getColumnIndex("username")) ?: ""
-            privateKey = cursor.getString(cursor.getColumnIndex("privateKey"))
             serverPublicKey = cursor.getString(cursor.getColumnIndex("serverPublicKey"))
             cipheredCredentials = cursor.getString(cursor.getColumnIndex("cipheredCredentials"))
             iv = cursor.getString(cursor.getColumnIndex("iv"))

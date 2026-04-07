@@ -90,6 +90,7 @@ class LoginActivity : AppCompatActivity() {
             offlineMode.setOnClickListener {
                 appMode.isOnline = false
                 sessionRepo.deleteAll()
+                Cryptography.deleteKeys()
                 navigateToMain()
             }
 
@@ -135,6 +136,7 @@ class LoginActivity : AppCompatActivity() {
             } else if (result is AppResult.Error) {
                 if (result.code == 401) {
                     sessionRepo.deleteAll()
+                    Cryptography.deleteKeys()
                     showLoading(false)
                     initUi()
                     initBiometricPrompt()
@@ -189,11 +191,13 @@ class LoginActivity : AppCompatActivity() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
                 sessionRepo.deleteAll()
+                Cryptography.deleteKeys()
             }
 
             override fun onAuthenticationFailed() {
                 super.onAuthenticationFailed()
                 sessionRepo.deleteAll()
+                Cryptography.deleteKeys()
             }
         })
 
@@ -291,13 +295,14 @@ class LoginActivity : AppCompatActivity() {
             val loginResponse = handleResult(loginRepo.login(credentials)) ?: return
             val jwt = loginResponse.token
 
-            val (privateKey, publicKey) = Cryptography.generateKeys()
+            // Generate and store keys in Android KeyStore, get Public Key B64
+            val publicKey = Cryptography.generateAndStoreKeys()
             handleResult(loginRepo.setUserClientPubKey(jwt, ServerPubKeyRequest(publicKey))) ?: return
 
             val serverPublicKey = handleResult(loginRepo.getUserServerPubKey(jwt))?.publicKey
                 ?: throw IllegalStateException("Server's public key is missing")
 
-            saveSession(jwt, username, privateKey, serverPublicKey, cipheredCredentials)
+            saveSession(jwt, username, serverPublicKey, cipheredCredentials)
             navigateToMain()
 
         } catch (e: Exception) {
@@ -320,13 +325,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveSession(jwt: String, username: String, privateKey: String, serverPublicKey: String, cipheredCredentials: CipheredCredentials?) {
+    private fun saveSession(jwt: String, username: String, serverPublicKey: String, cipheredCredentials: CipheredCredentials?) {
         val oldSession = sessionRepo.getFirstSession()
         val newSession = Session().apply {
             id = oldSession?.id ?: 0
             token = jwt
             this.username = username
-            this.privateKey = privateKey
             this.serverPublicKey = serverPublicKey
             this.cipheredCredentials = cipheredCredentials?.credentials.orEmpty()
             this.iv = cipheredCredentials?.iv.orEmpty()
