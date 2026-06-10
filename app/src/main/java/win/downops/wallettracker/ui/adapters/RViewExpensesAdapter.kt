@@ -42,7 +42,7 @@ class RViewExpensesAdapter(var list: MutableList<Expense>) : RecyclerView.Adapte
         if (desc.isNullOrEmpty()) {
             holder.expenseDescription.visibility = View.GONE
         } else if (desc.length > 20) {
-            holder.expenseDescription.text = desc.substring(0, 25) + "..."
+            holder.expenseDescription.text = desc.substring(0, 20) + "..."
         }else {
             holder.expenseDescription.text = desc
         }
